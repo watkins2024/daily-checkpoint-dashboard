@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Field & HouseCall — Ops Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #1a1a1a; color: #e0e0e0; line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    header { background: #222; padding: 15px 20px; position: sticky; top: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-bottom: 20px; }
+    header h1 { font-size: 22px; color: #fff; }
+    header p { font-size: 13px; color: #888; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .kpi-card { background: #2a2a2a; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .kpi-card label { font-size: 12px; color: #999; display: block; margin-bottom: 5px; }
+    .kpi-card .value { font-size: 28px; font-weight: 600; color: #4a9eff; }
+    .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #2a2a2a; padding: 5px; border-radius: 8px; }
+    .tabs button { background: transparent; border: none; padding: 10px 20px; color: #bbb; cursor: pointer; border-radius: 6px; font-size: 14px; transition: all 0.2s; }
+    .tabs button:hover { background: #333; }
+    .tabs button.active { background: #4a9eff; color: #fff; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card { background: #2a2a2a; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .card h2 { font-size: 18px; margin-bottom: 15px; color: #fff; }
+    .btn { background: #4a9eff; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; margin: 5px 5px 5px 0; transition: background 0.2s; }
+    .btn:hover { background: #3a8eef; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-ghost { background: transparent; color: #4a9eff; }
+    .btn-ghost:hover { background: #333; }
+    input, select, textarea { background: #333; border: 1px solid #444; color: #e0e0e0; padding: 10px; border-radius: 6px; width: 100%; margin-bottom: 10px; font-size: 14px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #4a9eff; }
+    .checkbox-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: #333; border-radius: 6px; margin-bottom: 8px; }
+    .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+    .checkbox-item.done { opacity: 0.5; }
+    .checkbox-item.done span { text-decoration: line-through; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+    th { color: #999; font-size: 12px; text-transform: uppercase; }
+    .hidden { display: none; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.open { display: flex; }
+    .modal-content { background: #2a2a2a; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+    .modal-content h3 { margin-bottom: 20px; }
+    .kanban { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .kanban-col { background: #333; padding: 15px; border-radius: 8px; min-height: 200px; }
+    .kanban-col h4 { margin-bottom: 10px; font-size: 14px; }
+    .kanban-card { background: #2a2a2a; padding: 12px; border-radius: 6px; margin-bottom: 8px; cursor: move; }
+    .kanban-card p { font-size: 13px; margin: 4px 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Field & HouseCall</h1>
+  <p>quiet power, clear ops</p>
+</header>
+
+<div class="container">
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi-card">
+      <label>Active Clients</label>
+      <div class="value" id="kpiClients">0</div>
+    </div>
+    <div class="kpi-card">
+      <label>MRR (est.)</label>
+      <div class="value" id="kpiMRR">$0</div>
+    </div>
+    <div class="kpi-card">
+      <label>Outreach This Week</label>
+      <div class="value">
+        <span id="kpiOutreach">0</span>
+        <button class="btn btn-sm btn-ghost" id="addOneOutreach">+1</button>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <label>Walk Streak (days)</label>
+      <div class="value" id="kpiStreak">0</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="active" onclick="showTab('today')">Today</button>
+    <button onclick="showTab('pipeline')">Pipeline</button>
+    <button onclick="showTab('clients')">Clients</button>
+    <button onclick="showTab('walks')">Walks</button>
+  </div>
+
+  <!-- Today Panel -->
+  <div id="today" class="panel active">
+    <div class="card">
+      <h2>Quick Actions</h2>
+      <button class="btn" onclick="openModal('walkModal')">Log Dawn Walk</button>
+      <button class="btn" onclick="openModal('taskModal')">Today's Checklist</button>
+      <div style="margin-top: 20px;">
+        <h3 style="font-size: 14px; margin-bottom: 10px;">Latest Walk</h3>
+        <div id="latestWalk" style="color: #888; font-size: 13px;">No walks logged yet.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>60-Day Validation Sprint</h2>
+        <button class="btn btn-sm btn-ghost" onclick="resetSprint()">Reset</button>
+      </div>
+      <div id="sprintList"></div>
+    </div>
+  </div>
+
+  <!-- Pipeline Panel -->
+  <div id="pipeline" class="panel">
+    <div class="card">
+      <h2>Add Lead</h2>
+      <input id="leadProp" placeholder="Property address">
+      <input id="leadName" placeholder="Owner name">
+      <input id="leadEmail" placeholder="Owner email">
+      <select id="leadStage">
+        <option>Leads</option>
+        <option>Contacted</option>
+        <option>Discovery</option>
+        <option>Trial</option>
+        <option>Active</option>
+      </select>
+      <button class="btn" onclick="addLead()">Add Lead</button>
+    </div>
+
+    <div class="card">
+      <h2>Pipeline</h2>
+      <div class="kanban">
+        <div class="kanban-col">
+          <h4>Leads</h4>
+          <div id="col-Leads"></div>
+        </div>
+        <div class="kanban-col">
+          <h4>Contacted</h4>
+          <div id="col-Contacted"></div>
+        </div>
+        <div class="kanban-col">
+          <h4>Discovery</h4>
+          <div id="col-Discovery"></div>
+        </div>
+        <div class="kanban-col">
+          <h4>Trial</h4>
+          <div id="col-Trial"></div>
+        </div>
+        <div class="kanban-col">
+          <h4>Active</h4>
+          <div id="col-Active"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clients Panel -->
+  <div id="clients" class="panel">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <h2>Clients</h2>
+        <button class="btn btn-sm" onclick="openModal('clientModal')">Add Client</button>
+      </div>
+      <input id="clientSearch" placeholder="Search clients..." oninput="renderClients()">
+      <table>
+        <thead>
+          <tr>
+            <th>Address</th>
+            <th>Plan</th>
+            <th>Price</th>
+            <th>Active</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="clientTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Walks Panel -->
+  <div id="walks" class="panel">
+    <div class="card">
+      <h2>Walk Log</h2>
+      <div id="walkList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Walk Modal -->
+<div id="walkModal" class="modal">
+  <div class="modal-content">
+    <h3>Log Dawn Walk</h3>
+    <input id="wmLocation" placeholder="Location">
+    <select id="wmWeather">
+      <option>Cold</option><option>Wind</option><option>Cloud</option><option>Clear</option><option>Rain</option>
+    </select>
+    <select id="wmMood">
+      <option>Calm</option><option>Charged</option><option>Focused</option><option>Ragged</option>
+    </select>
+    <textarea id="wmNotes" rows="4" placeholder="Notes..."></textarea>
+    <button class="btn" onclick="saveWalk()">Save</button>
+    <button class="btn btn-ghost" onclick="closeModal('walkModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div id="taskModal" class="modal">
+  <div class="modal-content">
+    <h3>Today's Checklist</h3>
+    <div id="taskList"></div>
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+      <input id="taskInput" placeholder="New task...">
+      <button class="btn" onclick="addTask()">Add</button>
+    </div>
+    <button class="btn btn-ghost" onclick="closeModal('taskModal')" style="margin-top: 15px;">Close</button>
+  </div>
+</div>
+
+<!-- Client Modal -->
+<div id="clientModal" class="modal">
+  <div class="modal-content">
+    <h3>Add Client</h3>
+    <input id="cmAddress" placeholder="Address">
+    <select id="cmPlan">
+      <option>Weekly</option>
+      <option>Monthly</option>
+    </select>
+    <input id="cmPrice" type="number" placeholder="Price" value="400">
+    <button class="btn" onclick="saveClient()">Save</button>
+    <button class="btn btn-ghost" onclick="closeModal('clientModal')">Cancel</button>
+  </div>
+</div>
+
+<script>
+const store = {
+  get(k, def) {
+    try { return JSON.parse(localStorage.getItem(k)) || def; } catch { return def; }
+  },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+};
+
+const defaultSprint = [
+  {text:'Launch website & ABN', done:false},
+  {text:'Call 5 cleaning companies (10–15% referral)', done:false},
+  {text:'Post in 3 property investor groups', done:false},
+  {text:'Deep research 20 properties', done:false},
+  {text:'Send 10 personalized emails', done:false},
+  {text:'Book 2–3 discovery calls', done:false},
+  {text:'Onboard 1–3 pilot clients', done:false},
+  {text:'Deliver first weekly reports', done:false}
+];
+
+function showTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'taskModal') renderTasks();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Sprint
+function loadSprint() {
+  const sprint = store.get('sprint', defaultSprint);
+  const html = sprint.map((item, i) => `
+    <div class="checkbox-item ${item.done ? 'done' : ''}">
+      <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleSprint(${i})">
+      <span>${item.text}</span>
+    </div>
+  `).join('');
+  document.getElementById('sprintList').innerHTML = html;
+}
+
+function toggleSprint(i) {
+  const sprint = store.get('sprint', defaultSprint);
+  sprint[i].done = !sprint[i].done;
+  store.set('sprint', sprint);
+  loadSprint();
+}
+
+function resetSprint() {
+  store.set('sprint', defaultSprint);
+  loadSprint();
+}
+
+// Walks
+function saveWalk() {
+  const walks = store.get('walks', []);
+  walks.unshift({
+    date: new Date().toISOString(),
+    location: document.getElementById('wmLocation').value || '—',
+    weather: document.getElementById('wmWeather').value,
+    mood: document.getElementById('wmMood').value,
+    notes: document.getElementById('wmNotes').value
+  });
+  store.set('walks', walks);
+  document.getElementById('wmLocation').value = '';
+  document.getElementById('wmNotes').value = '';
+  closeModal('walkModal');
+  renderWalks();
+  updateKPIs();
+}
+
+function renderWalks() {
+  const walks = store.get('walks', []);
+  if (walks.length === 0) {
+    document.getElementById('latestWalk').textContent = 'No walks logged yet.';
+    document.getElementById('walkList').innerHTML = '<p style="color:#888">No walks yet.</p>';
+    return;
+  }
+  
+  const latest = walks[0];
+  document.getElementById('latestWalk').textContent = 
+    `${new Date(latest.date).toLocaleString()} — ${latest.location} · ${latest.weather} · ${latest.mood}`;
+  
+  const html = walks.map((w, i) => `
+    <div style="background:#333; padding:15px; border-radius:6px; margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between;">
+        <strong>${new Date(w.date).toLocaleString()}</strong>
+        <button class="btn btn-sm btn-ghost" onclick="deleteWalk(${i})">×</button>
+      </div>
+      <p style="color:#999; font-size:13px; margin-top:5px;">${w.location} · ${w.weather} · ${w.mood}</p>
+      <p style="margin-top:8px; font-size:14px;">${w.notes}</p>
+    </div>
+  `).join('');
+  document.getElementById('walkList').innerHTML = html;
+}
+
+function deleteWalk(i) {
+  const walks = store.get('walks', []);
+  walks.splice(i, 1);
+  store.set('walks', walks);
+  renderWalks();
+  updateKPIs();
+}
+
+// Tasks
+function renderTasks() {
+  const tasks = store.get('tasks', [{text:'10 outreach emails', done:false}]);
+  const html = tasks.map((t, i) => `
+    <div class="checkbox-item ${t.done ? 'done' : ''}">
+      <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${i})">
+      <span>${t.text}</span>
+      <button class="btn btn-sm btn-ghost" onclick="deleteTask(${i})" style="margin-left:auto;">×</button>
+    </div>
+  `).join('');
+  document.getElementById('taskList').innerHTML = html;
+}
+
+function toggleTask(i) {
+  const tasks = store.get('tasks', []);
+  tasks[i].done = !tasks[i].done;
+  store.set('tasks', tasks);
+  renderTasks();
+}
+
+function addTask() {
+  const val = document.getElementById('taskInput').value.trim();
+  if (!val) return;
+  const tasks = store.get('tasks', []);
+  tasks.push({text: val, done: false});
+  store.set('tasks', tasks);
+  document.getElementById('taskInput').value = '';
+  renderTasks();
+}
+
+function deleteTask(i) {
+  const tasks = store.get('tasks', []);
+  tasks.splice(i, 1);
+  store.set('tasks', tasks);
+  renderTasks();
+}
+
+// Pipeline
+function addLead() {
+  const leads = store.get('pipeline', []);
+  leads.push({
+    id: Date.now(),
+    property: document.getElementById('leadProp').value || '—',
+    name: document.getElementById('leadName').value,
+    email: document.getElementById('leadEmail').value,
+    stage: document.getElementById('leadStage').value
+  });
+  store.set('pipeline', leads);
+  document.getElementById('leadProp').value = '';
+  document.getElementById('leadName').value = '';
+  document.getElementById('leadEmail').value = '';
+  renderPipeline();
+}
+
+function renderPipeline() {
+  const leads = store.get('pipeline', []);
+  ['Leads','Contacted','Discovery','Trial','Active'].forEach(stage => {
+    const filtered = leads.filter(l => l.stage === stage);
+    const html = filtered.map(l => `
+      <div class="kanban-card">
+        <p style="font-weight:600;">${l.property}</p>
+        <p style="color:#888;">${l.name}</p>
+        <p style="color:#888; font-size:12px;">${l.email}</p>
+      </div>
+    `).join('');
+    document.getElementById(`col-${stage}`).innerHTML = html || '<p style="color:#666; font-size:12px;">No leads</p>';
+  });
+}
+
+// Clients
+function saveClient() {
+  const clients = store.get('clients', []);
+  clients.push({
+    addr: document.getElementById('cmAddress').value,
+    plan: document.getElementById('cmPlan').value,
+    price: +document.getElementById('cmPrice').value,
+    active: true
+  });
+  store.set('clients', clients);
+  document.getElementById('cmAddress').value = '';
+  document.getElementById('cmPrice').value = '400';
+  closeModal('clientModal');
+  renderClients();
+  updateKPIs();
+}
+
+function renderClients() {
+  const clients = store.get('clients', []);
+  const search = document.getElementById('clientSearch').value.toLowerCase();
+  const filtered = clients.filter(c => 
+    (c.addr + c.plan).toLowerCase().includes(search)
+  );
+  const html = filtered.map((c, i) => `
+    <tr>
+      <td>${c.addr}</td>
+      <td>${c.plan}</td>
+      <td>$${c.price}</td>
+      <td>${c.active ? 'Active' : 'Paused'}</td>
+      <td><button class="btn btn-sm btn-ghost" onclick="deleteClient(${i})">×</button></td>
+    </tr>
+  `).join('');
+  document.getElementById('clientTable').innerHTML = html || '<tr><td colspan="5" style="text-align:center; color:#666;">No clients</td></tr>';
+}
+
+function deleteClient(i) {
+  const clients = store.get('clients', []);
+  clients.splice(i, 1);
+  store.set('clients', clients);
+  renderClients();
+  updateKPIs();
+}
+
+// Outreach
+document.getElementById('addOneOutreach').onclick = () => {
+  const data = store.get('outreach', {count: 0});
+  data.count++;
+  store.set('outreach', data);
+  updateKPIs();
+};
+
+// KPIs
+function updateKPIs() {
+  const clients = store.get('clients', []).filter(c => c.active);
+  document.getElementById('kpiClients').textContent = clients.length;
+  
+  const mrr = clients.reduce((sum, c) => sum + c.price, 0);
+  document.getElementById('kpiMRR').textContent = '$' + mrr.toLocaleString();
+  
+  const outreach = store.get('outreach', {count: 0});
+  document.getElementById('kpiOutreach').textContent = outreach.count;
+  
+  const walks = store.get('walks', []);
+  const today = new Date().toISOString().slice(0, 10);
+  let streak = 0;
+  let d = new Date();
+  const walkDates = new Set(walks.map(w => w.date.slice(0, 10)));
+  while (walkDates.has(d.toISOString().slice(0, 10))) {
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  document.getElementById('kpiStreak').textContent = streak;
+}
+
+// Init
+loadSprint();
+renderWalks();
+renderPipeline();
+renderClients();
+updateKPIs();
+</script>
+
+</body>
+</html>
