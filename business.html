@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Field & HouseCall — Business</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #1a1a1a; color: #e0e0e0; }
+    
+    .top-nav { background: #161616; padding: 10px 20px; display: flex; gap: 15px; border-bottom: 1px solid #333; }
+    .top-nav a { color: #888; text-decoration: none; padding: 8px 16px; border-radius: 6px; transition: all 0.2s; }
+    .top-nav a:hover { background: #2a2a2a; color: #4a9eff; }
+    .top-nav a.active { background: #2a2a2a; color: #4a9eff; }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    header { background: #222; padding: 15px 20px; margin-bottom: 20px; border-radius: 8px; }
+    header h1 { font-size: 24px; margin-bottom: 5px; }
+    header p { font-size: 14px; color: #888; }
+    
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .kpi-card { background: #2a2a2a; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .kpi-card label { font-size: 12px; color: #999; display: block; margin-bottom: 5px; }
+    .kpi-card .value { font-size: 28px; font-weight: 600; color: #4a9eff; display: flex; align-items: center; gap: 10px; }
+    
+    .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #2a2a2a; padding: 5px; border-radius: 8px; flex-wrap: wrap; }
+    .tabs button { background: transparent; border: none; padding: 10px 20px; color: #bbb; cursor: pointer; border-radius: 6px; font-size: 14px; transition: all 0.2s; }
+    .tabs button:hover { background: #333; }
+    .tabs button.active { background: #4a9eff; color: #fff; }
+    
+    .panel { display: none; }
+    .panel.active { display: block; }
+    
+    .card { background: #2a2a2a; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .card h2 { font-size: 18px; margin-bottom: 15px; color: #fff; }
+    
+    .btn { background: #4a9eff; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; margin: 5px 5px 5px 0; transition: background 0.2s; }
+    .btn:hover { background: #3a8eef; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-ghost { background: transparent; color: #4a9eff; border: 1px solid #4a9eff; }
+    .btn-ghost:hover { background: #333; }
+    
+    .mvp-action { background: linear-gradient(135deg, #4a9eff 0%, #6366f1 100%); padding: 30px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+    .mvp-action h2 { font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+    .mvp-action .action-text { font-size: 24px; font-weight: 600; color: #fff; margin-bottom: 20px; }
+    .mvp-action .action-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    
+    input, select, textarea { background: #333; border: 1px solid #444; color: #e0e0e0; padding: 10px; border-radius: 6px; width: 100%; margin-bottom: 10px; font-size: 14px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #4a9eff; }
+    
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+    th { color: #999; font-size: 12px; text-transform: uppercase; }
+    
+    .kanban { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .kanban-col { background: #333; padding: 15px; border-radius: 8px; min-height: 200px; }
+    .kanban-col h4 { margin-bottom: 10px; font-size: 14px; color: #bbb; }
+    .kanban-card { background: #2a2a2a; padding: 12px; border-radius: 6px; margin-bottom: 8px; cursor: move; border-left: 3px solid #4a9eff; }
+    .kanban-card p { font-size: 13px; margin: 4px 0; color: #bbb; }
+    @media (max-width: 968px) { .kanban { grid-template-columns: 1fr; } }
+    
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+    .stat { background: #333; padding: 15px; border-radius: 8px; }
+    .stat-title { font-size: 12px; color: #999; margin-bottom: 5px; }
+    .stat-value { font-size: 24px; font-weight: 600; color: #4a9eff; }
+    
+    .toggle { appearance: none; width: 40px; height: 20px; background: #555; border-radius: 20px; position: relative; cursor: pointer; transition: background 0.3s; }
+    .toggle:checked { background: #4a9eff; }
+    .toggle::before { content: ''; position: absolute; width: 16px; height: 16px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.3s; }
+    .toggle:checked::before { transform: translateX(20px); }
+    
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.open { display: flex; }
+    .modal-content { background: #2a2a2a; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+    .modal-content h3 { margin-bottom: 20px; }
+    
+    .hidden { display: none; }
+    .divider { height: 1px; background: #444; margin: 20px 0; }
+  </style>
+</head>
+<body>
+
+<div class="top-nav">
+  <a href="index.html">← Hub</a>
+  <a href="walks.html">Walks</a>
+  <a href="work.html">Work</a>
+  <a href="business.html" class="active">Business</a>
+</div>
+
+<div class="container">
+  <header>
+    <h1>Field & HouseCall</h1>
+    <p>quiet power, clear ops</p>
+  </header>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi-card">
+      <label>Active Clients</label>
+      <div class="value" id="kpiClients">0</div>
+    </div>
+    <div class="kpi-card">
+      <label>MRR (est.)</label>
+      <div class="value" id="kpiMRR">$0</div>
+    </div>
+    <div class="kpi-card">
+      <label>Outreach This Week</label>
+      <div class="value">
+        <span id="kpiOutreach">0</span>
+        <button class="btn btn-sm btn-ghost" id="addOneOutreach">+1</button>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <label>Walk Streak (days)</label>
+      <div class="value" id="kpiStreak">0</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="active" onclick="showTab('today')">Today</button>
+    <button onclick="showTab('pipeline')">Pipeline</button>
+    <button onclick="showTab('clients')">Clients</button>
+    <button onclick="showTab('ops')">Ops</button>
+  </div>
+
+  <!-- TODAY Panel -->
+  <div id="today" class="panel active">
+    <div class="mvp-action">
+      <h2>Today's MVP Focus</h2>
+      <div class="action-text" id="mvpActionText">Loading...</div>
+      <div class="action-buttons">
+        <button class="btn" onclick="completeMVPAction()">✓ Complete</button>
+        <button class="btn btn-ghost" onclick="nextMVPAction()">Skip →</button>
+        <button class="btn btn-ghost" onclick="openModal('sprintModal')">View All</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Quick Actions</h2>
+      <button class="btn" onclick="openModal('clientModal')">Add Client</button>
+      <button class="btn" onclick="window.location.href='walks.html'">Log Walk</button>
+      <button class="btn btn-ghost" onclick="exportAllData()">Export All Data</button>
+    </div>
+  </div>
+
+  <!-- PIPELINE Panel -->
+  <div id="pipeline" class="panel">
+    <div class="card">
+      <h2>Add Lead</h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 10px;">
+        <input id="leadProp" placeholder="Property address">
+        <input id="leadName" placeholder="Owner name">
+        <input id="leadEmail" placeholder="Owner email">
+        <select id="leadStage">
+          <option>Leads</option>
+          <option>Contacted</option>
+          <option>Discovery</option>
+          <option>Trial</option>
+          <option>Active</option>
+        </select>
+        <button class="btn" onclick="addLead()">Add</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pipeline</h2>
+      <div class="kanban">
+        <div class="kanban-col">
+          <h4>Leads</h4>
+          <div id="col-Leads"></div>
+        </div>
+        <div class="kanban-col">
+          <h4>Contacted</h4>
+          <div id="col-Contacted"></div>
+        </div>
+        <div class="kanban-col">
+          <h4>Discovery</h4>
+          <div id="col-Discovery"></div>
+        </div>
+        <div class="kanban-col">
+          <h4>Trial</h4>
+          <div id="col-Trial"></div>
+        </div>
+        <div class="kanban-col">
+          <h4>Active</h4>
+          <div id="col-Active"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTS Panel -->
+  <div id="clients" class="panel">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        <h2>Clients</h2>
+        <div style="display: flex; gap: 10px;">
+          <input id="clientSearch" placeholder="Search..." style="width: 200px; margin: 0;" oninput="renderClients()">
+          <button class="btn btn-sm" onclick="openModal('clientModal')">Add Client</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Address</th>
+            <th>Plan</th>
+            <th>Price</th>
+            <th>Contractor</th>
+            <th>Active</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="clientTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- OPS Panel -->
+  <div id="ops" class="panel">
+    <div class="grid-2">
+      <div class="card">
+        <h2>Contractors</h2>
+        <div style="display: flex; gap: 10px;">
+          <input id="ctrName" placeholder="Contractor name">
+          <button class="btn" onclick="addContractor()">Add</button>
+        </div>
+        <div id="ctrList" style="margin-top: 15px;"></div>
+      </div>
+
+      <div class="card">
+        <h2>Ops Estimates</h2>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">QC sample rate: <span id="qcRateVal">20</span>%</label>
+          <input id="qcRate" type="range" min="10" max="100" step="5" value="20" oninput="updateOps()" style="margin: 0;">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Avg review time (minutes)</label>
+          <select id="qcMins" onchange="updateOps()" style="margin: 0;">
+            <option>3</option><option selected>5</option><option>7</option><option>10</option>
+          </select>
+        </div>
+        <div class="divider"></div>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-title">Monthly Contractor Payout</div>
+            <div class="stat-value" id="opsPayout">$0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-title">Weekly QC Time</div>
+            <div class="stat-value" id="opsQC">0h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Client Modal -->
+<div id="clientModal" class="modal">
+  <div class="modal-content">
+    <h3>Add Client</h3>
+    <input id="cmAddress" placeholder="Property address">
+    <select id="cmPlan">
+      <option value="Weekly" selected>Weekly</option>
+      <option value="Monthly">Monthly</option>
+    </select>
+    <input id="cmPrice" type="number" placeholder="Monthly price" value="400">
+    <input id="cmContractor" placeholder="Contractor (optional)">
+    <button class="btn" onclick="saveClient()">Save</button>
+    <button class="btn btn-ghost" onclick="closeModal('clientModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Sprint Modal -->
+<div id="sprintModal" class="modal">
+  <div class="modal-content">
+    <h3>60-Day MVP Sprint</h3>
+    <p style="color: #888; font-size: 13px; margin-bottom: 15px;">Complete tasks one at a time</p>
+    <div id="sprintList"></div>
+    <button class="btn btn-ghost" onclick="resetSprint()" style="margin-top: 15px;">Reset Sprint</button>
+    <button class="btn btn-ghost" onclick="closeModal('sprintModal')">Close</button>
+  </div>
+</div>
+
+<script>
+const store = {
+  get(k, def) {
+    try { return JSON.parse(localStorage.getItem(k)) || def; } catch { return def; }
+  },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+};
+
+const defaultSprint = [
+  {text:'Launch website & ABN', done:false},
+  {text:'Call 5 cleaning companies (10–15% referral)', done:false},
+  {text:'Post in 3 property investor groups', done:false},
+  {text:'Deep research 20 properties', done:false},
+  {text:'Send 10 personalized emails', done:false},
+  {text:'Book 2–3 discovery calls', done:false},
+  {text:'Onboard 1–3 pilot clients', done:false},
+  {text:'Deliver first weekly reports', done:false}
+];
+
+function showTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'sprintModal') renderSprintModal();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// MVP Action
+function getCurrentMVPAction() {
+  const sprint = store.get('fh.sprint', defaultSprint);
+  return sprint.find(item => !item.done) || {text: 'All tasks complete! 🎉', done: true};
+}
+
+function renderMVPAction() {
+  const action = getCurrentMVPAction();
+  document.getElementById('mvpActionText').textContent = action.text;
+}
+
+function completeMVPAction() {
+  const sprint = store.get('fh.sprint', defaultSprint);
+  const currentIndex = sprint.findIndex(item => !item.done);
+  if (currentIndex >= 0) {
+    sprint[currentIndex].done = true;
+    store.set('fh.sprint', sprint);
+    renderMVPAction();
+  }
+}
+
+function nextMVPAction() {
+  completeMVPAction();
+}
+
+function renderSprintModal() {
+  const sprint = store.get('fh.sprint', defaultSprint);
+  const html = sprint.map((item, i) => `
+    <div style="background: #333; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; ${item.done ? 'opacity: 0.5;' : ''}">
+      <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleSprintItem(${i})" style="width: 18px; height: 18px;">
+      <span style="flex: 1; ${item.done ? 'text-decoration: line-through;' : ''}">${item.text}</span>
+    </div>
+  `).join('');
+  document.getElementById('sprintList').innerHTML = html;
+}
+
+function toggleSprintItem(i) {
+  const sprint = store.get('fh.sprint', defaultSprint);
+  sprint[i].done = !sprint[i].done;
+  store.set('fh.sprint', sprint);
+  renderSprintModal();
+  renderMVPAction();
+}
+
+function resetSprint() {
+  if (!confirm('Reset all sprint tasks?')) return;
+  store.set('fh.sprint', defaultSprint);
+  renderMVPAction();
+  renderSprintModal();
+}
+
+// Outreach
+document.getElementById('addOneOutreach').onclick = () => {
+  const data = store.get('fh.outreach', {count: 0, week: getWeekKey()});
+  const currentWeek = getWeekKey();
+  if (data.week !== currentWeek) {
+    data.count = 0;
+    data.week = currentWeek;
+  }
+  data.count++;
+  store.set('fh.outreach', data);
+  updateKPIs();
+};
+
+function getWeekKey() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const week = Math.ceil((d - new Date(year, 0, 1)) / (7 * 24 * 60 * 60 * 1000));
+  return `${year}-W${week}`;
+}
+
+// Pipeline
+function addLead() {
+  const leads = store.get('fh.pipeline', []);
+  leads.push({
+    id: Date.now(),
+    property: document.getElementById('leadProp').value || '—',
+    name: document.getElementById('leadName').value,
+    email: document.getElementById('leadEmail').value,
+    stage: document.getElementById('leadStage').value
+  });
+  store.set('fh.pipeline', leads);
+  document.getElementById('leadProp').value = '';
+  document.getElementById('leadName').value = '';
+  document.getElementById('leadEmail').value = '';
+  renderPipeline();
+}
+
+function renderPipeline() {
+  const leads = store.get('fh.pipeline', []);
+  ['Leads','Contacted','Discovery','Trial','Active'].forEach(stage => {
+    const filtered = leads.filter(l => l.stage === stage);
+    const html = filtered.map((l) => `
+      <div class="kanban-card">
+        <p style="font-weight:600; color:#fff; margin-bottom: 5px;">${l.property}</p>
+        <p style="font-size: 12px;">${l.name}</p>
+        <p style="font-size: 11px;">${l.email}</p>
+        <div style="margin-top: 8px; display: flex; gap: 5px;">
+          <button class="btn btn-sm" onclick="advanceLead(${l.id})" style="font-size: 11px; padding: 4px 8px;">→</button>
+          <button class="btn btn-sm btn-ghost" onclick="deleteLead(${l.id})" style="font-size: 11px; padding: 4px 8px;">×</button>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById(`col-${stage}`).innerHTML = html || '<p style="color:#666; font-size:12px;">No leads</p>';
+  });
+  updateKPIs();
+}
+
+function advanceLead(id) {
+  const leads = store.get('fh.pipeline', []);
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
+  const stages = ['Leads','Contacted','Discovery','Trial','Active'];
+  const currentIndex = stages.indexOf(lead.stage);
+  if (currentIndex < stages.length - 1) {
+    lead.stage = stages[currentIndex + 1];
+  }
+  store.set('fh.pipeline', leads);
+  renderPipeline();
+}
+
+function deleteLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  const leads = store.get('fh.pipeline', []);
+  const filtered = leads.filter(l => l.id !== id);
+  store.set('fh.pipeline', filtered);
+  renderPipeline();
+}
+
+// Clients
+function saveClient() {
+  const clients = store.get('fh.clients', []);
+  clients.push({
+    id: Date.now(),
+    addr: document.getElementById('cmAddress').value.trim(),
+    plan: document.getElementById('cmPlan').value,
+    price: +document.getElementById('cmPrice').value || 0,
+    contractor: document.getElementById('cmContractor').value.trim(),
+    active: true
+  });
+  store.set('fh.clients', clients);
+  document.getElementById('cmAddress').value = '';
+  document.getElementById('cmPrice').value = '400';
+  document.getElementById('cmContractor').value = '';
+  closeModal('clientModal');
+  renderClients();
+  updateKPIs();
+}
+
+function renderClients() {
+  const clients = store.get('fh.clients', []);
+  const search = (document.getElementById('clientSearch').value || '').toLowerCase();
+  const filtered = clients.filter(c => 
+    (c.addr + c.plan + (c.contractor||'')).toLowerCase().includes(search)
+  );
+  
+  const html = filtered.map((c) => `
+    <tr>
+      <td>${c.addr}</td>
+      <td>${c.plan}</td>
+      <td>$${c.price}</td>
+      <td><input value="${c.contractor||''}" onchange="updateClientContractor(${c.id}, this.value)" style="background: #222; padding: 6px; font-size: 12px; width: 150px;"></td>
+      <td>
+        <input type="checkbox" class="toggle" ${c.active ? 'checked' : ''} onchange="toggleClientActive(${c.id})">
+      </td>
+      <td><button class="btn btn-sm btn-ghost" onclick="deleteClient(${c.id})">×</button></td>
+    </tr>
+  `).join('');
+  
+  document.getElementById('clientTable').innerHTML = html || '<tr><td colspan="6" style="text-align:center; color:#666;">No clients</td></tr>';
+}
+
+function updateClientContractor(id, contractor) {
+  const clients = store.get('fh.clients', []);
+  const client = clients.find(c => c.id === id);
+  if (client) {
+    client.contractor = contractor;
+    store.set('fh.clients', clients);
+    renderContractors();
+  }
+}
+
+function toggleClientActive(id) {
+  const clients = store.get('fh.clients', []);
+  const client = clients.find(c => c.id === id);
+  if (client) {
+    client.active = !client.active;
+    store.set('fh.clients', clients);
+    updateKPIs();
+    updateOps();
+  }
+}
+
+function deleteClient(id) {
+  if (!confirm('Delete this client?')) return;
+  const clients = store.get('fh.clients', []);
+  const filtered = clients.filter(c => c.id !== id);
+  store.set('fh.clients', filtered);
+  renderClients();
+  updateKPIs();
+}
+
+// Contractors
+function addContractor() {
+  const name = document.getElementById('ctrName').value.trim();
+  if (!name) return;
+  const ctrs = store.get('fh.contractors', []);
+  ctrs.push({id: Date.now(), name});
+  store.set('fh.contractors', ctrs);
+  document.getElementById('ctrName').value = '';
+  renderContractors();
+}
+
+function renderContractors() {
+  const ctrs = store.get('fh.contractors', []);
+  const clients = store.get('fh.clients', []).filter(c => c.active);
+  
+  const html = ctrs.map((c) => {
+    const assigned = clients.filter(cl => (cl.contractor||'').toLowerCase() === c.name.toLowerCase());
+    return `
+      <div style="background: #333; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-weight: 600;">${c.name}</div>
+          <div style="font-size: 12px; color: #888;">${assigned.length} properties</div>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="deleteContractor(${c.id})">×</button>
+      </div>
+    `;
+  }).join('');
+  
+  document.getElementById('ctrList').innerHTML = html || '<p style="color:#888; font-size: 13px;">No contractors yet</p>';
+}
+
+function deleteContractor(id) {
+  if (!confirm('Delete this contractor?')) return;
+  const ctrs = store.get('fh.contractors', []);
+  const filtered = ctrs.filter(c => c.id !== id);
+  store.set('fh.contractors', filtered);
+  renderContractors();
+}
+
+// Ops
+function updateOps() {
+  const clients = store.get('fh.clients', []).filter(c => c.active);
+  let payout = 0;
+  clients.forEach(c => {
+    payout += c.plan === 'Weekly' ? 120 : 30;
+  });
+  document.getElementById('opsPayout').textContent = '$' + payout.toLocaleString();
+  
+  const qcRate = +document.getElementById('qcRate').value || 20;
+  const qcMins = +document.getElementById('qcMins').value || 5;
+  document.getElementById('qcRateVal').textContent = qcRate;
+  
+  const weeklyReports = clients.length;
+  const qcPerWeek = Math.ceil(weeklyReports * (qcRate / 100)) * qcMins;
+  const hours = (qcPerWeek / 60).toFixed(1) + 'h';
+  document.getElementById('opsQC').textContent = hours;
+}
+
+// KPIs
+function updateKPIs() {
+  const clients = store.get('fh.clients', []).filter(c => c.active);
+  document.getElementById('kpiClients').textContent = clients.length;
+  
+  const mrr = clients.reduce((sum, c) => sum + c.price, 0);
+  document.getElementById('kpiMRR').textContent = '$' + mrr.toLocaleString();
+  
+  const outreach = store.get('fh.outreach', {count: 0, week: getWeekKey()});
+  const currentWeek = getWeekKey();
+  document.getElementById('kpiOutreach').textContent = outreach.week === currentWeek ? outreach.count : 0;
+  
+  const walks = store.get('fh.walks', []);
+  const days = new Set(walks.map(w => w.date.slice(0, 10)));
+  let streak = 0;
+  let d = new Date();
+  while (days.has(d.toISOString().slice(0, 10))) {
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  document.getElementById('kpi
