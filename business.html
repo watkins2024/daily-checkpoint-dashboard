@@ -76,6 +76,10 @@
     .modal-content { background: #2a2a2a; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
     .modal-content h3 { margin-bottom: 20px; }
     
+    .progress-entry { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
+    .progress-date { font-weight: 600; color: #4a9eff; margin-bottom: 5px; }
+    .progress-text { line-height: 1.6; font-size: 14px; }
+    
     .hidden { display: none; }
     .divider { height: 1px; background: #444; margin: 20px 0; }
   </style>
@@ -113,8 +117,8 @@
       </div>
     </div>
     <div class="kpi-card">
-      <label>Walk Streak (days)</label>
-      <div class="value" id="kpiStreak">0</div>
+      <label>Pipeline Leads</label>
+      <div class="value" id="kpiLeads">0</div>
     </div>
   </div>
 
@@ -124,6 +128,7 @@
     <button onclick="showTab('pipeline')">Pipeline</button>
     <button onclick="showTab('clients')">Clients</button>
     <button onclick="showTab('ops')">Ops</button>
+    <button onclick="showTab('progress')">Progress Log</button>
   </div>
 
   <!-- TODAY Panel -->
@@ -133,15 +138,15 @@
       <div class="action-text" id="mvpActionText">Loading...</div>
       <div class="action-buttons">
         <button class="btn" onclick="completeMVPAction()">✓ Complete</button>
-        <button class="btn btn-ghost" onclick="nextMVPAction()">Skip →</button>
-        <button class="btn btn-ghost" onclick="openModal('sprintModal')">View All</button>
+        <button class="btn btn-ghost" style="background: rgba(255,255,255,0.2); border: none;" onclick="nextMVPAction()">Skip →</button>
+        <button class="btn btn-ghost" style="background: rgba(255,255,255,0.2); border: none;" onclick="openModal('sprintModal')">View All</button>
       </div>
     </div>
 
     <div class="card">
       <h2>Quick Actions</h2>
       <button class="btn" onclick="openModal('clientModal')">Add Client</button>
-      <button class="btn" onclick="window.location.href='walks.html'">Log Walk</button>
+      <button class="btn" onclick="openModal('progressModal')">Log Progress</button>
       <button class="btn btn-ghost" onclick="exportAllData()">Export All Data</button>
     </div>
   </div>
@@ -256,10 +261,21 @@
       </div>
     </div>
   </div>
+
+  <!-- PROGRESS LOG Panel -->
+  <div id="progress" class="panel">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>Progress & Action Log</h2>
+        <button class="btn btn-sm" onclick="openModal('progressModal')">Add Entry</button>
+      </div>
+      <div id="progressList"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Client Modal -->
-<div id="clientModal" class="modal">
+<div id="clientModal" class="modal" onclick="if(event.target===this) closeModal('clientModal')">
   <div class="modal-content">
     <h3>Add Client</h3>
     <input id="cmAddress" placeholder="Property address">
@@ -275,13 +291,23 @@
 </div>
 
 <!-- Sprint Modal -->
-<div id="sprintModal" class="modal">
+<div id="sprintModal" class="modal" onclick="if(event.target===this) closeModal('sprintModal')">
   <div class="modal-content">
     <h3>60-Day MVP Sprint</h3>
     <p style="color: #888; font-size: 13px; margin-bottom: 15px;">Complete tasks one at a time</p>
     <div id="sprintList"></div>
     <button class="btn btn-ghost" onclick="resetSprint()" style="margin-top: 15px;">Reset Sprint</button>
     <button class="btn btn-ghost" onclick="closeModal('sprintModal')">Close</button>
+  </div>
+</div>
+
+<!-- Progress Modal -->
+<div id="progressModal" class="modal" onclick="if(event.target===this) closeModal('progressModal')">
+  <div class="modal-content">
+    <h3>Log Progress / Action Item</h3>
+    <textarea id="progressText" rows="6" placeholder="What did you accomplish? What's next? Any blockers?"></textarea>
+    <button class="btn" onclick="saveProgress()">Save</button>
+    <button class="btn btn-ghost" onclick="closeModal('progressModal')">Cancel</button>
   </div>
 </div>
 
@@ -309,6 +335,8 @@ function showTab(tab) {
   document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
   document.getElementById(tab).classList.add('active');
   event.target.classList.add('active');
+  
+  if (tab === 'progress') renderProgressLog();
 }
 
 function openModal(id) {
@@ -323,7 +351,7 @@ function closeModal(id) {
 // MVP Action
 function getCurrentMVPAction() {
   const sprint = store.get('fh.sprint', defaultSprint);
-  return sprint.find(item => !item.done) || {text: 'All tasks complete! 🎉', done: true};
+  return sprint.find(item => !item.done) || {text: 'All tasks complete!', done: true};
 }
 
 function renderMVPAction() {
@@ -338,6 +366,14 @@ function completeMVPAction() {
     sprint[currentIndex].done = true;
     store.set('fh.sprint', sprint);
     renderMVPAction();
+    
+    // Log to progress
+    const progress = store.get('fh.progress', []);
+    progress.unshift({
+      date: new Date().toISOString(),
+      text: `Completed: ${sprint[currentIndex].text}`
+    });
+    store.set('fh.progress', progress);
   }
 }
 
@@ -371,6 +407,48 @@ function resetSprint() {
   renderSprintModal();
 }
 
+// Progress Log
+function saveProgress() {
+  const text = document.getElementById('progressText').value.trim();
+  if (!text) return;
+  
+  const progress = store.get('fh.progress', []);
+  progress.unshift({
+    date: new Date().toISOString(),
+    text
+  });
+  store.set('fh.progress', progress);
+  document.getElementById('progressText').value = '';
+  closeModal('progressModal');
+  renderProgressLog();
+}
+
+function renderProgressLog() {
+  const progress = store.get('fh.progress', []);
+  if (progress.length === 0) {
+    document.getElementById('progressList').innerHTML = '<p style="color:#888">No progress entries yet. Click "Add Entry" to log your progress.</p>';
+    return;
+  }
+  
+  const html = progress.map((entry, i) => `
+    <div class="progress-entry">
+      <div class="progress-date">${new Date(entry.date).toLocaleString()}</div>
+      <div class="progress-text">${entry.text}</div>
+      <button class="btn btn-sm btn-ghost" onclick="deleteProgress(${i})" style="margin-top: 8px;">Delete</button>
+    </div>
+  `).join('');
+  
+  document.getElementById('progressList').innerHTML = html;
+}
+
+function deleteProgress(i) {
+  if (!confirm('Delete this entry?')) return;
+  const progress = store.get('fh.progress', []);
+  progress.splice(i, 1);
+  store.set('fh.progress', progress);
+  renderProgressLog();
+}
+
 // Outreach
 document.getElementById('addOneOutreach').onclick = () => {
   const data = store.get('fh.outreach', {count: 0, week: getWeekKey()});
@@ -393,12 +471,18 @@ function getWeekKey() {
 
 // Pipeline
 function addLead() {
+  const prop = document.getElementById('leadProp').value.trim();
+  if (!prop) {
+    alert('Please enter a property address');
+    return;
+  }
+  
   const leads = store.get('fh.pipeline', []);
   leads.push({
     id: Date.now(),
-    property: document.getElementById('leadProp').value || '—',
-    name: document.getElementById('leadName').value,
-    email: document.getElementById('leadEmail').value,
+    property: prop,
+    name: document.getElementById('leadName').value.trim(),
+    email: document.getElementById('leadEmail').value.trim(),
     stage: document.getElementById('leadStage').value
   });
   store.set('fh.pipeline', leads);
@@ -406,6 +490,7 @@ function addLead() {
   document.getElementById('leadName').value = '';
   document.getElementById('leadEmail').value = '';
   renderPipeline();
+  updateKPIs();
 }
 
 function renderPipeline() {
@@ -425,7 +510,6 @@ function renderPipeline() {
     `).join('');
     document.getElementById(`col-${stage}`).innerHTML = html || '<p style="color:#666; font-size:12px;">No leads</p>';
   });
-  updateKPIs();
 }
 
 function advanceLead(id) {
@@ -439,6 +523,7 @@ function advanceLead(id) {
   }
   store.set('fh.pipeline', leads);
   renderPipeline();
+  updateKPIs();
 }
 
 function deleteLead(id) {
@@ -447,16 +532,29 @@ function deleteLead(id) {
   const filtered = leads.filter(l => l.id !== id);
   store.set('fh.pipeline', filtered);
   renderPipeline();
+  updateKPIs();
 }
 
 // Clients
 function saveClient() {
+  const addr = document.getElementById('cmAddress').value.trim();
+  const price = +document.getElementById('cmPrice').value;
+  
+  if (!addr) {
+    alert('Please enter an address');
+    return;
+  }
+  if (!price || price <= 0) {
+    alert('Please enter a valid price');
+    return;
+  }
+  
   const clients = store.get('fh.clients', []);
   clients.push({
     id: Date.now(),
-    addr: document.getElementById('cmAddress').value.trim(),
+    addr,
     plan: document.getElementById('cmPlan').value,
-    price: +document.getElementById('cmPrice').value || 0,
+    price,
     contractor: document.getElementById('cmContractor').value.trim(),
     active: true
   });
@@ -467,6 +565,7 @@ function saveClient() {
   closeModal('clientModal');
   renderClients();
   updateKPIs();
+  updateOps();
 }
 
 function renderClients() {
@@ -498,7 +597,7 @@ function updateClientContractor(id, contractor) {
   if (client) {
     client.contractor = contractor;
     store.set('fh.clients', clients);
-    renderContractors();
+    renderrenderContractors();
   }
 }
 
@@ -520,6 +619,8 @@ function deleteClient(id) {
   store.set('fh.clients', filtered);
   renderClients();
   updateKPIs();
+  updateOps();
+  renderContractors();
 }
 
 // Contractors
@@ -592,12 +693,38 @@ function updateKPIs() {
   const currentWeek = getWeekKey();
   document.getElementById('kpiOutreach').textContent = outreach.week === currentWeek ? outreach.count : 0;
   
-  const walks = store.get('fh.walks', []);
-  const days = new Set(walks.map(w => w.date.slice(0, 10)));
-  let streak = 0;
-  let d = new Date();
-  while (days.has(d.toISOString().slice(0, 10))) {
-    streak++;
-    d.setDate(d.getDate() - 1);
-  }
-  document.getElementById('kpi
+  const leads = store.get('fh.pipeline', []);
+  document.getElementById('kpiLeads').textContent = leads.length;
+}
+
+function exportAllData() {
+  const data = {
+    clients: store.get('fh.clients', []),
+    pipeline: store.get('fh.pipeline', []),
+    contractors: store.get('fh.contractors', []),
+    sprint: store.get('fh.sprint', defaultSprint),
+    outreach: store.get('fh.outreach', {}),
+    progress: store.get('fh.progress', []),
+    exportDate: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `business-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('Data exported! You can import this JSON into Excel or Google Sheets.');
+}
+
+// Initialize
+renderMVPAction();
+renderPipeline();
+renderClients();
+renderContractors();
+updateOps();
+updateKPIs();
+</script>
+
+</body>
+</html>
