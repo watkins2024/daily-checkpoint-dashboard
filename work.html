@@ -13,7 +13,7 @@
     .top-nav a:hover { background: #2a2a2a; color: #4a9eff; }
     .top-nav a.active { background: #2a2a2a; color: #4a9eff; }
     
-    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
     header { background: #222; padding: 15px 20px; margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     header h1 { font-size: 24px; }
     
@@ -31,7 +31,8 @@
     .panel.active { display: block; }
     
     .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-    @media (max-width: 968px) { .grid { grid-template-columns: 1fr; } }
+    .grid-tasks { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    @media (max-width: 968px) { .grid, .grid-tasks { grid-template-columns: 1fr; } }
     
     .card { background: #2a2a2a; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); margin-bottom: 20px; }
     .card h2 { font-size: 18px; margin-bottom: 15px; color: #fff; border-bottom: 2px solid #444; padding-bottom: 10px; }
@@ -70,6 +71,9 @@
     .work-log-class { color: #4a9eff; font-size: 14px; }
     .work-log-notes { line-height: 1.6; font-size: 14px; }
     
+    .daily-note-section { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
+    .daily-note-date { font-weight: 600; color: #4a9eff; margin-bottom: 10px; }
+    
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
     .modal.open { display: flex; }
     .modal-content { background: #2a2a2a; padding: 30px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
@@ -99,36 +103,57 @@
 <div class="container">
   <div class="tabs">
     <button class="active" onclick="showTab('today')">Today</button>
+    <button onclick="showTab('tasks')">Tasks & Timer</button>
     <button onclick="showTab('log')">Work Log</button>
-    <button onclick="showTab('tasks')">Tasks</button>
   </div>
 
   <!-- TODAY Panel -->
   <div id="today" class="panel active">
-    <div class="grid">
-      <div>
-        <div class="card">
-          <h2>Today's Classes - <span id="todayDate"></span></h2>
-          <div id="todayClasses"></div>
+    <div class="card">
+      <h2>Today's Classes - <span id="todayDate"></span></h2>
+      <div id="todayClasses"></div>
+    </div>
+    
+    <div class="card">
+      <h2>Daily Summary Notes</h2>
+      <p style="color: #888; font-size: 13px; margin-bottom: 10px;">Reflect on your day as a whole</p>
+      <textarea id="dailySummary" rows="6" placeholder="How was today? Key insights, challenges, wins..." style="margin: 0;"></textarea>
+      <button class="btn btn-sm" onclick="saveDailySummary()" style="margin-top: 10px;">Save Summary</button>
+    </div>
+  </div>
+
+  <!-- TASKS & TIMER Panel -->
+  <div id="tasks" class="panel">
+    <div class="grid-tasks">
+      <div class="card">
+        <h2>Priority Tasks</h2>
+        <p style="color: #888; font-size: 13px; margin-bottom: 15px;">Drag to reorder by priority</p>
+        <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 10px; margin-bottom: 15px;">
+          <input id="newTask" placeholder="New task..." style="margin: 0;">
+          <select id="newTaskPriority" style="width: 120px; margin: 0;">
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <button class="btn" style="margin: 0;" onclick="addTask()">Add</button>
         </div>
+        <div id="taskList"></div>
       </div>
       
-      <div>
-        <div class="card">
-          <h2>Pomodoro Timer</h2>
-          <div class="timer-display">
-            <div class="timer-number" id="timerDisplay">25:00</div>
-            <div class="timer-controls">
-              <button class="btn" id="timerStart" onclick="startTimer()">Start</button>
-              <button class="btn btn-ghost" id="timerPause" onclick="pauseTimer()" style="display:none;">Pause</button>
-              <button class="btn btn-ghost" onclick="resetTimer()">Reset</button>
-            </div>
-            <div class="timer-presets">
-              <button class="btn btn-sm btn-ghost" onclick="setTimer(25)">25m</button>
-              <button class="btn btn-sm btn-ghost" onclick="setTimer(15)">15m</button>
-              <button class="btn btn-sm btn-ghost" onclick="setTimer(5)">5m</button>
-              <button class="btn btn-sm btn-ghost" onclick="setTimer(1)">1m</button>
-            </div>
+      <div class="card">
+        <h2>Pomodoro Timer</h2>
+        <div class="timer-display">
+          <div class="timer-number" id="timerDisplay">25:00</div>
+          <div class="timer-controls">
+            <button class="btn" id="timerStart" onclick="startTimer()">Start</button>
+            <button class="btn btn-ghost" id="timerPause" onclick="pauseTimer()" style="display:none;">Pause</button>
+            <button class="btn btn-ghost" onclick="resetTimer()">Reset</button>
+          </div>
+          <div class="timer-presets">
+            <button class="btn btn-sm btn-ghost" onclick="setTimer(25)">25m</button>
+            <button class="btn btn-sm btn-ghost" onclick="setTimer(15)">15m</button>
+            <button class="btn btn-sm btn-ghost" onclick="setTimer(5)">5m</button>
+            <button class="btn btn-sm btn-ghost" onclick="setTimer(1)">1m</button>
           </div>
         </div>
       </div>
@@ -138,26 +163,13 @@
   <!-- WORK LOG Panel -->
   <div id="log" class="panel">
     <div class="card">
-      <h2>Work Log</h2>
-      <div id="workLogList"></div>
+      <h2>Daily Summaries</h2>
+      <div id="dailySummaryList"></div>
     </div>
-  </div>
-
-  <!-- TASKS Panel -->
-  <div id="tasks" class="panel">
+    
     <div class="card">
-      <h2>Priority Tasks</h2>
-      <p style="color: #888; font-size: 13px; margin-bottom: 15px;">Drag to reorder by priority</p>
-      <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 10px; margin-bottom: 15px;">
-        <input id="newTask" placeholder="New task..." style="margin: 0;">
-        <select id="newTaskPriority" style="width: 120px; margin: 0;">
-          <option value="high">High</option>
-          <option value="medium" selected>Medium</option>
-          <option value="low">Low</option>
-        </select>
-        <button class="btn" style="margin: 0;" onclick="addTask()">Add</button>
-      </div>
-      <div id="taskList"></div>
+      <h2>Class Notes Log</h2>
+      <div id="workLogList"></div>
     </div>
   </div>
 </div>
@@ -171,23 +183,23 @@
     <div id="scheduleEditor">
       <div class="schedule-day">
         <h4>Monday</h4>
-        <textarea id="schedule-Monday" rows="3" placeholder="9:00 - Introduction to Philosophy - Room 301&#10;14:00 - Mathematics - Building A"></textarea>
+        <textarea id="schedule-Monday" rows="3" placeholder="9:05 - English Yr10 - SENGP3 WATR&#10;9:55 - English Yr10 - SENGP3 WATR"></textarea>
       </div>
       <div class="schedule-day">
         <h4>Tuesday</h4>
-        <textarea id="schedule-Tuesday" rows="3" placeholder="9:00 - Introduction to Philosophy - Room 301"></textarea>
+        <textarea id="schedule-Tuesday" rows="3" placeholder="9:00 - Class Name - Location"></textarea>
       </div>
       <div class="schedule-day">
         <h4>Wednesday</h4>
-        <textarea id="schedule-Wednesday" rows="3" placeholder="9:00 - Introduction to Philosophy - Room 301"></textarea>
+        <textarea id="schedule-Wednesday" rows="3" placeholder="9:00 - Class Name - Location"></textarea>
       </div>
       <div class="schedule-day">
         <h4>Thursday</h4>
-        <textarea id="schedule-Thursday" rows="3" placeholder="9:00 - Introduction to Philosophy - Room 301"></textarea>
+        <textarea id="schedule-Thursday" rows="3" placeholder="9:00 - Class Name - Location"></textarea>
       </div>
       <div class="schedule-day">
         <h4>Friday</h4>
-        <textarea id="schedule-Friday" rows="3" placeholder="9:00 - Introduction to Philosophy - Room 301"></textarea>
+        <textarea id="schedule-Friday" rows="3" placeholder="9:00 - Class Name - Location"></textarea>
       </div>
     </div>
     
@@ -272,13 +284,14 @@ function renderTodayClasses() {
         <div class="class-name">${name}</div>
         ${location ? `<div class="class-location">${location}</div>` : ''}
         <div class="class-notes">
-          <textarea placeholder="Take notes..." onchange="saveClassNotes(${i}, this.value, '${name}')">${notes}</textarea>
+          <textarea placeholder="Take notes..." onchange="saveClassNotes(${i}, this.value, '${name.replace(/'/g, "\\'")}')">${notes}</textarea>
         </div>
       </div>
     `;
   }).join('');
   
   document.getElementById('todayClasses').innerHTML = html;
+  loadDailySummary();
 }
 
 function saveClassNotes(classIndex, notes, className) {
@@ -287,7 +300,6 @@ function saveClassNotes(classIndex, notes, className) {
   savedNotes[noteKey] = notes;
   store.set('work.classNotes', savedNotes);
   
-  // Add to work log
   const workLog = store.get('work.log', []);
   const existingIndex = workLog.findIndex(entry => entry.noteKey === noteKey);
   
@@ -307,6 +319,55 @@ function saveClassNotes(classIndex, notes, className) {
   store.set('work.log', workLog);
 }
 
+// Daily Summary
+function loadDailySummary() {
+  const summaries = store.get('work.dailySummaries', {});
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('dailySummary').value = summaries[today] || '';
+}
+
+function saveDailySummary() {
+  const summaries = store.get('work.dailySummaries', {});
+  const today = new Date().toISOString().slice(0,10);
+  const text = document.getElementById('dailySummary').value.trim();
+  
+  if (text) {
+    summaries[today] = text;
+    store.set('work.dailySummaries', summaries);
+    alert('Daily summary saved');
+    renderDailySummaries();
+  }
+}
+
+function renderDailySummaries() {
+  const summaries = store.get('work.dailySummaries', {});
+  const entries = Object.entries(summaries).sort((a, b) => b[0].localeCompare(a[0]));
+  
+  if (entries.length === 0) {
+    document.getElementById('dailySummaryList').innerHTML = '<p style="color:#888">No daily summaries yet</p>';
+    return;
+  }
+  
+  const html = entries.map(([date, text]) => `
+    <div class="daily-note-section">
+      <div class="daily-note-date">${new Date(date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+      <div class="work-log-notes">${text}</div>
+      <button class="btn btn-sm btn-ghost" onclick="deleteDailySummary('${date}')" style="margin-top: 10px;">Delete</button>
+    </div>
+  `).join('');
+  
+  document.getElementById('dailySummaryList').innerHTML = html;
+}
+
+function deleteDailySummary(date) {
+  if (!confirm('Delete this summary?')) return;
+  const summaries = store.get('work.dailySummaries', {});
+  delete summaries[date];
+  store.set('work.dailySummaries', summaries);
+  renderDailySummaries();
+  loadDailySummary();
+}
+
 function renderWorkLog() {
   const workLog = store.get('work.log', []).filter(entry => entry.notes && entry.notes.trim());
   if (workLog.length === 0) {
@@ -314,7 +375,7 @@ function renderWorkLog() {
     return;
   }
   
-  const html = workLog.map((entry, i) => `
+  const html = workLog.map((entry) => `
     <div class="work-log-entry">
       <div class="work-log-header">
         <div>
@@ -492,6 +553,7 @@ function exportData() {
     workLog: store.get('work.log', []),
     tasks: store.get('work.tasks', []),
     classNotes: store.get('work.classNotes', {}),
+    dailySummaries: store.get('work.dailySummaries', {}),
     exportDate: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
@@ -512,6 +574,7 @@ if (Notification.permission === 'default') {
 renderTodayClasses();
 renderWorkLog();
 renderTasks();
+renderDailySummaries();
 updateTimerDisplay();
 </script>
 
