@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leverage Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #1a1a1a; color: #e0e0e0; }
+    
+    .top-nav { background: #161616; padding: 10px 20px; display: flex; gap: 15px; border-bottom: 1px solid #333; }
+    .top-nav a { color: #888; text-decoration: none; padding: 8px 16px; border-radius: 6px; transition: all 0.2s; }
+    .top-nav a:hover { background: #2a2a2a; color: #4a9eff; }
+    .top-nav a.active { background: #2a2a2a; color: #4a9eff; }
+    
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    header { background: #222; padding: 15px 20px; margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 24px; }
+    
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .metric-card { background: #2a2a2a; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .metric-label { font-size: 12px; color: #999; margin-bottom: 5px; }
+    .metric-value { font-size: 28px; font-weight: 600; color: #4a9eff; }
+    .metric-sub { font-size: 12px; color: #888; margin-top: 5px; }
+    
+    .tabs { display: flex; gap: 5px; margin-bottom: 20px; background: #2a2a2a; padding: 5px; border-radius: 8px; flex-wrap: wrap; }
+    .tabs button { background: transparent; border: none; padding: 10px 20px; color: #bbb; cursor: pointer; border-radius: 6px; font-size: 14px; transition: all 0.2s; }
+    .tabs button:hover { background: #333; }
+    .tabs button.active { background: #4a9eff; color: #fff; }
+    
+    .panel { display: none; }
+    .panel.active { display: block; }
+    
+    .card { background: #2a2a2a; padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .card h2 { font-size: 18px; margin-bottom: 15px; color: #fff; border-bottom: 2px solid #444; padding-bottom: 10px; }
+    
+    .btn { background: #4a9eff; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; margin: 5px 5px 5px 0; transition: background 0.2s; }
+    .btn:hover { background: #3a8eef; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-ghost { background: transparent; border: 1px solid #4a9eff; }
+    
+    .accelerator { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 12px; }
+    .accelerator-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .accelerator-name { font-weight: 600; font-size: 15px; }
+    .accelerator-progress { font-size: 18px; color: #4a9eff; font-weight: 600; }
+    .progress-bar { background: #222; height: 8px; border-radius: 4px; overflow: hidden; }
+    .progress-fill { background: linear-gradient(90deg, #4a9eff, #6366f1); height: 100%; transition: width 0.3s; }
+    
+    .action-entry { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
+    .action-header { display: flex; justify-content: between; align-items: start; margin-bottom: 8px; }
+    .action-date { font-weight: 600; color: #4a9eff; }
+    .action-category { display: inline-block; background: #444; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin-left: 10px; }
+    .action-desc { margin: 8px 0; line-height: 1.5; }
+    .action-meta { display: flex; gap: 15px; font-size: 12px; color: #888; }
+    
+    input, select, textarea { background: #333; border: 1px solid #444; color: #e0e0e0; padding: 10px; border-radius: 6px; width: 100%; margin-bottom: 10px; font-size: 14px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #4a9eff; }
+    
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.open { display: flex; }
+    .modal-content { background: #2a2a2a; padding: 30px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
+    .modal-content h3 { margin-bottom: 20px; }
+    
+    .impact-stars { display: flex; gap: 5px; margin-bottom: 10px; }
+    .impact-star { font-size: 24px; cursor: pointer; opacity: 0.3; transition: opacity 0.2s; }
+    .impact-star.active { opacity: 1; color: #f59e0b; }
+  </style>
+</head>
+<body>
+
+<div class="top-nav">
+  <a href="index.html">← Hub</a>
+  <a href="walks.html">Walks</a>
+  <a href="work.html">Work</a>
+  <a href="business.html">Business</a>
+  <a href="leverage.html" class="active">Leverage</a>
+</div>
+
+<header>
+  <h1>Leverage Dashboard</h1>
+  <button class="btn btn-ghost" onclick="exportData()">Export Data</button>
+</header>
+
+<div class="container">
+  <!-- Key Metrics -->
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="metric-label">Autonomy Score</div>
+      <div class="metric-value" id="autonomyScore">0%</div>
+      <div class="metric-sub">Weekly completion rate</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Actions This Week</div>
+      <div class="metric-value" id="weekActions">0</div>
+      <div class="metric-sub" id="weekHours">0h invested</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Cash Buffer</div>
+      <div class="metric-value" id="bufferWeeks">0</div>
+      <div class="metric-sub">weeks runway</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Income Sources</div>
+      <div class="metric-value" id="incomeStreams">1</div>
+      <div class="metric-sub">active streams</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="active" onclick="showTab('accelerators')">Accelerators</button>
+    <button onclick="showTab('actions')">Actions Log</button>
+    <button onclick="showTab('financial')">Financial</button>
+    <button onclick="showTab('reflection')">Weekly Reflection</button>
+  </div>
+
+  <!-- ACCELERATORS Panel -->
+  <div id="accelerators" class="panel active">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>12 Accelerators</h2>
+        <button class="btn btn-sm" onclick="openModal('acceleratorModal')">Update Progress</button>
+      </div>
+      <div id="acceleratorList"></div>
+    </div>
+
+    <div class="card">
+      <h2>Quick Actions</h2>
+      <button class="btn" onclick="openModal('actionModal')">Log Sovereignty Action</button>
+      <button class="btn" onclick="openModal('incomeModal')">Add Income Event</button>
+      <button class="btn" onclick="openModal('reflectionModal')">Weekly Reflection</button>
+    </div>
+  </div>
+
+  <!-- ACTIONS LOG Panel -->
+  <div id="actions" class="panel">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>Action Log</h2>
+        <button class="btn btn-sm" onclick="openModal('actionModal')">Add Action</button>
+      </div>
+      <div id="actionList"></div>
+    </div>
+  </div>
+
+  <!-- FINANCIAL Panel -->
+  <div id="financial" class="panel">
+    <div class="grid-2">
+      <div class="card">
+        <h2>Income Streams</h2>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Source</label>
+          <input id="incomeSource" placeholder="e.g., Salary, Tutoring, Digital Product">
+          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Monthly Amount</label>
+          <input id="incomeAmount" type="number" placeholder="Amount">
+          <button class="btn" onclick="addIncomeStream()">Add Stream</button>
+        </div>
+        <div id="incomeStreamList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Financial Buffer</h2>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Total Savings</label>
+          <input id="totalSavings" type="number" placeholder="Total savings" onchange="updateFinancials()">
+          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Weekly Expenses</label>
+          <input id="weeklyExpenses" type="number" placeholder="Average weekly spend" onchange="updateFinancials()">
+        </div>
+        <div style="background: #333; padding: 15px; border-radius: 6px;">
+          <div style="font-size: 14px; color: #999; margin-bottom: 5px;">Dependence Ratio</div>
+          <div style="font-size: 32px; font-weight: 600; color: #4a9eff;" id="dependenceRatio">0%</div>
+          <div style="font-size: 12px; color: #888; margin-top: 5px;">Institutional income / Total income</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFLECTION Panel -->
+  <div id="reflection" class="panel">
+    <div class="card">
+      <h2>Weekly Reflections</h2>
+      <div id="reflectionList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Modal -->
+<div id="actionModal" class="modal" onclick="if(event.target===this) closeModal('actionModal')">
+  <div class="modal-content">
+    <h3>Log Sovereignty Action</h3>
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Category</label>
+    <select id="actionCategory">
+      <option>Separate Systems</option>
+      <option>Buffer</option>
+      <option>Cost Audit</option>
+      <option>Productise Skill</option>
+      <option>Repair Skill</option>
+      <option>Exchange Network</option>
+      <option>Document Duplication</option>
+      <option>Business Manual</option>
+      <option>Income Sources</option>
+      <option>Relocation Axis</option>
+      <option>Compliance Simplicity</option>
+      <option>Independence Metric</option>
+    </select>
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Description</label>
+    <textarea id="actionDesc" rows="3" placeholder="What did you do?"></textarea>
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Time Spent (hours)</label>
+    <input id="actionTime" type="number" step="0.5" placeholder="e.g., 2.5">
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Impact (1-5 stars)</label>
+    <div class="impact-stars" id="impactStars">
+      <span class="impact-star" onclick="setImpact(1)">★</span>
+      <span class="impact-star" onclick="setImpact(2)">★</span>
+      <span class="impact-star" onclick="setImpact(3)">★</span>
+      <span class="impact-star" onclick="setImpact(4)">★</span>
+      <span class="impact-star" onclick="setImpact(5)">★</span>
+    </div>
+    <textarea id="actionNotes" rows="2" placeholder="Additional notes (optional)"></textarea>
+    <button class="btn" onclick="saveAction()">Save Action</button>
+    <button class="btn btn-ghost" onclick="closeModal('actionModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Accelerator Modal -->
+<div id="acceleratorModal" class="modal" onclick="if(event.target===this) closeModal('acceleratorModal')">
+  <div class="modal-content">
+    <h3>Update Accelerator Progress</h3>
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Select Accelerator</label>
+    <select id="acceleratorSelect"></select>
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Progress %</label>
+    <input id="acceleratorProgress" type="range" min="0" max="100" step="5" value="0" style="margin: 0;">
+    <div style="text-align: center; font-size: 24px; font-weight: 600; color: #4a9eff; margin: 10px 0;" id="progressDisplay">0%</div>
+    <button class="btn" onclick="updateAccelerator()">Update</button>
+    <button class="btn btn-ghost" onclick="closeModal('acceleratorModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Income Modal -->
+<div id="incomeModal" class="modal" onclick="if(event.target===this) closeModal('incomeModal')">
+  <div class="modal-content">
+    <h3>Add Income Event</h3>
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Source</label>
+    <input id="incomeEventSource" placeholder="e.g., Tutoring session, Product sale">
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Amount</label>
+    <input id="incomeEventAmount" type="number" placeholder="Amount earned">
+    <textarea id="incomeEventNotes" rows="2" placeholder="Notes (optional)"></textarea>
+    <button class="btn" onclick="saveIncomeEvent()">Save</button>
+    <button class="btn btn-ghost" onclick="closeModal('incomeModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Reflection Modal -->
+<div id="reflectionModal" class="modal" onclick="if(event.target===this) closeModal('reflectionModal')">
+  <div class="modal-content">
+    <h3>Weekly Reflection</h3>
+    <p style="color: #888; font-size: 13px; margin-bottom: 15px;">What worked? What didn't? What's next?</p>
+    <textarea id="reflectionText" rows="8" placeholder="Your reflection..."></textarea>
+    <button class="btn" onclick="saveReflection()">Save</button>
+    <button class="btn btn-ghost" onclick="closeModal('reflectionModal')">Cancel</button>
+  </div>
+</div>
+
+<script>
+const store = {
+  get(k, def) {
+    try { return JSON.parse(localStorage.getItem(k)) || def; } catch { return def; }
+  },
+  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+};
+
+const defaultAccelerators = [
+  { name: 'Separate Systems', target: '2 active accounts + budget', progress: 0 },
+  { name: 'Buffer', target: '3-month expenses saved', progress: 0 },
+  { name: 'Cost Audit', target: 'Essential/comfort/system split', progress: 0 },
+  { name: 'Productise Skill', target: '1 digital offer launched', progress: 0 },
+  { name: 'Repair Skill', target: '1 practical repair mastered', progress: 0 },
+  { name: 'Exchange Network', target: '2 barter partners', progress: 0 },
+  { name: 'Document Duplication', target: 'All docs backed up', progress: 0 },
+  { name: 'Business Manual', target: '1-page ops doc done', progress: 0 },
+  { name: 'Income Sources', target: '3+ paying sources', progress: 0 },
+  { name: 'Relocation Axis', target: '1 base outside grid', progress: 0 },
+  { name: 'Compliance Simplicity', target: 'BAS + insurances understood', progress: 0 },
+  { name: 'Independence Metric', target: 'Defined + tracked', progress: 0 }
+];
+
+let currentImpact = 3;
+
+function showTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  event.target.classList.add('active');
+  
+  if (tab === 'actions') renderActions();
+  if (tab === 'reflection') renderReflections();
+  if (tab === 'financial') renderIncomeStreams();
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'acceleratorModal') populateAcceleratorSelect();
+  if (id === 'actionModal') currentImpact = 3;
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Accelerators
+function renderAccelerators() {
+  const accelerators = store.get('lev.accelerators', defaultAccelerators);
+  const html = accelerators.map((acc, i) => `
+    <div class="accelerator">
+      <div class="accelerator-header">
+        <div class="accelerator-name">${acc.name}</div>
+        <div class="accelerator-progress">${acc.progress}%</div>
+      </div>
+      <div style="font-size: 12px; color: #888; margin-bottom: 8px;">${acc.target}</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: ${acc.progress}%;"></div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('acceleratorList').innerHTML = html;
+}
+
+function populateAcceleratorSelect() {
+  const accelerators = store.get('lev.accelerators', defaultAccelerators);
+  const html = accelerators.map((acc, i) => `<option value="${i}">${acc.name} (${acc.progress}%)</option>`).join('');
+  document.getElementById('acceleratorSelect').innerHTML = html;
+  document.getElementById('acceleratorProgress').value = accelerators[0].progress;
+  document.getElementById('progressDisplay').textContent = accelerators[0].progress + '%';
+  
+  document.getElementById('acceleratorProgress').oninput = (e) => {
+    document.getElementById('progressDisplay').textContent = e.target.value + '%';
+  };
+  
+  document.getElementById('acceleratorSelect').onchange = (e) => {
+    const idx = parseInt(e.target.value);
+    document.getElementById('acceleratorProgress').value = accelerators[idx].progress;
+    document.getElementById('progressDisplay').textContent = accelerators[idx].progress + '%';
+  };
+}
+
+function updateAccelerator() {
+  const accelerators = store.get('lev.accelerators', defaultAccelerators);
+  const idx = parseInt(document.getElementById('acceleratorSelect').value);
+  const progress = parseInt(document.getElementById('acceleratorProgress').value);
+  
+  accelerators[idx].progress = progress;
+  store.set('lev.accelerators', accelerators);
+  renderAccelerators();
+  closeModal('acceleratorModal');
+  updateMetrics();
+}
+
+// Actions
+function setImpact(stars) {
+  currentImpact = stars;
+  document.querySelectorAll('.impact-star').forEach((star, i) => {
+    star.classList.toggle('active', i < stars);
+  });
+}
+
+function saveAction() {
+  const category = document.getElementById('actionCategory').value;
+  const desc = document.getElementById('actionDesc').value.trim();
+  const time = parseFloat(document.getElementById('actionTime').value) || 0;
+  const notes = document.getElementById('actionNotes').value.trim();
+  
+  if (!desc) {
+    alert('Please enter a description');
+    return;
+  }
+  
+  const actions = store.get('lev.actions', []);
+  actions.unshift({
+    id: Date.now(),
+    date: new Date().toISOString(),
+    category,
+    description: desc,
+    time,
+    impact: currentImpact,
+    notes,
+    status: 'completed'
+  });
+  store.set('lev.actions', actions);
+  
+  document.getElementById('actionDesc').value = '';
+  document.getElementById('actionTime').value = '';
+  document.getElementById('actionNotes').value = '';
+  closeModal('actionModal');
+  updateMetrics();
+  renderActions();
+}
+
+function renderActions() {
+  const actions = store.get('lev.actions', []);
+  if (actions.length === 0) {
+    document.getElementById('actionList').innerHTML = '<p style="color:#888">No actions logged yet.</p>';
+    return;
+  }
+  
+  const html = actions.map((action, i) => `
+    <div class="action-entry">
+      <div class="action-header">
+        <div>
+          <span class="action-date">${new Date(action.date).toLocaleDateString()}</span>
+          <span class="action-category">${action.category}</span>
+        </div>
+      </div>
+      <div class="action-desc">${action.description}</div>
+      <div class="action-meta">
+        <span>⏱ ${action.time}h</span>
+        <span>⭐ ${'★'.repeat(action.impact)}${'☆'.repeat(5-action.impact)}</span>
+        ${action.notes ? `<span>📝 ${action.notes}</span>` : ''}
+      </div>
+      <button class="btn btn-sm btn-ghost" onclick="deleteAction(${i})" style="margin-top: 8px;">Delete</button>
+    </div>
+  `).join('');
+  document.getElementById('actionList').innerHTML = html;
+}
+
+function deleteAction(i) {
+  if (!confirm('Delete this action?')) return;
+  const actions = store.get('lev.actions', []);
+  actions.splice(i, 1);
+  store.set('lev.actions', actions);
+  renderActions();
+  updateMetrics();
+}
+
+// Financial
+function addIncomeStream() {
+  const source = document.getElementById('incomeSource').value.trim();
+  const amount = parseFloat(document.getElementById('incomeAmount').value) || 0;
+  
+  if (!source || amount <= 0) {
+    alert('Please enter source and amount');
+    return;
+  }
+  
+  const streams = store.get('lev.incomeStreams', []);
+  streams.push({ id: Date.now(), source, amount });
+  store.set('lev.incomeStreams', streams);
+  
+  document.getElementById('incomeSource').value = '';
+  document.getElementById('incomeAmount').value = '';
+  renderIncomeStreams();
+  updateMetrics();
+}
+
+function renderIncomeStreams() {
+  const streams = store.get('lev.incomeStreams', []);
+  if (streams.length === 0) {
+    document.getElementById('incomeStreamList').innerHTML = '<p style="color:#888; font-size: 13px;">No income streams yet.</p>';
+    return;
+  }
+  
+  const html = streams.map((stream, i) => `
+    <div style="background: #222; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <div style="font-weight: 600;">${stream.source}</div>
+        <div style="font-size: 12px; color: #888;">$${stream.amount}/month</div>
+      </div>
+      <button class="btn btn-sm btn-ghost" onclick="deleteIncomeStream(${i})">×</button>
+    </div>
+  `).join('');
+  document.getElementById('incomeStreamList').innerHTML = html;
+  
+  // Load saved financial values
+  const financial = store.get('lev.financial', { savings: 0, weeklyExpenses: 0 });
+  document.getElementById('totalSavings').value = financial.savings || '';
+  document.getElementById('weeklyExpenses').value = financial.weeklyExpenses || '';
+  updateFinancials();
+}
+
+function deleteIncomeStream(i) {
+  const streams = store.get('lev.incomeStreams', []);
+  streams.splice(i, 1);
+  store.set('lev.incomeStreams', streams);
+  renderIncomeStreams();
+  updateMetrics();
+}
+
+function saveIncomeEvent() {
+  const source = document.getElementById('incomeEventSource').value.trim();
+  const amount = parseFloat(document.getElementById('incomeEventAmount').value) || 0;
+  const notes = document.getElementById('incomeEventNotes').value.trim();
+  
+  if (!source || amount <= 0) {
+    alert('Please enter source and amount');
+    return;
+  }
+  
+  const events = store.get('lev.incomeEvents', []);
+  events.unshift({
+    id: Date.now(),
+    date: new Date().toISOString(),
+    source,
+    amount,
+    notes
+  });
+  store.set('lev.incomeEvents', events);
+  
+  document.getElementById('incomeEventSource').value = '';
+  document.getElementById('incomeEventAmount').value = '';
+  document.getElementById('incomeEventNotes').value = '';
+  closeModal('incomeModal');
+}
+
+function updateFinancials() {
+  const savings = parseFloat(document.getElementById('totalSavings').value) || 0;
+  const weeklyExpenses = parseFloat(document.getElementById('weeklyExpenses').value) || 0;
+  
+  store.set('lev.financial', { savings, weeklyExpenses });
+  
+  const streams = store.get('lev.incomeStreams', []);
+  const totalIncome = streams.reduce((sum, s) => sum + s.amount, 0);
+  const salaryIncome = streams.find(s => s.source.toLowerCase().includes('salary') || s.source.toLowerCase().includes('teaching'))?.amount || 0;
+  
+  const dependenceRatio = totalIncome > 0 ? ((salaryIncome / totalIncome) * 100).toFixed(0) : 0;
+  document.getElementById('dependenceRatio').textContent = dependenceRatio + '%';
+  
+  updateMetrics();
+}
+
+// Reflection
+function saveReflection() {
+  const text = document.getElementById('reflectionText').value.trim();
+  if (!text) return;
+  
+  const reflections = store.get('lev.reflections', []);
+  reflections.unshift({
+    id: Date.now(),
+    date: new Date().toISOString(),
+    text
+  });
+  store.set('lev.reflections', reflections);
+  
+  document.getElementById('reflectionText').value = '';
+  closeModal('reflectionModal');
+  renderReflections();
+}
+
+function renderReflections() {
+  const reflections = store.get('lev.reflections', []);
+  if (reflections.length === 0) {
+    document.getElementById('reflectionList').innerHTML = '<p style="color:#888">No reflections yet.</p>';
+    return;
+  }
+  
+  const html = reflections.map((ref, i) => `
+    <div style="background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px;">
+      <div style="font-weight: 600; color: #4a9eff; margin-bottom: 8px;">${new Date(ref.date).toLocaleDateString()}</div>
+      <div style="line-height: 1.6;">${ref.text}</div>
+      <button class="btn btn-sm btn-ghost" onclick="deleteReflection(${i})" style="margin-top: 8px;">Delete</button>
+    </div>
+  `).join('');
+  document.getElementById('reflectionList').innerHTML = html;
+}
+
+function deleteReflection(i) {
+  if (!confirm('Delete this reflection?')) return;
+  const reflections = store.get('lev.reflections', []);
+  reflections.splice(i, 1);
+  store.set('lev.reflections', reflections);
+  renderReflections();
+}
+
+// Metrics
+function updateMetrics() {
+  // Autonomy Score (average accelerator progress)const accelerators = store.get('lev.accelerators', defaultAccelerators);
+  const avgProgress = accelerators.reduce((sum, acc) => sum + acc.progress, 0) / accelerators.length;
+  document.getElementById('autonomyScore').textContent = Math.round(avgProgress) + '%';
+  
+  // Actions this week
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  weekStart.setHours(0,0,0,0);
+  
+  const actions = store.get('lev.actions', []);
+  const weekActions = actions.filter(a => new Date(a.date) >= weekStart);
+  const weekHours = weekActions.reduce((sum, a) => sum + a.time, 0);
+  
+  document.getElementById('weekActions').textContent = weekActions.length;
+  document.getElementById('weekHours').textContent = weekHours.toFixed(1) + 'h invested';
+  
+  // Cash buffer
+  const financial = store.get('lev.financial', { savings: 0, weeklyExpenses: 0 });
+  const bufferWeeks = financial.weeklyExpenses > 0 
+    ? (financial.savings / financial.weeklyExpenses).toFixed(1) 
+    : 0;
+  document.getElementById('bufferWeeks').textContent = bufferWeeks;
+  
+  // Income streams
+  const streams = store.get('lev.incomeStreams', []);
+  document.getElementById('incomeStreams').textContent = streams.length;
+}
+
+function getWeekKey() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const week = Math.ceil((d - new Date(year, 0, 1)) / (7 * 24 * 60 * 60 * 1000));
+  return `${year}-W${week}`;
+}
+
+function exportData() {
+  const data = {
+    accelerators: store.get('lev.accelerators', defaultAccelerators),
+    actions: store.get('lev.actions', []),
+    incomeStreams: store.get('lev.incomeStreams', []),
+    incomeEvents: store.get('lev.incomeEvents', []),
+    financial: store.get('lev.financial', {}),
+    reflections: store.get('lev.reflections', []),
+    exportDate: new Date().toISOString(),
+    metrics: {
+      autonomyScore: document.getElementById('autonomyScore').textContent,
+      weekActions: document.getElementById('weekActions').textContent,
+      bufferWeeks: document.getElementById('bufferWeeks').textContent,
+      incomeStreams: document.getElementById('incomeStreams').textContent,
+      dependenceRatio: document.getElementById('dependenceRatio').textContent
+    }
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `leverage-data-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('Data exported! Import into Excel or Google Sheets.');
+}
+
+// Initialize
+renderAccelerators();
+renderActions();
+renderIncomeStreams();
+renderReflections();
+updateMetrics();
+</script>
+
+</body>
+</html>
