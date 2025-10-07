@@ -34,11 +34,6 @@
   .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;border:1px solid #3a3a3a;color:#9aa0a6}
   .spacer{height:8px}
   .divider{height:1px;background:#333;margin:12px 0}
-  details{background:#232323;border:1px solid #2f2f2f;border-radius:10px;padding:12px}
-  details summary{cursor:pointer;color:#cfcfcf;margin-bottom:6px}
-  .list{display:flex;flex-direction:column;gap:10px;max-height:320px;overflow:auto}
-  .log{background:#2b2b2b;border:1px solid #363636;border-radius:8px;padding:10px}
-  .log .when{font-size:12px;color:#9aa0a6;margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -56,10 +51,10 @@
 <div class="container">
   <header>
     <h1>Household Control</h1>
-    <p>Split income, track balances, and see the rhythm of independence.</p>
+    <p>Split income, track balances, and see your independence progress over time.</p>
   </header>
 
-  <!-- SPLIT INPUT -->
+  <!-- INCOME SPLIT -->
   <div class="grid">
     <div class="card">
       <h2>Income & Split</h2>
@@ -79,7 +74,7 @@
 
   <div class="spacer"></div>
 
-  <!-- BALANCES + GRAPH -->
+  <!-- BALANCES -->
   <div class="card">
     <h2>Current Balances</h2>
     <p class="muted">Enter balances from each account to compare against targets.</p>
@@ -96,6 +91,15 @@
     <canvas id="balanceChart" style="width:100%;max-width:700px;height:260px;background:#1a1a1a;border-radius:8px;"></canvas>
   </div>
 
+  <div class="spacer"></div>
+
+  <!-- PROGRESS OVER TIME -->
+  <div class="card">
+    <h2>Progress Over Time</h2>
+    <p class="muted">Tracks total household reserves (sum of all balances). The dotted line shows projected growth at a steady rate.</p>
+    <canvas id="progressChart" style="width:100%;max-width:700px;height:260px;background:#1a1a1a;border-radius:8px;"></canvas>
+  </div>
+
 </div>
 
 <script>
@@ -106,7 +110,7 @@ const store = {
 };
 const el = id => document.getElementById(id);
 
-/* ---------- Income ---------- */
+/* ---------- Income Split ---------- */
 const incomeInput = el('income');
 const saveIncomeBtn = el('saveIncome');
 const amtOps = el('amtOps'), amtBuf = el('amtBuf'), amtGrowth = el('amtGrowth'), amtFreedom = el('amtFreedom');
@@ -141,6 +145,7 @@ saveIncomeBtn.addEventListener('click',()=>{
   store.set('house.income', val);
   renderSplit(val);
   updateChart();
+  drawTimeline();
   saveIncomeBtn.textContent='Saved';
   setTimeout(()=>saveIncomeBtn.textContent='Save split',800);
 });
@@ -164,15 +169,14 @@ function updateChart(){
   const actual = [b.ops,b.buf,b.growth,b.freedom];
   const target = [targets.ops,targets.buf,targets.growth,targets.freedom];
   const labels = ['Living','Debt+Buffer','Growth+Tools','Freedom'];
-  const colorsA = '#4aa3ff', colorsT = '#9aa0a6';
   if(chart) chart.destroy();
   chart = new Chart(ctx,{
     type:'bar',
     data:{
       labels,
       datasets:[
-        {label:'Actual',data:actual,backgroundColor:colorsA,borderRadius:6},
-        {label:'Target',data:target,backgroundColor:colorsT,borderRadius:6}
+        {label:'Actual',data:actual,backgroundColor:'#4aa3ff',borderRadius:6},
+        {label:'Target',data:target,backgroundColor:'#777',borderRadius:6}
       ]
     },
     options:{
@@ -184,16 +188,67 @@ function updateChart(){
     }
   });
 }
+
+/* ---------- Progress Over Time ---------- */
+let progressChart;
+
+function logTimeline(total){
+  const logs = store.get('house.timeline', []);
+  logs.unshift({when:new Date().toISOString(), total});
+  store.set('house.timeline', logs.slice(0,100));
+  drawTimeline();
+}
+
+function drawTimeline(){
+  const logs = store.get('house.timeline', []);
+  if(logs.length === 0) return;
+  const ctx = document.getElementById('progressChart').getContext('2d');
+
+  const dates = logs.map(l => new Date(l.when).toLocaleDateString()).reverse();
+  const actual = logs.map(l => l.total).reverse();
+
+  const start = actual[0] || 0;
+  const projection = actual.map((v,i)=>Math.round(start*Math.pow(1.008,i)));
+
+  if(progressChart) progressChart.destroy();
+  progressChart = new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:dates,
+      datasets:[
+        {label:'Actual',data:actual,borderColor:'#4aa3ff',tension:0.25,borderWidth:2,fill:false,pointRadius:2},
+        {label:'Projected',data:projection,borderColor:'#888',borderDash:[5,5],tension:0.25,borderWidth:1.5,fill:false}
+      ]
+    },
+    options:{
+      scales:{
+        y:{beginAtZero:true,grid:{color:'#333'},ticks:{color:'#999'}},
+        x:{grid:{display:false},ticks:{color:'#ccc',maxRotation:0}}
+      },
+      plugins:{legend:{labels:{color:'#ccc'}}}
+    }
+  });
+}
+
+/* ---------- Save Balances + Timeline ---------- */
 saveBalancesBtn.addEventListener('click',()=>{
-  const b={ops:Number(balOps.value)||0,buf:Number(balBuf.value)||0,growth:Number(balGrowth.value)||0,freedom:Number(balFreedom.value)||0};
+  const b={
+    ops:Number(balOps.value)||0,
+    buf:Number(balBuf.value)||0,
+    growth:Number(balGrowth.value)||0,
+    freedom:Number(balFreedom.value)||0
+  };
   store.set('house.balances',b);
   updateChart();
+  const total = b.ops + b.buf + b.growth + b.freedom;
+  logTimeline(total);
   balStatus.textContent='Saved '+new Date().toLocaleTimeString();
 });
 
 /* ---------- Init ---------- */
 loadIncome();
 loadBalances();
+drawTimeline();
 </script>
 </body>
 </html>
