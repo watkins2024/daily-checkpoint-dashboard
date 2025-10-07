@@ -3,44 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Independence Laboratory — Focus Mode</title>
+  <title>Independence Laboratory — Scalable Ops (Dark)</title>
   <style>
     /* ------------------------------------------------------
-       Independence Laboratory v3 — Focus Mode (Dark)
+       Independence Laboratory v4 — Scalable Ops (Dark)
+       Tailored for: Airbnb Host Support (restock + yard + photo report)
        Goals:
-       - Minimal, quiet UI (low noise)
-       - One-clear-next-step per metric
-       - "Gentle" vs "Push" step sequences
-       - Auto-progress: finish steps → milestone completes
+       - Quiet, elegant UI (low noise)
+       - One crystal-clear next step from a deep, practical library
+       - "Gentle" vs "Push" modes (small move vs leverage jump)
+       - Steps are concrete, revenue-true, and sequence toward scale
        - Keeps your existing localStorage data/keys
        ------------------------------------------------------ */
 
     :root{
-      --bg: #0f1216;         /* page */
-      --surface: #12161c;    /* cards */
-      --muted: #8b95a7;      /* secondary text */
-      --ink: #e6ebf2;        /* primary text */
-      --edge: #1f2a36;       /* borders */
-      --accent: #4aa8ff;     /* primary accent */
-      --accent-2: #7c8cff;   /* secondary accent */
-      --ok: #10b981;         /* success */
-      --warn: #f59e0b;       /* warning */
-      --danger: #ef4444;     /* danger */
-      --ring: rgba(74,168,255,.25);
+      --bg: #0b0f14;
+      --surface: #0f151c;
+      --muted: #92a0b3;
+      --ink: #e7edf7;
+      --edge: #1d2938;
+      --accent: #53a8ff;
+      --accent-2: #7c8cff;
+      --ok: #10b981;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --ring: rgba(83,168,255,.22);
       --radius: 14px;
-      --shadow: 0 8px 30px rgba(0,0,0,.35);
+      --shadow: 0 8px 28px rgba(0,0,0,.35);
     }
 
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
     body{
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: radial-gradient(80% 80% at 80% 0%, #0c0f13 0%, #0f1216 40%, #0f1216 100%);
+      background: radial-gradient(1200px 800px at 80% -10%, #0d131a 0%, #0b0f14 45%, #0b0f14 100%);
       color: var(--ink);
     }
 
     a{color:var(--muted); text-decoration:none}
-    .top-nav{ position:sticky; top:0; z-index:30; background:#0b0e12cc; backdrop-filter: blur(8px); border-bottom: 1px solid #0f1720; display:flex; gap:10px; padding:10px 16px }
+    .top-nav{ position:sticky; top:0; z-index:30; background:#080c10cc; backdrop-filter: blur(8px); border-bottom: 1px solid #0f1720; display:flex; gap:10px; padding:10px 16px }
     .top-nav a{ padding:8px 12px; border-radius:10px }
     .top-nav a:hover{ background:#12161c; color: var(--accent) }
     .top-nav a.active{ background:#12161c; color: var(--accent) }
@@ -56,7 +57,7 @@
     .metric-item.active{ background:#0d1520; outline: 1px solid #142033 }
 
     .ring{ width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700; color:#9be2c2; background:
-      conic-gradient(var(--ok) var(--pct,0%), #1a2533 0); }
+      conic-gradient(var(--ok) var(--pct,0%), #142033 0); }
 
     .item-text{ display:grid }
     .item-name{ font-size:13px }
@@ -75,10 +76,8 @@
     .badge{ font-size:12px; color:#a6b3c6; background:#0d1520; border:1px solid #16263a; border-radius:999px; padding:4px 10px }
 
     .bar{ height:12px; width:100%; background:#0e1621; border:1px solid #142033; border-radius:999px; position:relative; overflow:hidden }
-    .bar-fill{ position:absolute; inset:0 auto 0 0; width:0%; background: linear-gradient(90deg, #12b886, #4aa8ff); transition: width .35s ease }
+    .bar-fill{ position:absolute; inset:0 auto 0 0; width:0%; background: linear-gradient(90deg, #12b886, #53a8ff); transition: width .35s ease }
     .bar-line{ position:absolute; left:60%; top:-4px; height:20px; width:2px; background: var(--warn) }
-
-    .seg{ display:grid; grid-template-columns: 1fr; gap:12px }
 
     input, textarea, select{ width:100%; padding:10px 12px; border-radius:10px; background:#0c121a; border:1px solid #142033; color:var(--ink) }
     input:focus, textarea:focus, select:focus{ outline:none; border-color: #214b7a; box-shadow: 0 0 0 3px var(--ring) }
@@ -94,13 +93,8 @@
 
     .mini{ font-size:12px; color:var(--muted) }
 
-    .list{ display:grid; gap:8px }
-    .log{ background:#0c121a; border:1px solid #142033; padding:10px; border-radius:10px }
+    .log{ background:#0c121a; border:1px solid #142033; padding:10px; border-radius:10px; margin-bottom:8px }
     .log .when{ color:#6aa8ff; font-size:12px; margin-bottom:4px }
-
-    .toggle{ display:flex; gap:8px; align-items:center }
-    .toggle input{ width:40px; height:22px }
-
   </style>
 </head>
 <body>
@@ -113,7 +107,7 @@
   </div>
 
   <div class="shell">
-    <!-- Sidebar: pick a pathway (quiet, single-column) -->
+    <!-- Sidebar: pick a pathway (quiet) -->
     <aside class="side">
       <h2>Your pathways</h2>
       <div id="sideList"></div>
@@ -127,7 +121,7 @@
           <span id="metricStage" class="badge">Stage —</span>
           <span id="metricWeight" class="badge">Weight ×</span>
           <span class="badge" id="modeBadge">Mode: Gentle</span>
-          <span class="mini">Tip: Keep it simple. Do the next step, log a proof. Repeat.</span>
+          <span class="mini">Do the next step → log a proof. Sequences unlock bigger moves.</span>
         </div>
         <div class="row" style="margin-top:10px">
           <div class="grow">
@@ -138,21 +132,21 @@
         </div>
       </section>
 
-      <section class="card seg">
+      <section class="card">
         <div class="row" style="align-items:center; justify-content: space-between">
           <div class="row" style="align-items:center">
             <div id="metricRing" class="ring" style="--pct:0%">0%</div>
             <div class="mini" id="milestoneSummary">0/5 milestones</div>
           </div>
-          <label class="toggle mini">
+          <label class="mini" style="display:flex; align-items:center; gap:8px">
             <input type="checkbox" id="pushToggle" onchange="toggleMode()" /> Push mode
           </label>
         </div>
 
-        <!-- Next attainable step (auto-generated) -->
+        <!-- Next attainable step (from library) -->
         <div class="step">
           <div class="step-title" id="stepTitle">Next step will appear here</div>
-          <div class="step-help" id="stepHelp">A small, do-able move. When done, tick ✓ and (optionally) log one line of proof.</div>
+          <div class="step-help" id="stepHelp">Small, do‑able and revenue‑true. When done, tick ✓ and (optionally) log one line of proof.</div>
           <div class="row">
             <button class="btn-ok" onclick="completeStep()">✓ I did this</button>
             <button class="btn" onclick="shuffleStep()">↻ Try another option</button>
@@ -164,8 +158,8 @@
           </div>
         </div>
 
-        <!-- Evidence recap (last 3) -->
-        <div class="list" id="evidenceList"></div>
+        <!-- Evidence recap (last 4) -->
+        <div id="evidenceList"></div>
       </section>
 
       <section class="card">
@@ -179,101 +173,98 @@
     /* ===================== Storage ===================== */
     const store = { get(k, d){ try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }, set(k,v){ localStorage.setItem(k, JSON.stringify(v)) } };
 
-    // Keep your existing keys; add a couple for v3
-    // - lev.ladder     (preserved)
-    // - lev.actions    (preserved)
-    // - lev.evidence   (preserved)
-    // - lev.energy     (preserved)
-    // - lev.thread     (preserved)
-    // - lev.micro      (preserved)
+    // Keys preserved from your prior versions
+    // - lev.ladder, lev.actions, lev.evidence, lev.energy, lev.thread, lev.micro
+    // New lightweight ones for v4
     // - lev.mode       ('gentle' | 'push')
     // - lev.focus      (metric index)
+    // - lev.progress.<Metric>.<Stage>: count of steps done (auto-complete milestone at threshold)
 
-    /* ===================== Default ladder ===================== */
+    /* ===================== Ladder ===================== */
     const defaultLadder = [
-      { name:'Independent Cashflow', weight:3, milestones:[
-        {stage:'Seed',    text:'Earn $50 once from non-salary work', completed:false},
-        {stage:'Active',  text:'Earn $200/month for 2 months', completed:false},
-        {stage:'Growing', text:'Reach 20% independent income', completed:false},
-        {stage:'Stable',  text:'Reach 40% independent income', completed:false},
-        {stage:'Autonomous', text:'Maintain 60%+ for 3 months', completed:false}
+      { name:'Independent Cashflow (Airbnb Ops)', weight:4, milestones:[
+        {stage:'Seed',    text:'Validate one paying client at $300–$400/mo', completed:false},
+        {stage:'Active',  text:'Standardise the offer + route and reporting', completed:false},
+        {stage:'Growing', text:'Reach $1,200+/mo with 3 clients', completed:false},
+        {stage:'Stable',  text:'Document ops and hire a helper 5–10 hrs/wk', completed:false},
+        {stage:'Autonomous', text:'Owner-time ≤ 10 hrs/mo; keep margin ≥ 40%', completed:false}
       ]},
       { name:'Survival Buffer', weight:3, milestones:[
-        {stage:'Seed',    text:'Save $100 in separate account', completed:false},
-        {stage:'Active',  text:'Build 1 month essential expenses', completed:false},
-        {stage:'Growing', text:'Reach 3 months expenses', completed:false},
-        {stage:'Stable',  text:'Achieve 6 months runway', completed:false},
-        {stage:'Autonomous', text:'Maintain 12+ months buffer', completed:false}
+        {stage:'Seed',    text:'Open “Runway” account + first transfer', completed:false},
+        {stage:'Active',  text:'1 month essentials funded', completed:false},
+        {stage:'Growing', text:'3 months funded', completed:false},
+        {stage:'Stable',  text:'6 months funded', completed:false},
+        {stage:'Autonomous', text:'12+ months + written rules of use', completed:false}
       ]},
-      { name:'Lean Cost Index', weight:2, milestones:[
-        {stage:'Seed',    text:'Cancel one recurring payment', completed:false},
-        {stage:'Active',  text:'Reduce expenses by 5%', completed:false},
-        {stage:'Growing', text:'Cut costs by 10%', completed:false},
-        {stage:'Stable',  text:'Achieve 20% cost reduction', completed:false},
-        {stage:'Autonomous', text:'Sustain lean baseline 6+ months', completed:false}
+      { name:'Lean Cost Index (Family Cash Design)', weight:2, milestones:[
+        {stage:'Seed',    text:'Move 3 recurring bills to better/cheaper', completed:false},
+        {stage:'Active',  text:'Create simple “Money Map” (no budget)', completed:false},
+        {stage:'Growing', text:'Lower baseline by 10%', completed:false},
+        {stage:'Stable',  text:'Lower baseline by 20%', completed:false},
+        {stage:'Autonomous', text:'Maintain lean baseline 6+ months', completed:false}
       ]},
-      { name:'Productised Value', weight:3, milestones:[
-        {stage:'Seed',    text:'Write outline for one offer', completed:false},
-        {stage:'Active',  text:'Create simple landing page or document', completed:false},
-        {stage:'Growing', text:'Get first paying customer', completed:false},
-        {stage:'Stable',  text:'Earn $100+/month from product', completed:false},
-        {stage:'Autonomous', text:'Repeatable product generating revenue', completed:false}
-      ]},
-      { name:'Repair Capability', weight:2, milestones:[
-        {stage:'Seed',    text:'Learn 1 basic repair (YouTube counts)', completed:false},
-        {stage:'Active',  text:'Successfully complete 1 repair', completed:false},
-        {stage:'Growing', text:'Master 2 different repair skills', completed:false},
-        {stage:'Stable',  text:'Achieve 3 verified competencies', completed:false},
-        {stage:'Autonomous', text:'Teach someone else a repair skill', completed:false}
+      { name:'Productised Value (Add‑on Offers)', weight:3, milestones:[
+        {stage:'Seed',    text:'Define 1 add-on (kit or mini‑service)', completed:false},
+        {stage:'Active',  text:'Sell first add‑on to an existing client', completed:false},
+        {stage:'Growing', text:'$300+/mo from add‑ons', completed:false},
+        {stage:'Stable',  text:'Automate ordering + delivery', completed:false},
+        {stage:'Autonomous', text:'2–3 add‑ons running with SOP', completed:false}
       ]},
       { name:'Exchange Network', weight:2, milestones:[
-        {stage:'Seed',    text:'Do one small exchange (even with friend)', completed:false},
-        {stage:'Active',  text:'Establish 2 barter/trade relationships', completed:false},
-        {stage:'Growing', text:'Complete 5 exchanges outside money', completed:false},
-        {stage:'Stable',  text:'Build network of 5+ active partners', completed:false},
-        {stage:'Autonomous', text:'Weekly exchanges are a normal routine', completed:false}
+        {stage:'Seed',    text:'Create list of 10 complementary partners', completed:false},
+        {stage:'Active',  text:'Do 2 partner exchanges (referrals ↔ perks)', completed:false},
+        {stage:'Growing', text:'5 active partners feeding leads', completed:false},
+        {stage:'Stable',  text:'1 partner contract/month min', completed:false},
+        {stage:'Autonomous', text:'Weekly lead flow via partners', completed:false}
       ]},
       { name:'Systems Autonomy', weight:2, milestones:[
-        {stage:'Seed',    text:'Back up one critical folder today', completed:false},
-        {stage:'Active',  text:'Document one key process', completed:false},
-        {stage:'Growing', text:'All files backed up in 2 places', completed:false},
-        {stage:'Stable',  text:'Complete 1‑page operations manual', completed:false},
-        {stage:'Autonomous', text:'Could step away for a month and it runs', completed:false}
+        {stage:'Seed',    text:'Back up ops + create a one‑page SOP', completed:false},
+        {stage:'Active',  text:'Simple CRM + route schedule live', completed:false},
+        {stage:'Growing', text:'Photo report template + auto-send', completed:false},
+        {stage:'Stable',  text:'Checklist app + shared calendar', completed:false},
+        {stage:'Autonomous', text:'Ops run if you step away 4 weeks', completed:false}
       ]},
       { name:'Multi-Source Income', weight:3, milestones:[
-        {stage:'Seed',    text:'Identify 2 potential income sources', completed:false},
-        {stage:'Active',  text:'Earn from 2 different sources in one month', completed:false},
-        {stage:'Growing', text:'Maintain 3 active income streams', completed:false},
-        {stage:'Stable',  text:'Achieve 4+ distinct reliable payers', completed:false},
-        {stage:'Autonomous', text:'No single source exceeds 40% of income', completed:false}
+        {stage:'Seed',    text:'Add one small remote/online stream', completed:false},
+        {stage:'Active',  text:'Earn from 2 sources in one month', completed:false},
+        {stage:'Growing', text:'Maintain 3 active streams', completed:false},
+        {stage:'Stable',  text:'4+ reliable payers', completed:false},
+        {stage:'Autonomous', text:'No source >40% of income', completed:false}
       ]},
       { name:'Physical Base', weight:2, milestones:[
-        {stage:'Seed',    text:'Research one lower-cost location', completed:false},
-        {stage:'Active',  text:'Visit or scout potential base', completed:false},
-        {stage:'Growing', text:'Secure plan or lease agreement', completed:false},
-        {stage:'Stable',  text:'Functional base established', completed:false},
-        {stage:'Autonomous', text:'Living/working from controlled base', completed:false}
+        {stage:'Seed',    text:'Choose a low‑friction service radius', completed:false},
+        {stage:'Active',  text:'Lock a route plan (drive time < 45m)', completed:false},
+        {stage:'Growing', text:'Secure storage + supplies area', completed:false},
+        {stage:'Stable',  text:'Base established and profitable', completed:false},
+        {stage:'Autonomous', text:'Ops independent of a single location', completed:false}
       ]},
-      { name:'Compliance Mastery', weight:1, milestones:[
-        {stage:'Seed',    text:'Read one BAS/tax guide', completed:false},
-        {stage:'Active',  text:'Complete one form yourself', completed:false},
-        {stage:'Growing', text:'Handle quarterly obligations unaided', completed:false},
+      { name:'Compliance Mastery (AU)', weight:2, milestones:[
+        {stage:'Seed',    text:'ABN + basic insurance confirmed', completed:false},
+        {stage:'Active',  text:'BAS/tax set‑aside % and workflow', completed:false},
+        {stage:'Growing', text:'Quarterly obligations unaided', completed:false},
         {stage:'Stable',  text:'Confident across tax/insurance processes', completed:false},
-        {stage:'Autonomous', text:'Help someone else with their compliance', completed:false}
+        {stage:'Autonomous', text:'Documented checklist + help someone', completed:false}
       ]},
       { name:'Strategic Redundancy', weight:1, milestones:[
-        {stage:'Seed',    text:'Back up phone contacts + photos', completed:false},
-        {stage:'Active',  text:'Duplicate 1 critical piece of equipment', completed:false},
-        {stage:'Growing', text:'Backup power/comms solution in place', completed:false},
+        {stage:'Seed',    text:'Duplicate phone tools + contacts', completed:false},
+        {stage:'Active',  text:'Backup power + comms', completed:false},
+        {stage:'Growing', text:'Spare mower/consumables pack', completed:false},
         {stage:'Stable',  text:'All essential gear covered', completed:false},
-        {stage:'Autonomous', text:'System survives any single failure', completed:false}
+        {stage:'Autonomous', text:'Survives any single failure', completed:false}
+      ]},
+      { name:'Repair Capability', weight:1, milestones:[
+        {stage:'Seed',    text:'Learn basic mower maintenance', completed:false},
+        {stage:'Active',  text:'Sharpen/replace blades yourself', completed:false},
+        {stage:'Growing', text:'Fix 2 common small issues solo', completed:false},
+        {stage:'Stable',  text:'3 verified competencies', completed:false},
+        {stage:'Autonomous', text:'Teach or document for helper', completed:false}
       ]},
       { name:'Reflection Loop', weight:2, milestones:[
         {stage:'Seed',    text:'Write one weekly reflection', completed:false},
-        {stage:'Active',  text:'Complete 4 weekly reflections in a row', completed:false},
-        {stage:'Growing', text:'Identify one pattern from your notes', completed:false},
-        {stage:'Stable',  text:'Weekly review becomes automatic habit', completed:false},
-        {stage:'Autonomous', text:'Use reflections to guide decisions', completed:false}
+        {stage:'Active',  text:'4 reflections in a row', completed:false},
+        {stage:'Growing', text:'Spot one pattern from notes', completed:false},
+        {stage:'Stable',  text:'Weekly review automatic', completed:false},
+        {stage:'Autonomous', text:'Reflections guide decisions', completed:false}
       ]}
     ];
 
@@ -281,7 +272,7 @@
       const current = store.get('lev.ladder', null); if(!current) return defaultLadder;
       const byName = Object.fromEntries(defaultLadder.map(m=>[m.name, m]));
       return current.map(old=>{
-        const tpl = byName[old.name] || old; // keep unknowns
+        const tpl = byName[old.name] || old;
         const merged = (tpl.milestones||[]).map(t=>{
           const match = (old.milestones||[]).find(o=>o.text===t.text) || {}; return {...t, completed: !!match.completed};
         });
@@ -289,60 +280,205 @@
       });
     }
 
-    /* ===================== Step engine ===================== */
-    // For each (metric, stage) provide small, plain-language steps (Gentle & Push).
-    // Steps are intentionally tiny → consistent weekly progress.
+    /* ===================== Evidence-based Step Library ===================== */
+    // Structure: steps[metric][stage] = { gentle: [...], push: [...] }
+    // Concrete, field-tested. Focused on Airbnb Host Support business.
     const steps = {
-      'Independent Cashflow':{
+      'Independent Cashflow (Airbnb Ops)':{
         'Seed':{
-          gentle:[ 'List 1 skill you can sell in 30 words', 'Ask 1 friend if they know someone who needs that', 'Post 1 offer in 1 place (chat/group)' ],
-          push:[ 'Draft a 3-line offer and DM 3 prospects', 'Do the service free once to create a proof', 'Invoice $50 using any template' ]
+          gentle:[
+            'Define the service in 1 sentence: restock + light yard + photo report (no cleaning).',
+            'Price test: set $350/mo for 4 visits (weekly) within 15km radius.',
+            'Create a 6‑photo proof template: exterior, entry, kitchen, bath, bedroom, supplies.',
+            'Draft a 4‑line outreach email for hosts (pain→offer→price→reply).',
+            'Make a list of 10 local listings that clearly need upkeep (save URLs).',
+            'Register a simple domain and placeholder page with contact form.',
+            'Set up payment link (Stripe/PayPal) named “Airbnb Restock & Report — Monthly”.',
+            'Create a one‑page service agreement (scope, visits, access, price, cancellation).',
+            'Prepare a restock checklist: toiletries, coffee/tea, bin liners, basic pantry, batteries.',
+            'Assemble a starter kit box (consumables + small tools).'
+          ],
+          push:[
+            'Send 10 direct emails to hosts with your 4‑line pitch and 1 before/after photo.',
+            'Post offer once in 2 local FB/host groups (clear scope and price).',
+            'Call 2 local cleaning companies to offer “between‑clean restock + yard” partnership.',
+            'Offer first month at $300 for 1 early client; include photo report and supply receipts.',
+            'Book access with 1 host; schedule 4 weekly visits; lock in keys/lockbox code.'
+          ]
         },
         'Active':{
-          gentle:[ 'Pick a simple price for the month', 'Message 2 past contacts about a small paid task', 'Set 1 recurring slot in calendar for delivery' ],
-          push:[ 'Publish a quick checkout (Stripe/PayPal link)', 'Book 3 micro-gigs for this month', 'Collect 1 testimonial' ]
+          gentle:[
+            'Standardise your weekly route: cluster visits by area, total drive < 90m.',
+            'Create a repeatable Google Doc report template with photo slots + notes.',
+            'Track time per visit this week (door‑to‑door).',
+            'Add a “refill cost cap” (e.g., up to $30/wk, billed monthly with receipts).',
+            'Collect 1 testimonial with photos from your first client.'
+          ],
+          push:[
+            'Upsell a simple add‑on: lawn mow (small yard) +$40/visit or bin service +$15.',
+            'Publish a basic website section: pricing, route radius map, report sample, payment link.',
+            'Email 15 more hosts with your testimonial and report sample.',
+            'Partner deal: cleaners refer you; you refer them; 10% off first month both ways.',
+            'Create a shared calendar with client: scheduled visit window + locker access notes.'
+          ]
         },
         'Growing':{
-          gentle:[ 'Write a one-page result you deliver', 'Raise price by 10% on next sale', 'Bundle your offer with 1 tiny add-on' ],
-          push:[ 'Pitch 5 cold leads with your 3-line script', 'Create a before/after proof page', 'Run a 2-hour sprint offer this week' ]
+          gentle:[
+            'Raise new‑client price to $400/mo with add‑on menu.',
+            'Document supply list with per‑unit cost; set a monthly restock budget.',
+            'Batch buy top 10 consumables; store them in labelled bins.',
+            'Design a simple route sheet for a helper (address, tasks, photo angles).',
+            'Add automatic payment: monthly subscription (Stripe/PayPal subs).'
+          ],
+          push:[
+            'Close 2 more clients from partner referrals or emails (target 3 total).',
+            'Pilot a helper for 2 visits; measure quality with your photo report template.',
+            'Implement access redundancy: spare keys + lockbox + digital codes list.',
+            'Negotiate a small storage shelf at one client’s property for supplies.',
+            'Create a “host onboarding” form (access, bins day, lawn frequency, supply preferences).'
+          ]
         },
-        'Stable':{ gentle:[ 'Turn delivery into a checklist', 'Block weekly ops hour', 'Automate 1 step (invoice/template)' ], push:[ 'Launch a monthly retainer to 3 clients', 'Raise price 20% for new clients', 'Hire a helper for one task' ] },
-        'Autonomous':{ gentle:[ 'Document your offer in 1 page', 'Replace yourself in 1 step', 'Review churn + retention once' ], push:[ 'Spin out a second offer', 'Run a 1‑week promotion', 'Negotiate a 3‑month prepay' ] }
+        'Stable':{
+          gentle:[
+            'Create a 1‑page SOP: visit flow (arrive → restock → yard → photos → notes → leave).',
+            'Write a failure protocol (lock jam, missing supplies, guest damage).',
+            'Automate monthly invoice + receipts email.',
+            'Set weekly office hour for scheduling + stock ordering.',
+            'Add a simple CRM sheet: client name, address, visit day, add‑ons, notes.'
+          ],
+          push:[
+            'Hire a reliable helper for 5–10 hrs/week; train using your SOP + photo template.',
+            'Offer a 3‑month prepay at 10% discount to improve cashflow.',
+            'Add SMS reminders to clients 24h before visits.',
+            'Track margin per client; prune or reprice low‑margin ones.',
+            'Test a second micro‑area (another 15km cluster) with 1 new client.'
+          ]
+        },
+        'Autonomous':{
+          gentle:[
+            'Owner dashboard: visits completed this week, issues, cash in/out, margin.',
+            'Monthly quality review: sample 1 report per client.',
+            'Document “when to pause/exit a client” rules.'
+          ],
+          push:[
+            'Appoint a lead helper; shift scheduling + stock ordering to them.',
+            'Package your system as a local franchise‑lite playbook for a new operator.',
+            'Spin a second city/cluster with the same SOP and pricing.'
+          ]
+        }
       },
+
+      'Productised Value (Add‑on Offers)':{
+        'Seed':{
+          gentle:[
+            'Define 1 add‑on: “Mid‑stay mini‑refresh” (trash + quick tidy + supplies).',
+            'Create a laminated “welcome restock kit” list with per‑unit costs.',
+            'Add a $15 “bin put‑out & bring‑in” weekly add‑on.'
+          ],
+          push:[
+            'Bundle: $60/month for bin service + porch sweep + mail check.',
+            'Offer seasonal yard tidy (leaves/rake) for +$45 per visit.',
+            'Create listing‑photo touch‑up: 10 photos post‑processing $79.'
+          ]
+        },
+        'Active':{
+          gentle:[
+            'Pitch add‑on to existing client via email with 2 bullet benefits.',
+            'Make a one‑click add‑on payment link.',
+            'Track add‑on uptake rate.'
+          ],
+          push:[
+            'Launch add‑on menu on website with photos.',
+            'Run a “first month half‑price add‑on” for current clients.',
+            'Partner with cleaners to resell your mid‑stay mini‑refresh.'
+          ]
+        },
+        'Growing':{
+          gentle:[
+            'Hit consistent $300/mo add‑on revenue.',
+            'Create reorder reminders for supplies.',
+            'Add a small premium starter kit for new hosts.'
+          ],
+          push:[
+            'Negotiate wholesale on consumables to raise margin 10–15%.',
+            'Prepack 3 kits for quick dispatch days.',
+            'Offer a quarterly “deep yard spruce” day at a fixed rate.'
+          ]
+        },
+        'Stable':{
+          gentle:[ 'Automate add‑on billing', 'SOP for add‑on delivery', 'Quarterly review' ],
+          push:[ 'Partner commissions for add‑on referrals', 'Run seasonal promos', 'Upsell package at renewal' ]
+        },
+        'Autonomous':{
+          gentle:[ 'Add‑ons run without you', 'Monitor uptake KPI', 'Refine margins annually' ],
+          push:[ 'Productise kits for other operators', 'License your menu', 'Open a tiny webshop' ]
+        }
+      },
+
+      'Systems Autonomy':{
+        'Seed':{
+          gentle:[ 'Back up SOP + stock list to Drive', 'Create shared calendar', 'Make photo template folder' ],
+          push:[ 'Simple CRM (Sheet) with status', 'Issue tracker (lost key, damage)', 'Route planner doc' ]
+        },
+        'Active':{
+          gentle:[ 'Automate invoice emails', 'Create access doc (codes/keys)', 'Set weekly schedule block' ],
+          push:[ 'Try a checklist app for visits', 'Auto‑rename photo sets per visit', 'Shared inbox alias' ]
+        },
+        'Growing':{
+          gentle:[ 'Helper onboarding doc', 'Stock reorder cadence', 'Quality review template' ],
+          push:[ 'Auto‑send report to host', 'SMS visit reminder', 'SLA response times' ]
+        },
+        'Stable':{
+          gentle:[ 'Calendar + checklist fully used', 'Backups verified', 'Escalation rules' ],
+          push:[ 'Lead helper controls schedule', 'You approve exceptions only', 'Quarterly ops drill' ]
+        },
+        'Autonomous':{
+          gentle:[ 'Monthly ops snapshot', 'Risk register', 'Post‑mortem once/quarter' ],
+          push:[ 'Document for replication', 'Spin second cluster', 'Delegate ordering & hiring' ]
+        }
+      },
+
+      'Lean Cost Index (Family Cash Design)':{
+        'Seed':{
+          gentle:[ 'List top 5 recurring bills + due dates', 'Switch one to cheaper plan', 'Cancel one unused subscription' ],
+          push:[ 'Call to negotiate a discount on internet/power', 'Move two bills to annual save', 'Sell one unused item and retire a bill' ]
+        },
+        'Active':{
+          gentle:[ 'Create a 1‑page Money Map: inflow → fixed → variable → buffer → independence', 'Set automatic transfer to buffer', 'Add a “business ops” line for stock' ],
+          push:[ 'Cut one category 15% for 30 days', 'Replace 2 retail buys with wholesale', 'Share Money Map with partner' ]
+        },
+        'Growing':{
+          gentle:[ 'Track new baseline for 4 weeks', 'Direct savings to buffer or margin', 'Audit utilities once' ],
+          push:[ 'Drop baseline by 10%', 'Refinance or switch one provider', 'Batch errands to cut fuel 15%' ]
+        },
+        'Stable':{ gentle:[ 'Hold the 20% reduction', 'Automate bills', 'Quarterly review' ], push:[ 'Prepay to capture discounts', 'Bundle services', 'Eliminate one whole category' ] },
+        'Autonomous':{ gentle:[ 'Write lean rules', 'Keep one treat', 'Annual review' ], push:[ 'Crisis budget simulation', 'Top up crisis buffer', 'Teach your method' ] }
+      },
+
       'Survival Buffer':{
-        'Seed':{ gentle:[ 'Open a dedicated savings space', 'Move $20 today', 'Name the account “Runway”' ], push:[ 'Move $100 today', 'Cancel 1 subscription and redirect saving', 'Sell 1 unused item and bank it' ] },
-        'Active':{ gentle:[ 'Total essential bills for 1 month', 'Set weekly auto-transfer (small)', 'Track buffer total in notes' ], push:[ 'Auto-transfer 5% of income', 'Cut 1 big expense for 30 days', 'Pick a small side gig to feed buffer' ] },
-        'Growing':{ gentle:[ 'Snapshot current balance', 'Add $50 this week', 'Plan the next $200' ], push:[ 'Add $200 this week', 'Bank next invoice % to buffer', 'Renegotiate 1 bill' ] },
-        'Stable':{ gentle:[ 'Review interest/account safety', 'Add $50 to keep habit', 'Record months of runway' ], push:[ 'Top up to goal', 'Move excess to safe vehicle', 'Set alert if balance dips' ] },
-        'Autonomous':{ gentle:[ 'Quarterly review', 'Write “rules of use”', 'Keep auto-transfer on' ], push:[ 'Increase goal by 1 month', 'Shift to higher-yield account', 'Fund 1 new resilience item' ] }
+        'Seed':{ gentle:[ 'Open high‑interest saver', 'Move $50 today', 'Name it “Runway”' ], push:[ 'Move $200 today', 'Redirect one cancelled bill to saver', 'Sell one item and bank it' ] },
+        'Active':{ gentle:[ 'Tally one‑month essentials', 'Set weekly auto‑transfer', 'Track months of runway' ], push:[ 'Auto‑transfer 5% of income', 'Cut one big cost 30 days', 'Feed buffer with add‑on sales' ] },
+        'Growing':{ gentle:[ 'Add $50 this week', 'Plan next $200', 'Snapshot current balance' ], push:[ 'Add $200 this week', 'Renegotiate a bill', 'Bank next invoice % to buffer' ] },
+        'Stable':{ gentle:[ 'Top up to goal', 'Review safety of account', 'Document rules of use' ], push:[ 'Increase to 6 months', 'Move excess appropriately', 'Set alert if dips' ] },
+        'Autonomous':{ gentle:[ 'Quarterly review', 'Keep auto‑transfer', 'Rebalance yearly' ], push:[ 'Raise goal by 1 month', 'Shift to better yield', 'Fund resilience item' ] }
       },
-      'Lean Cost Index':{
-        'Seed':{ gentle:[ 'List 3 recurring charges', 'Cancel or pause 1 now', 'Switch 1 to annual save' ], push:[ 'Negotiate 1 bill on a call', 'Sell 1 unused item', 'Batch cook 3 low-cost meals' ] },
-        'Active':{ gentle:[ 'Find 1 cheaper alternative', 'Lower 1 discretionary category 10%', 'Set spend alerts' ], push:[ 'No-spend weekend', 'Cut 1 category 25% for 2 weeks', 'Share plan with accountability buddy' ] },
-        'Growing':{ gentle:[ 'Lock new baseline', 'Audit utilities', 'Library over buy once' ], push:[ 'Trim transport cost 15%', 'Downgrade 1 plan tier', 'Switch provider' ] },
-        'Stable':{ gentle:[ 'Review every 90 days', 'Automate bills', 'Track 3-month average' ], push:[ 'Prepay to capture discount', 'Bundle services', 'Eliminate 1 whole category' ] },
-        'Autonomous':{ gentle:[ 'Write your lean rules', 'Share with future you', 'Keep one treat' ], push:[ 'Model crisis budget', 'Fund crisis buffer', 'Teach someone your method' ] }
+
+      'Exchange Network':{
+        'Seed':{ gentle:[ 'List 10 partners: cleaners, lawn, locksmiths, handymen', 'Write a 3‑line referral swap', 'Intro yourself to 2 cleaners' ], push:[ 'Set a 10% mutual referral deal with 1 cleaner', 'Offer to cover mid‑week gaps for a host manager', 'Post partnership call in a local group' ] },
+        'Active':{ gentle:[ 'Do 1 barter (you restock, they refer)', 'Share your report template with a partner', 'Log partner details in CRM' ], push:[ 'Co‑bundle “between‑clean” package', 'Ask 2 partners for 3 intros each', 'Run a joint promo week' ] },
+        'Growing':{ gentle:[ 'Track lead sources', 'Thank‑you gift for referrals', 'Monthly partner check‑in' ], push:[ 'Formalise 3 partners', 'Guaranteed 1 referral/month deal', 'Cross‑link websites' ] },
+        'Stable':{ gentle:[ 'Keep referral loop tight', 'Quality feedback both ways', 'Quarterly lunch' ], push:[ 'Partner landing page', 'Partner of the month', 'Joint case study' ] },
+        'Autonomous':{ gentle:[ 'Leads arrive weekly', 'Measure close rate', 'Refine offer with partners' ], push:[ 'Partner program doc', 'Scale to second cluster through partners', 'Exclusive territory test' ] }
       },
-      'Productised Value':{
-        'Seed':{ gentle:[ 'Write the outcome you deliver in 1 sentence', 'List 3 pains your offer resolves', 'Sketch a 5‑bullet outline' ], push:[ 'Draft a 3‑screen landing page', 'Ask 3 people for feedback', 'Pre-sell to 1 buyer' ] },
-        'Active':{ gentle:[ 'Publish a simple doc/page', 'Add 1 call-to-action', 'Collect 1 email' ], push:[ 'Add payment link', 'Offer a beta price to 3 people', 'Ship v1 to 1 buyer' ] },
-        'Growing':{ gentle:[ 'Write a tiny FAQ', 'Add 1 proof screenshot', 'Clarify scope in bullets' ], push:[ 'Raise price 15%', 'Upsell a mini add-on', 'Collect 1 case study' ] },
-        'Stable':{ gentle:[ 'Automate delivery step', 'Template your onboarding', 'Block weekly product hour' ], push:[ 'Affiliate/partner with 1 person', 'Launch a time-boxed promo', 'Bundle with your service' ] },
-        'Autonomous':{ gentle:[ 'Ops checklist ready', 'Quarterly review', 'Add stop-loss rules' ], push:[ 'Second product seed', 'Licensing test', 'Raise floor price' ] }
-      },
-      // For brevity, remaining metrics reuse a generic pattern
+
+      'Compliance Mastery (AU)':{
+        'Seed':{ gentle:[ 'Apply/confirm ABN', 'Get public liability insurance quote', 'Open business bank account' ], push:[ 'Choose tax set‑aside % (e.g., 25%)', 'Create receipts folder structure', 'Record‑keeping checklist' ] },
+        'Active':{ gentle:[ 'Register for GST if needed', 'Set monthly BAS reminder', 'Open savings for tax set‑aside' ], push:[ 'Automate set‑aside transfer', 'Do one BAS cycle solo', 'Store certificates/insurance in Drive' ] },
+        'Growing':{ gentle:[ 'Document compliance workflow', 'Quarterly self‑audit', 'Keep advisor contacts' ], push:[ 'Write a 1‑page compliance SOP', 'Help a friend through their ABN', 'Benchmark insurance annually' ] },
+        'Stable':{ gentle:[ 'Calendar all due dates', 'Templates for invoices/receipts', 'Backups verified' ], push:[ 'Consolidate processes', 'One‑pager “do this if audited”', 'Review with advisor yearly' ] },
+        'Autonomous':{ gentle:[ 'Run system eyes‑closed', 'Teach someone else', 'Update SOP yearly' ], push:[ 'Add secondary signatory', 'Disaster recovery drill', 'Compliance pack for scale' ] }
+      }
     };
-
-    function genericSteps(stage){
-      const g = {
-        gentle:[ 'Define the smallest move (write 1 line)', 'Do a 10‑minute test now', 'Log 1 proof line here' ],
-        push:[ 'Schedule a 30‑minute sprint', 'Invite 1 person to hold you to it', 'Ship a visible outcome today' ]
-      };
-      return g;
-    }
-
-    // Fallback for metrics not fully specified above
-    const metricNames = defaultLadder.map(m=>m.name);
 
     /* ===================== State ===================== */
     let ladder = loadLadder();
@@ -350,7 +486,7 @@
     let focus = store.get('lev.focus', 0);
     let mode = store.get('lev.mode', 'gentle');
 
-    /* ===================== Render Sidebar ===================== */
+    /* ===================== Sidebar ===================== */
     function percentForMetric(m){ const done = m.milestones.filter(x=>x.completed).length; return Math.round(done / m.milestones.length * 100); }
 
     function renderSidebar(){
@@ -371,7 +507,7 @@
       }).join('');
     }
 
-    /* ===================== Main Panel ===================== */
+    /* ===================== Main ===================== */
     function renderMain(){
       const m = ladder[focus];
       const stageIdx = m.milestones.findIndex(x=>!x.completed);
@@ -386,7 +522,7 @@
       document.getElementById('metricRing').textContent = pct + '%';
       document.getElementById('milestoneSummary').textContent = `${m.milestones.filter(x=>x.completed).length}/5 milestones`;
 
-      // Overall bar (weighted average across metrics)
+      // Overall weighted bar
       const weights = ladder.map(x=>x.weight||1);
       const scores = ladder.map(percentForMetric);
       const totalW = weights.reduce((a,b)=>a+b,0);
@@ -394,14 +530,13 @@
       document.getElementById('overallFill').style.width = weighted + '%';
       document.getElementById('overallText').textContent = 'Overall independence: ' + weighted + '%';
 
-      // Streak
       document.getElementById('streakBadge').textContent = 'Streak ' + computeStreak() + 'w';
 
       // Step engine
       currentStep = pickStep(m.name, stage);
       renderStep();
 
-      // Evidence list (last 3)
+      // Evidence list
       renderEvidence();
 
       // Sync toggle
@@ -419,12 +554,17 @@
       return streak;
     }
 
-    /* ===================== Step selection ===================== */
+    /* ===================== Step selection & completion ===================== */
     let currentStep = null;
 
     function getStepList(metricName, stage){
-      const lib = steps[metricName]?.[stage] || genericSteps(stage);
-      return (mode==='push'? lib.push : lib.gentle);
+      const lib = steps[metricName]?.[stage];
+      if(!lib){
+        // Generic fallback
+        return (mode==='push' ? {list:['Schedule a 30‑minute sprint','Invite 1 partner for accountability','Ship a visible outcome today']}
+                              : {list:['Write the exact smallest move','Do a 10‑minute test','Log a one‑line proof']}).list;
+      }
+      return mode==='push' ? lib.push : lib.gentle;
     }
 
     function pickStep(metricName, stage){
@@ -433,9 +573,7 @@
       return { text: list[idx], metric: metricName, stage };
     }
 
-    function renderStep(){
-      document.getElementById('stepTitle').textContent = currentStep ? currentStep.text : '—';
-    }
+    function renderStep(){ document.getElementById('stepTitle').textContent = currentStep ? currentStep.text : '—'; }
 
     function shuffleStep(){
       const m = ladder[focus];
@@ -452,15 +590,14 @@
       store.set('lev.actions', actions);
       renderActions();
 
-      // Track micro-progression: after 3 steps in this stage, auto-complete the milestone.
+      // Track progression: after 4 steps at a stage, auto-complete milestone
       const key = `lev.progress.${currentStep.metric}.${currentStep.stage}`;
       const c = store.get(key, 0) + 1; store.set(key, c);
-      if(c >= 3){
-        // auto-complete current milestone
+      if(c >= 4){
         const m = ladder[focus];
         const idx = m.milestones.findIndex(x=>!x.completed);
         if(idx!==-1){ m.milestones[idx].completed = true; store.set('lev.ladder', ladder); }
-        store.set(key, 0); // reset counter for next stage
+        store.set(key, 0);
       }
 
       renderSidebar();
@@ -495,15 +632,15 @@
     function renderEvidence(){
       const m = ladder[focus];
       const ev = store.get('lev.evidence', {});
-      const list = (ev[m.name]||[]).slice(0,3).map(e=>`<div class="log"><div class="when">${new Date(e.date).toLocaleDateString()}</div>${escapeHtml(e.text)}</div>`).join('');
+      const list = (ev[m.name]||[]).slice(0,4).map(e=>`<div class="log"><div class="when">${new Date(e.date).toLocaleDateString()}</div>${escapeHtml(e.text)}</div>`).join('');
       document.getElementById('evidenceList').innerHTML = list || '<div class="mini">No proof logged yet.</div>';
     }
 
     /* ===================== Actions ===================== */
     function renderActions(){
       const actions = store.get('lev.actions', []);
-      const html = actions.length ? actions.slice(0,30).map(a=>`
-        <div class="log"><div class="when">${new Date(a.date).toLocaleDateString()} · ${a.metric}</div>${escapeHtml(a.description)}</div>
+      const html = actions.length ? actions.slice(0,40).map(a=>`
+        <div class="log"><div class="when">${new Date(a.date).toLocaleDateString()} · ${escapeHtml(a.metric)}</div>${escapeHtml(a.description)}</div>
       `).join('') : '<div class="mini">No actions yet.</div>';
       document.getElementById('actionList').innerHTML = html;
     }
@@ -513,7 +650,7 @@
     function toggleMode(){ mode = document.getElementById('pushToggle').checked ? 'push' : 'gentle'; store.set('lev.mode', mode); renderMain(); }
 
     /* ===================== Utils ===================== */
-    function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+    function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#039;'); }
 
     /* ===================== Boot ===================== */
     renderSidebar();
