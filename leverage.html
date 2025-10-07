@@ -39,13 +39,18 @@
     .btn-sm { padding: 6px 12px; font-size: 12px; }
     .btn-ghost { background: transparent; border: 1px solid #4a9eff; }
     
-    .accelerator { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 12px; }
+    .accelerator { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 12px; position: relative; }
     .accelerator-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .accelerator-name { font-weight: 600; font-size: 15px; }
+    .accelerator-name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
     .accelerator-progress { font-size: 18px; color: #4a9eff; font-weight: 600; }
     .accelerator-weight { font-size: 11px; color: #f59e0b; margin-left: 8px; }
     .progress-bar { background: #222; height: 8px; border-radius: 4px; overflow: hidden; }
     .progress-fill { background: linear-gradient(90deg, #4a9eff, #6366f1); height: 100%; transition: width 0.3s; }
+    
+    .info-icon { cursor: pointer; color: #4a9eff; font-size: 16px; }
+    .metric-explainer { display: none; background: #222; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 13px; line-height: 1.6; }
+    .metric-explainer.show { display: block; }
+    .metric-explainer strong { color: #4a9eff; display: block; margin-top: 8px; }
     
     .action-entry { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
     .action-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
@@ -53,6 +58,13 @@
     .action-category { display: inline-block; background: #444; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin-left: 10px; }
     .action-desc { margin: 8px 0; line-height: 1.5; }
     .action-meta { display: flex; gap: 15px; font-size: 12px; color: #888; flex-wrap: wrap; }
+    
+    .weekly-goal { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
+    .weekly-goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .weekly-goal-metric { font-weight: 600; color: #f59e0b; }
+    .weekly-goal-target { font-size: 13px; color: #bbb; }
+    .weekly-goal.completed { opacity: 0.6; }
+    .weekly-goal.completed .weekly-goal-metric { text-decoration: line-through; }
     
     input, select, textarea { background: #333; border: 1px solid #444; color: #e0e0e0; padding: 10px; border-radius: 6px; width: 100%; margin-bottom: 10px; font-size: 14px; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: #4a9eff; }
@@ -71,6 +83,10 @@
     .weight-selector { display: flex; gap: 10px; margin-bottom: 10px; }
     .weight-btn { padding: 8px 16px; background: #444; border: none; color: #e0e0e0; border-radius: 6px; cursor: pointer; }
     .weight-btn.active { background: #f59e0b; color: #000; }
+    
+    .weekly-banner { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+    .weekly-banner h3 { font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .weekly-banner .goal-count { font-size: 32px; font-weight: 600; color: #fff; }
   </style>
 </head>
 <body>
@@ -115,20 +131,47 @@
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="active" onclick="showTab('metrics')">12 Metrics</button>
+    <button class="active" onclick="showTab('weekly')">This Week</button>
+    <button onclick="showTab('metrics')">12 Metrics</button>
     <button onclick="showTab('actions')">Actions Log</button>
     <button onclick="showTab('financial')">Financial</button>
     <button onclick="showTab('reflection')">Reflection</button>
   </div>
 
-  <!-- METRICS Panel -->
-  <div id="metrics" class="panel active">
+  <!-- WEEKLY GOALS Panel -->
+  <div id="weekly" class="panel active">
+    <div class="weekly-banner">
+      <h3>Weekly Goals</h3>
+      <div class="goal-count"><span id="weeklyGoalsCompleted">0</span> / <span id="weeklyGoalsTotal">0</span> Complete</div>
+    </div>
+
     <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h2>12 High-Leverage Independence Metrics</h2>
-        <button class="btn btn-sm" onclick="openModal('metricModal')">Update Progress</button>
+      <h2>Set This Week's Goals</h2>
+      <p style="color: #888; font-size: 13px; margin-bottom: 15px;">Choose 2-3 small, achievable targets to move the needle this week</p>
+      <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 10px;">
+        <select id="goalMetric">
+          <option>Independent Cashflow Ratio</option>
+          <option>Survival Buffer</option>
+          <option>Lean Cost Index</option>
+          <option>Productised Value Engine</option>
+          <option>Repair & Maintenance Capability</option>
+          <option>Exchange & Support Network</option>
+          <option>Systems Autonomy</option>
+          <option>Multi-Source Income Structure</option>
+          <option>Regional or Physical Base Autonomy</option>
+          <option>Compliance & Administration Mastery</option>
+          <option>Strategic Redundancy & Tools</option>
+          <option>Independence Metric & Reflection Loop</option>
+        </select>
+        <input id="goalTarget" placeholder="e.g., +5%" style="width: 100px; margin: 0;">
       </div>
-      <div id="metricList"></div>
+      <textarea id="goalDesc" rows="2" placeholder="What will you do? (e.g., 'Call 3 potential tutoring clients')" style="margin: 0;"></textarea>
+      <button class="btn" onclick="addWeeklyGoal()" style="margin-top: 10px;">Add Goal</button>
+    </div>
+
+    <div class="card">
+      <h2>Active Weekly Goals</h2>
+      <div id="weeklyGoalsList"></div>
     </div>
 
     <div class="card">
@@ -136,6 +179,17 @@
       <button class="btn" onclick="openModal('actionModal')">Log Action</button>
       <button class="btn" onclick="openModal('incomeModal')">Add Income Event</button>
       <button class="btn" onclick="openModal('reflectionModal')">Weekly Reflection</button>
+    </div>
+  </div>
+
+  <!-- METRICS Panel -->
+  <div id="metrics" class="panel">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>12 High-Leverage Independence Metrics</h2>
+        <button class="btn btn-sm" onclick="openModal('metricModal')">Update Progress</button>
+      </div>
+      <div id="metricList"></div>
     </div>
   </div>
 
@@ -196,12 +250,12 @@
       <div class="grid-2">
         <div>
           <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Repair Skills Mastered</label>
-          <input id="repairSkills" type="number" value="0" onchange="updateMetrics()" style="margin: 0;">
+          <input id="repairSkills" type="number" value="0" onchange="updateTopMetrics()" style="margin: 0;">
           <div style="font-size: 12px; color: #888; margin-top: 5px;">Target: 3 core skills</div>
         </div>
         <div>
           <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Exchange Partners</label>
-          <input id="exchangePartners" type="number" value="0" onchange="updateMetrics()" style="margin: 0;">
+          <input id="exchangePartners" type="number" value="0" onchange="updateTopMetrics()" style="margin: 0;">
           <div style="font-size: 12px; color: #888; margin-top: 5px;">Target: 5+ partners</div>
         </div>
       </div>
@@ -307,6 +361,81 @@ const store = {
   set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 };
 
+const metricExplainers = {
+  'Independent Cashflow Ratio': {
+    definition: 'Percentage of your total monthly income from sources not tied to institutions (salary, government, corporate systems)',
+    target: '≥40% initially, scaling to 60-80%',
+    whatToEnter: 'Independent_Income / Total_Income × 100',
+    why: 'Primary exit velocity metric — shows how much livelihood comes from self-directed work'
+  },
+  'Survival Buffer': {
+    definition: 'Number of months you could live from savings with no income',
+    target: '6 months minimum of essential living costs',
+    whatToEnter: 'Savings / Average_Monthly_Expenses',
+    why: 'Measures freedom-to-choose — capacity to pause, pivot, or relocate without panic'
+  },
+  'Lean Cost Index': {
+    definition: 'Percentage reduction of core living expenses compared to original baseline',
+    target: 'Reduce essential expenses by 20% or more',
+    whatToEnter: '(Baseline_Expenses - Current_Expenses) / Baseline_Expenses × 100',
+    why: 'Every cost cut equals earning more income; lean base makes independence durable'
+  },
+  'Productised Value Engine': {
+    definition: 'Skill, service, or process turned into repeatable, sellable product',
+    target: 'One offer generating regular revenue',
+    whatToEnter: 'Progress % (0-100%) or monthly income from product',
+    why: 'Converts personal labour into asset that works when you don\'t'
+  },
+  'Repair & Maintenance Capability': {
+    definition: 'Breadth of practical self-reliance skills (home, tools, tech, vehicle)',
+    target: 'Three verified competencies',
+    whatToEnter: 'Count of distinct repair skills mastered ÷ 3 × 100%',
+    why: 'Every skill replaces external dependency and compounds resilience'
+  },
+  'Exchange & Support Network': {
+    definition: 'Trusted peers for trading work, goods, or knowledge outside formal markets',
+    target: '5 or more active relationships',
+    whatToEnter: 'Current partner count ÷ 5 × 100%',
+    why: 'Builds parallel economy — mutual support beyond wage systems'
+  },
+  'Systems Autonomy': {
+    definition: 'Completeness and portability of personal and business systems',
+    target: 'All critical files backed up; one concise SOP/manual complete',
+    whatToEnter: 'Percent of systems documented and backed up',
+    why: 'Ensures operation with zero institutional IT or admin reliance'
+  },
+  'Multi-Source Income Structure': {
+    definition: 'Number of distinct paying sources (clients, products, rentals, etc.)',
+    target: '≥4 active, reliable sources',
+    whatToEnter: 'Current_Sources / 4 × 100%',
+    why: 'Reduces fragility — loss of one source doesn\'t collapse livelihood'
+  },
+  'Regional or Physical Base Autonomy': {
+    definition: 'Control over living/working base outside high-cost or institution-dense zones',
+    target: 'One owned or low-overhead base under your control',
+    whatToEnter: '0% = none; 50% = secured plan/lease; 100% = functional base',
+    why: 'Physical independence lowers costs and anchors autonomy in tangible world'
+  },
+  'Compliance & Administration Mastery': {
+    definition: 'Ability to handle tax, BAS, insurance, registration without third-party reliance',
+    target: 'Complete confidence and documented workflow',
+    whatToEnter: 'Percent of processes you can execute unaided',
+    why: 'Eliminates bureaucratic fear; transforms red tape into routine'
+  },
+  'Strategic Redundancy & Tools': {
+    definition: 'Level of backup and duplication for critical tools, data, communications',
+    target: 'All essential gear duplicated or securely backed up',
+    whatToEnter: 'Percent of critical items covered (laptop, phone, ID, storage, power)',
+    why: 'Protects against single-point failure; ensures continuity if systems go down'
+  },
+  'Independence Metric & Reflection Loop': {
+    definition: 'Overall autonomy score updated weekly, paired with reflection log',
+    target: 'Continuous upward trend toward 100%',
+    whatToEnter: 'Mean % of all other metrics; link to weekly notes',
+    why: 'Keeps awareness alive — feedback loop that transforms motion into mastery'
+  }
+};
+
 const defaultMetrics = [
   { name: 'Independent Cashflow Ratio', target: '≥40% non-institutional income', progress: 0, weight: 3 },
   { name: 'Survival Buffer', target: '6 months lean expenses saved', progress: 0, weight: 3 },
@@ -331,6 +460,7 @@ function showTab(tab) {
   document.getElementById(tab).classList.add('active');
   event.target.classList.add('active');
   
+  if (tab === 'weekly') renderWeeklyGoals();
   if (tab === 'actions') renderActions();
   if (tab === 'reflection') renderReflections();
   if (tab === 'financial') renderIncomeStreams();
@@ -346,25 +476,117 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
+// Weekly Goals
+function getWeekKey() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const week = Math.ceil((d - new Date(year, 0, 1)) / (7 * 24 * 60 * 60 * 1000));
+  return `${year}-W${week}`;
+}
+
+function addWeeklyGoal() {
+  const metric = document.getElementById('goalMetric').value;
+  const target = document.getElementById('goalTarget').value.trim();
+  const desc = document.getElementById('goalDesc').value.trim();
+  
+  if (!target || !desc) {
+    alert('Please enter a target and description');
+    return;
+  }
+  
+  const goals = store.get('lev.weeklyGoals', []);
+  const weekKey = getWeekKey();
+  
+  goals.push({
+    id: Date.now(),
+    week: weekKey,
+    metric,
+    target,
+    description: desc,
+    completed: false
+  });
+  
+  store.set('lev.weeklyGoals', goals);
+  document.getElementById('goalTarget').value = '';
+  document.getElementById('goalDesc').value = '';
+  renderWeeklyGoals();
+}
+
+function renderWeeklyGoals() {
+  const goals = store.get('lev.weeklyGoals', []);
+  const weekKey = getWeekKey();
+  const weekGoals = goals.filter(g => g.week === weekKey);
+  
+  document.getElementById('weeklyGoalsTotal').textContent = weekGoals.length;
+  document.getElementById('weeklyGoalsCompleted').textContent = weekGoals.filter(g => g.completed).length;
+  
+  if (weekGoals.length === 0) {
+    document.getElementById('weeklyGoalsList').innerHTML = '<p style="color:#888">No goals set for this week. Add 2-3 small targets above.</p>';
+    return;
+  }
+  
+  const html = weekGoals.map((goal, i) => `
+    <div class="weekly-goal ${goal.completed ? 'completed' : ''}">
+      <div class="weekly-goal-header">
+        <div>
+          <div class="weekly-goal-metric">${goal.metric}</div>
+          <div class="weekly-goal-target">Target: ${goal.target}</div>
+        </div>
+        <input type="checkbox" ${goal.completed ? 'checked' : ''} onchange="toggleGoalComplete(${goal.id})" style="width: 20px; height: 20px; cursor: pointer;">
+      </div>
+      <div style="font-size: 13px; color: #bbb; margin-top: 8px;">${goal.description}</div>
+    </div>
+  `).join('');
+  
+  document.getElementById('weeklyGoalsList').innerHTML = html;
+}
+
+function toggleGoalComplete(id) {
+  const goals = store.get('lev.weeklyGoals', []);
+  const goal = goals.find(g => g.id === id);
+  if (goal) {
+    goal.completed = !goal.completed;
+    store.set('lev.weeklyGoals', goals);
+    renderWeeklyGoals();
+  }
+}
+
 // Metrics
 function renderMetrics() {
   const metrics = store.get('lev.metrics', defaultMetrics);
-  const html = metrics.map((met, i) => `
-    <div class="accelerator">
-      <div class="accelerator-header">
-        <div>
-          <span class="accelerator-name">${met.name}</span>
-          <span class="accelerator-weight">${met.weight}× weight</span>
+  const html = metrics.map((met, i) => {
+    const explainer = metricExplainers[met.name];
+    return `
+      <div class="accelerator">
+        <div class="accelerator-header">
+          <div>
+            <span class="accelerator-name">
+              ${met.name}
+              <span class="info-icon" onclick="toggleExplainer(${i})">ℹ️</span>
+            </span>
+            <span class="accelerator-weight">${met.weight}× weight</span>
+          </div>
+          <div class="accelerator-progress">${met.progress}%</div>
         </div>
-        <div class="accelerator-progress">${met.progress}%</div>
+        <div style="font-size: 12px; color: #888; margin-bottom: 8px;">${met.target}</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${met.progress}%;"></div>
+        </div>
+        <div class="metric-explainer" id="explainer-${i}">
+          <div style="color: #bbb;">${explainer.definition}</div>
+          <strong>Target:</strong> ${explainer.target}
+          <strong>What to enter:</strong> ${explainer.whatToEnter}
+          <strong>Why it matters:</strong> ${explainer.why}
+        </div>
       </div>
-      <div style="font-size: 12px; color: #888; margin-bottom: 8px;">${met.target}</div>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: ${met.progress}%;"></div>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
   document.getElementById('metricList').innerHTML = html;
+}
+
+function toggleExplainer(i) {
+  const explainer = document.getElementById(`explainer-${i}`);
+  explainer.classList.toggle('show');
 }
 
 function populateMetricSelect() {
@@ -574,7 +796,6 @@ function updateFinancials() {
   
   const financial = store.get('lev.financial', { savings: 0, monthlyExpenses: 0, baselineExpenses: monthlyExpenses || 0 });
   
-  // Set baseline on first save
   if (!financial.baselineExpenses && monthlyExpenses > 0) {
     financial.baselineExpenses = monthlyExpenses;
   }
@@ -583,7 +804,6 @@ function updateFinancials() {
   financial.monthlyExpenses = monthlyExpenses;
   store.set('lev.financial', financial);
   
-  // Calculate metrics
   const streams = store.get('lev.incomeStreams', []);
   const totalIncome = streams.reduce((sum, s) => sum + s.amount, 0);
   const independentIncome = streams.filter(s => s.type === 'independent').reduce((sum, s) => sum + s.amount, 0);
@@ -591,7 +811,6 @@ function updateFinancials() {
   const cashflowRatio = totalIncome > 0 ? ((independentIncome / totalIncome) * 100).toFixed(0) : 0;
   document.getElementById('cashflowRatio').textContent = cashflowRatio + '%';
   
-  // Cost reduction
   const costReduction = financial.baselineExpenses > 0 
     ? (((financial.baselineExpenses - monthlyExpenses) / financial.baselineExpenses) * 100).toFixed(0)
     : 0;
@@ -645,28 +864,24 @@ function deleteReflection(i) {
 
 // Top Metrics
 function updateTopMetrics() {
-  // Weighted Autonomy Score
   const metrics = store.get('lev.metrics', defaultMetrics);
   const totalWeight = metrics.reduce((sum, m) => sum + m.weight, 0);
   const weightedProgress = metrics.reduce((sum, m) => sum + (m.progress * m.weight), 0);
   const autonomyScore = totalWeight > 0 ? Math.round(weightedProgress / totalWeight) : 0;
   document.getElementById('autonomyScore').textContent = autonomyScore + '%';
   
-  // Independent Income %
   const streams = store.get('lev.incomeStreams', []);
   const totalIncome = streams.reduce((sum, s) => sum + s.amount, 0);
   const independentIncome = streams.filter(s => s.type === 'independent').reduce((sum, s) => sum + s.amount, 0);
   const independentPercent = totalIncome > 0 ? Math.round((independentIncome / totalIncome) * 100) : 0;
   document.getElementById('independentIncome').textContent = independentPercent + '%';
   
-  // Months Runway
   const financial = store.get('lev.financial', { savings: 0, monthlyExpenses: 0 });
   const monthsRunway = financial.monthlyExpenses > 0 
     ? (financial.savings / financial.monthlyExpenses).toFixed(1)
     : 0;
   document.getElementById('monthsRunway').textContent = monthsRunway;
   
-  // Resilience Index
   const repairSkills = parseInt(document.getElementById('repairSkills')?.value || 0);
   const exchangePartners = parseInt(document.getElementById('exchangePartners')?.value || 0);
   const resilienceIndex = streams.length + repairSkills + exchangePartners;
@@ -676,6 +891,7 @@ function updateTopMetrics() {
 function exportData() {
   const data = {
     metrics: store.get('lev.metrics', defaultMetrics),
+    weeklyGoals: store.get('lev.weeklyGoals', []),
     actions: store.get('lev.actions', []),
     incomeStreams: store.get('lev.incomeStreams', []),
     incomeEvents: store.get('lev.incomeEvents', []),
@@ -703,6 +919,7 @@ function exportData() {
 
 // Initialize
 renderMetrics();
+renderWeeklyGoals();
 renderActions();
 renderIncomeStreams();
 renderReflections();
