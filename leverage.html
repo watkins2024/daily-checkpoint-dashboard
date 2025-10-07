@@ -3,140 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Independence Laboratory</title>
+  <title>Independence Laboratory — Focus Mode</title>
   <style>
-    /* ---------------------------------------------
-       Independence Laboratory v2.1
-       - Adds Micro-steps (Plan → Do → Proof)
-       - Visual progress rings per pathway
-       - Preserves your existing localStorage keys
-       --------------------------------------------- */
+    /* ------------------------------------------------------
+       Independence Laboratory v3 — Focus Mode (Dark)
+       Goals:
+       - Minimal, quiet UI (low noise)
+       - One-clear-next-step per metric
+       - "Gentle" vs "Push" step sequences
+       - Auto-progress: finish steps → milestone completes
+       - Keeps your existing localStorage data/keys
+       ------------------------------------------------------ */
 
     :root{
-      --bg: #f6f7f9;
-      --panel: #ffffff;
-      --muted: #8b8f98;
-      --ink: #1e232b;
-      --ink-soft: #2c3340;
-      --primary: #3b82f6;
-      --primary-ink: #0b63f6;
-      --ok: #10b981;
-      --warn: #f59e0b;
-      --danger: #ef4444;
-      --ring: rgba(59,130,246,.35);
-      --border: #e8e9ee;
-      --shadow: 0 6px 24px rgba(0,0,0,0.08);
+      --bg: #0f1216;         /* page */
+      --surface: #12161c;    /* cards */
+      --muted: #8b95a7;      /* secondary text */
+      --ink: #e6ebf2;        /* primary text */
+      --edge: #1f2a36;       /* borders */
+      --accent: #4aa8ff;     /* primary accent */
+      --accent-2: #7c8cff;   /* secondary accent */
+      --ok: #10b981;         /* success */
+      --warn: #f59e0b;       /* warning */
+      --danger: #ef4444;     /* danger */
+      --ring: rgba(74,168,255,.25);
       --radius: 14px;
+      --shadow: 0 8px 30px rgba(0,0,0,.35);
     }
 
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
     body{
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background: var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(80% 80% at 80% 0%, #0c0f13 0%, #0f1216 40%, #0f1216 100%);
       color: var(--ink);
-      line-height: 1.35;
     }
 
-    a{color: var(--ink); text-decoration: none}
-    .top-nav{
-      background:#fff;
-      border-bottom: 1px solid var(--border);
-      position: sticky; top:0; z-index: 20;
-      display:flex; gap:10px; padding:10px 16px;
-    }
-    .top-nav a{ padding:8px 14px; border-radius:10px; color: var(--muted) }
-    .top-nav a:hover{ background:#f0f3f7; color: var(--primary-ink) }
-    .top-nav a.active{ background:#e8f0ff; color: var(--primary-ink) }
+    a{color:var(--muted); text-decoration:none}
+    .top-nav{ position:sticky; top:0; z-index:30; background:#0b0e12cc; backdrop-filter: blur(8px); border-bottom: 1px solid #0f1720; display:flex; gap:10px; padding:10px 16px }
+    .top-nav a{ padding:8px 12px; border-radius:10px }
+    .top-nav a:hover{ background:#12161c; color: var(--accent) }
+    .top-nav a.active{ background:#12161c; color: var(--accent) }
 
-    header{ max-width: 1200px; margin: 18px auto 0; padding: 16px; }
-    header h1{ margin:0 0 4px 0; font-size: 28px; letter-spacing:.2px }
-    header p{ margin:0; color: var(--muted) }
+    .shell{ display:grid; grid-template-columns: 280px 1fr; gap:16px; max-width:1200px; margin:18px auto 40px; padding:0 16px }
 
-    .container{ max-width:1200px; margin: 16px auto 40px; padding: 0 16px }
+    /* Sidebar */
+    .side{ background: var(--surface); border:1px solid var(--edge); border-radius: var(--radius); box-shadow: var(--shadow); padding:10px }
+    .side h2{ font-size:14px; color:var(--muted); margin:4px 6px 10px }
 
-    /* Summary metrics */
-    .metrics{ display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 12px; margin-top: 16px; }
-    .metric-card{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:16px; box-shadow: var(--shadow); }
-    .metric-label{ font-size:12px; color: var(--muted); letter-spacing:.3px; text-transform: uppercase }
-    .metric-value{ font-size:32px; font-weight:700; margin-top:6px }
-    .metric-sub{ font-size:12px; color: var(--muted); margin-top:4px }
+    .metric-item{ display:flex; align-items:center; gap:10px; padding:8px; border-radius:10px; cursor:pointer }
+    .metric-item:hover{ background:#0d131a }
+    .metric-item.active{ background:#0d1520; outline: 1px solid #142033 }
 
-    /* Big threshold bar */
-    .exit-wrap{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:18px; margin-top:14px; box-shadow: var(--shadow); }
-    .bar{ height:14px; width:100%; background:#eef1f7; border-radius:999px; position:relative; overflow:hidden }
-    .bar-fill{ position:absolute; left:0; top:0; height:100%; width:0%; background: linear-gradient(90deg, var(--ok), #46c0f9); transition: width .4s ease; }
-    .bar-line{ position:absolute; top:-6px; width:2px; height:26px; background: var(--warn); left: 60%; }
-    .bar-label{ display:flex; justify-content: space-between; margin-top:8px; color: var(--muted); font-size:12px }
-    .exit-note{ margin-top:10px; font-size:13px; color: var(--muted) }
-    .glow{ box-shadow: 0 0 0 3px rgba(16,185,129,.15), 0 0 0 1px rgba(16,185,129,.25) }
+    .ring{ width:36px; height:36px; border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:700; color:#9be2c2; background:
+      conic-gradient(var(--ok) var(--pct,0%), #1a2533 0); }
 
-    /* Tabs */
-    .tabs{ display:flex; flex-wrap: wrap; gap:8px; margin-top:18px }
-    .tabs button{ border:1px solid var(--border); background: #fff; color: var(--ink); padding:10px 14px; border-radius: 10px; cursor:pointer; }
-    .tabs button.active{ background: #e8f0ff; color: var(--primary-ink); border-color:#dbe6ff }
-    .panel{ display:none; margin-top:14px }
-    .panel.active{ display:block }
+    .item-text{ display:grid }
+    .item-name{ font-size:13px }
+    .item-sub{ font-size:11px; color:var(--muted) }
 
-    /* Cards / sections */
-    .card{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:20px; box-shadow: var(--shadow); margin-bottom: 14px; }
-    .card h2{ margin:0 0 8px 0; font-size:18px }
-    .help{ font-size:13px; color: var(--muted) }
+    /* Main */
+    .main{ display:grid; gap:16px }
 
-    /* Metric ladders */
-    .ladder-list{ display:grid; grid-template-columns: repeat(auto-fit,minmax(310px,1fr)); gap: 12px }
-    .metric-ladder{ border:1px solid var(--border); border-radius: 12px; padding:14px; background:#fff; }
-    .metric-header{ display:flex; align-items:center; justify-content: space-between; gap:6px }
-    .metric-name{ font-weight:700 }
-    .metric-stage{ font-size:12px; color: var(--warn) }
-
-    .ladder-track{ display:flex; gap:6px; margin:10px 0 8px }
-    .ladder-rung{ flex:1; height:8px; border-radius: 999px; background:#eef1f7 }
-    .ladder-rung.active{ background: linear-gradient(90deg, #93c5fd, #818cf8) }
-
-    .metric-tools{ display:grid; gap:10px }
-    .row{ display:grid; grid-template-columns: 1fr; gap:8px }
-    .row-2{ display:grid; grid-template-columns: 1fr 110px; gap:8px }
-
-    textarea,input,select{ width:100%; border:1px solid var(--border); background:#fbfcff; border-radius:10px; padding:10px 12px; font-size:14px; color: var(--ink); }
-    textarea:focus, input:focus, select:focus{ outline:none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); background:#fff; }
-
-    .btn{ border:1px solid #dbe6ff; background: #eaf2ff; color: var(--primary-ink); padding:8px 12px; border-radius: 10px; cursor:pointer; font-size:14px; }
-    .btn:hover{ background:#dfeaff }
-    .btn-ghost{ background:#fff; border:1px dashed var(--border); color: var(--muted) }
-
-    .badge{ font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); background:#fff; color: var(--muted) }
-
-    /* Tooltips */
-    .info{ width:20px; height:20px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:#eef4ff; border:1px solid #dbe6ff; color:#487ef7; cursor:pointer; font-size:12px; }
-    .tooltip{ position: absolute; z-index:50; background:#0f172a; color:#dbeafe; padding:12px; border-radius:10px; width:min(320px, 80vw); font-size:13px; box-shadow: 0 14px 36px rgba(2,8,23,.3); border:1px solid #1e293b; }
-    .tooltip h4{ margin:0 0 6px 0; color:#93c5fd }
-    .tooltip p{ margin:6px 0 }
-
-    /* Action log + Threadline */
-    .action-entry{ padding:12px; border:1px solid var(--border); border-radius:10px; background:#fff; margin-bottom:8px }
-    .action-date{ font-weight:600; color:#3b82f6; margin-bottom:4px; font-size:13px }
-    .action-desc{ font-size:14px }
-    .thread-entry{ padding:12px; border:1px solid var(--border); border-radius:10px; background:#fff; margin-bottom:8px }
-
+    .card{ background: var(--surface); border:1px solid var(--edge); border-radius: var(--radius); box-shadow: var(--shadow); padding:18px }
+    .card h1{ font-size:22px; margin:0 0 4px }
     .muted{ color: var(--muted) }
-    .split{ display:flex; gap:12px; flex-wrap: wrap }
-    .grow{ flex: 1 1 300px }
 
-    /* Visual progress ring */
-    .ring{ width: 64px; height: 64px; border-radius: 50%; background:
-      conic-gradient(var(--ok) var(--pct,0%), #e9eef6 0);
-      display:grid; place-items:center; font-weight:700; color:#0f5132; }
-    .ring span{ font-size:12px; color:#0f5132 }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center }
+    .grow{ flex:1 1 280px }
 
-    /* Micro-step pills */
-    .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--border); border-radius:9999px; background:#fff; font-size:12px }
-    .pill input{ width:16px; height:16px }
+    .badge{ font-size:12px; color:#a6b3c6; background:#0d1520; border:1px solid #16263a; border-radius:999px; padding:4px 10px }
+
+    .bar{ height:12px; width:100%; background:#0e1621; border:1px solid #142033; border-radius:999px; position:relative; overflow:hidden }
+    .bar-fill{ position:absolute; inset:0 auto 0 0; width:0%; background: linear-gradient(90deg, #12b886, #4aa8ff); transition: width .35s ease }
+    .bar-line{ position:absolute; left:60%; top:-4px; height:20px; width:2px; background: var(--warn) }
+
+    .seg{ display:grid; grid-template-columns: 1fr; gap:12px }
+
+    input, textarea, select{ width:100%; padding:10px 12px; border-radius:10px; background:#0c121a; border:1px solid #142033; color:var(--ink) }
+    input:focus, textarea:focus, select:focus{ outline:none; border-color: #214b7a; box-shadow: 0 0 0 3px var(--ring) }
+
+    .btn{ background:#112136; border:1px solid #1b3a5c; color:#cfe4ff; padding:10px 14px; border-radius:10px; cursor:pointer }
+    .btn:hover{ background:#0f1c2e }
+    .btn-ok{ background:#0f2a22; border:1px solid #155a48; color:#bff2df }
+    .btn-ghost{ background:transparent; border:1px dashed #203246; color:var(--muted) }
+
+    .step{ background:#0c121a; border:1px solid #132035; padding:14px; border-radius:12px; display:grid; gap:8px }
+    .step-title{ font-weight:700; letter-spacing:.2px }
+    .step-help{ font-size:12px; color:var(--muted) }
+
+    .mini{ font-size:12px; color:var(--muted) }
+
+    .list{ display:grid; gap:8px }
+    .log{ background:#0c121a; border:1px solid #142033; padding:10px; border-radius:10px }
+    .log .when{ color:#6aa8ff; font-size:12px; margin-bottom:4px }
+
+    .toggle{ display:flex; gap:8px; align-items:center }
+    .toggle input{ width:40px; height:22px }
+
   </style>
 </head>
 <body>
-
-  <!-- Keep your nav links intact -->
   <div class="top-nav">
     <a href="index.html">← Hub</a>
     <a href="walks.html">Walks</a>
@@ -145,608 +112,413 @@
     <a href="leverage.html" class="active">Leverage</a>
   </div>
 
-  <header>
-    <h1>Independence Laboratory</h1>
-    <p id="lastUpdated" class="muted">Last updated —</p>
-  </header>
+  <div class="shell">
+    <!-- Sidebar: pick a pathway (quiet, single-column) -->
+    <aside class="side">
+      <h2>Your pathways</h2>
+      <div id="sideList"></div>
+    </aside>
 
-  <div class="container">
-    <!-- Summary + Exit threshold -->
-    <div class="metrics">
-      <div class="metric-card">
-        <div class="metric-label">Momentum</div>
-        <div class="metric-value" id="weeklyActions">0</div>
-        <div class="metric-sub">actions this week</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Milestones Hit</div>
-        <div class="metric-value" id="milestonesCompleted">0</div>
-        <div class="metric-sub">across all pathways</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Active Pathways</div>
-        <div class="metric-value" id="activeMetrics">0</div>
-        <div class="metric-sub">in motion</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Streak</div>
-        <div class="metric-value" id="actionStreak">0</div>
-        <div class="metric-sub">weeks with action</div>
-      </div>
-    </div>
-
-    <div class="exit-wrap" id="exitCard">
-      <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:10px">
-        <div><b>Overall Independence</b></div>
-        <div class="badge" id="overallBadge">0%</div>
-      </div>
-      <div class="bar" aria-label="Overall independence progress bar">
-        <div class="bar-fill" id="overallFill"></div>
-        <div class="bar-line" title="Exit threshold (60%)"></div>
-      </div>
-      <div class="bar-label">
-        <span>0%</span><span>Target 60%</span><span>100%</span>
-      </div>
-      <div class="exit-note">≥ 60% = baseline fit for independent work as default.</div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="active" data-tab="ladder">Pathways</button>
-      <button data-tab="actions">Action Log</button>
-      <button data-tab="thread">Threadline</button>
-      <button data-tab="help">Instructions</button>
-    </div>
-
-    <!-- PANELS -->
-    <div id="ladder" class="panel active">
-      <div class="card">
-        <h2>12 Pathways to Independence</h2>
-        <p class="help">Each pathway shows: a progress ring, your next milestone, a 5‑rung ladder, micro‑steps (Plan → Do → Proof), evidence box, and an energy slider.</p>
-        <div class="ladder-list" id="ladderList"></div>
-      </div>
-    </div>
-
-    <div id="actions" class="panel">
-      <div class="card">
-        <div style="display:flex; justify-content: space-between; align-items:center">
-          <h2>Action Log</h2>
-          <button class="btn" onclick="openActionModal()">Log Action</button>
-        </div>
-        <div id="actionList"></div>
-      </div>
-    </div>
-
-    <div id="thread" class="panel">
-      <div class="card">
-        <h2>Threadline — weekly continuity</h2>
-        <p class="help">One short entry per week: <b>What shifted</b> / <b>What resisted</b> / <b>What’s next</b>.</p>
+    <!-- Main focus panel: ONE metric at a time -->
+    <main class="main">
+      <section class="card">
+        <h1 id="metricTitle">—</h1>
         <div class="row">
-          <textarea id="threadText" rows="5" placeholder="This week: shifted / resisted / next focus…"></textarea>
-          <div style="display:flex; gap:8px; justify-content:flex-end">
-            <button class="btn" onclick="saveThread()">Save entry</button>
-            <button class="btn btn-ghost" onclick="clearThreadText()">Clear</button>
+          <span id="metricStage" class="badge">Stage —</span>
+          <span id="metricWeight" class="badge">Weight ×</span>
+          <span class="badge" id="modeBadge">Mode: Gentle</span>
+          <span class="mini">Tip: Keep it simple. Do the next step, log a proof. Repeat.</span>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="grow">
+            <div class="bar"><div id="overallFill" class="bar-fill"></div><div class="bar-line" title="Exit baseline (60%)"></div></div>
+            <div class="mini" id="overallText" style="margin-top:6px">Overall independence: 0%</div>
+          </div>
+          <div class="badge" id="streakBadge">Streak 0w</div>
+        </div>
+      </section>
+
+      <section class="card seg">
+        <div class="row" style="align-items:center; justify-content: space-between">
+          <div class="row" style="align-items:center">
+            <div id="metricRing" class="ring" style="--pct:0%">0%</div>
+            <div class="mini" id="milestoneSummary">0/5 milestones</div>
+          </div>
+          <label class="toggle mini">
+            <input type="checkbox" id="pushToggle" onchange="toggleMode()" /> Push mode
+          </label>
+        </div>
+
+        <!-- Next attainable step (auto-generated) -->
+        <div class="step">
+          <div class="step-title" id="stepTitle">Next step will appear here</div>
+          <div class="step-help" id="stepHelp">A small, do-able move. When done, tick ✓ and (optionally) log one line of proof.</div>
+          <div class="row">
+            <button class="btn-ok" onclick="completeStep()">✓ I did this</button>
+            <button class="btn" onclick="shuffleStep()">↻ Try another option</button>
+            <button class="btn-ghost" onclick="markMilestoneIfReady()">Mark milestone ✓</button>
+          </div>
+          <div class="row">
+            <input id="evidenceInput" placeholder="One factual line of proof (optional)" />
+            <button class="btn" onclick="saveEvidenceLine()">Save proof</button>
           </div>
         </div>
-      </div>
-      <div class="card">
-        <h2>Past threadline entries</h2>
-        <div id="threadList"></div>
-      </div>
-    </div>
 
-    <div id="help" class="panel">
-      <div class="card">
-        <h2>Quick reference</h2>
-        <ul class="help" style="margin-left:18px">
-          <li><b>Micro‑steps</b>: Tick <i>Plan</i> → <i>Do (10‑min)</i> → <i>Proof</i>. Repeat weekly until the rung is truly done.</li>
-          <li><b>Mark a milestone</b>: Use the button beside the current rung. It auto‑logs an action and resets micro‑steps for that rung.</li>
-          <li><b>Evidence</b>: One factual sentence (e.g., “Sold first $40 service”).</li>
-          <li><b>Energy</b>: Rate the weekly energy/pressure for this pathway (0–100). Lower = heavy; use as an early‑warning signal.</li>
-          <li><b>Exit threshold</b>: The big bar glows as you approach 60% (independence baseline).</li>
-        </ul>
-      </div>
-    </div>
+        <!-- Evidence recap (last 3) -->
+        <div class="list" id="evidenceList"></div>
+      </section>
 
-  </div>
-
-  <!-- Simple modal for quick action logging -->
-  <div id="actionModal" style="display:none; position:fixed; inset:0; background:rgba(2,8,23,.5); z-index:1000; align-items:center; justify-content:center">
-    <div style="background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow: var(--shadow); width:min(560px,90vw); padding:18px">
-      <h3 style="margin:0 0 8px 0">Log Action</h3>
-      <div class="row-2">
-        <select id="actionMetric"></select>
-        <input id="actionDate" type="date" />
-      </div>
-      <textarea id="actionDesc" rows="3" placeholder="Describe what you actually did…"></textarea>
-      <div style="display:flex; gap:8px; justify-content:flex-end">
-        <button class="btn" onclick="saveAction()">Save</button>
-        <button class="btn btn-ghost" onclick="closeActionModal()">Cancel</button>
-      </div>
-    </div>
+      <section class="card">
+        <h1 style="font-size:16px; margin-bottom:8px">Recent actions</h1>
+        <div id="actionList"></div>
+      </section>
+    </main>
   </div>
 
   <script>
-    /* ==========================================================
-       Storage helpers (kept from v2; extended)
-       ========================================================== */
-    const store = {
-      get(k, def){ try { return JSON.parse(localStorage.getItem(k)) ?? def } catch(_) { return def } },
-      set(k, v){ localStorage.setItem(k, JSON.stringify(v)) }
-    };
+    /* ===================== Storage ===================== */
+    const store = { get(k, d){ try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }, set(k,v){ localStorage.setItem(k, JSON.stringify(v)) } };
 
-    // Existing keys preserved:
-    //  - lev.ladder, lev.actions, lev.reflections (if you used it elsewhere)
-    // New keys:
-    //  - lev.evidence  -> { [metricName]: [{date, text}] }
-    //  - lev.energy    -> { [metricName]: [{date, value}] }
-    //  - lev.thread    -> [{date, text}]
-    //  - lev.micro     -> { "<metric>|<milIdx>": { plan:boolean, do:boolean, proof:boolean, note:string } }
+    // Keep your existing keys; add a couple for v3
+    // - lev.ladder     (preserved)
+    // - lev.actions    (preserved)
+    // - lev.evidence   (preserved)
+    // - lev.energy     (preserved)
+    // - lev.thread     (preserved)
+    // - lev.micro      (preserved)
+    // - lev.mode       ('gentle' | 'push')
+    // - lev.focus      (metric index)
 
-    const MICRO_KEYS = ["plan","do","proof"];
-    function microKey(metricName, milIdx){ return `${metricName}|${milIdx}`; }
-    function getMicro(){ return store.get('lev.micro', {}); }
-    function setMicro(v){ store.set('lev.micro', v); }
-
-    /* ==========================================================
-       Default ladder with info + weights
-       ========================================================== */
+    /* ===================== Default ladder ===================== */
     const defaultLadder = [
-      { name:'Independent Cashflow',    weight:3, info:{ def:'Ratio of income from non‑institutional sources.', target:'≥ 40% independent income.', enter:'Mark milestones as you earn.', why:'Cashflow buys calendar control and negotiation power.' }, milestones:[
+      { name:'Independent Cashflow', weight:3, milestones:[
         {stage:'Seed',    text:'Earn $50 once from non-salary work', completed:false},
-        {stage:'Active',  text:'Earn $200/month for 2 months',       completed:false},
-        {stage:'Growing', text:'Reach 20% independent income',       completed:false},
-        {stage:'Stable',  text:'Reach 40% independent income',       completed:false},
-        {stage:'Autonomous',text:'Maintain 60%+ for 3 months',       completed:false}
+        {stage:'Active',  text:'Earn $200/month for 2 months', completed:false},
+        {stage:'Growing', text:'Reach 20% independent income', completed:false},
+        {stage:'Stable',  text:'Reach 40% independent income', completed:false},
+        {stage:'Autonomous', text:'Maintain 60%+ for 3 months', completed:false}
       ]},
-      { name:'Survival Buffer',         weight:3, info:{ def:'Cash runway for lean periods.', target:'6 months of essentials.', enter:'Mark milestones as you fund the buffer.', why:'Runway turns urgency into patience and better decisions.' }, milestones:[
+      { name:'Survival Buffer', weight:3, milestones:[
         {stage:'Seed',    text:'Save $100 in separate account', completed:false},
-        {stage:'Active',  text:'Build 1 month of essentials',   completed:false},
-        {stage:'Growing', text:'Reach 3 months saved',          completed:false},
-        {stage:'Stable',  text:'Achieve 6 months runway',       completed:false},
-        {stage:'Autonomous',text:'Maintain 12+ months',        completed:false}
+        {stage:'Active',  text:'Build 1 month essential expenses', completed:false},
+        {stage:'Growing', text:'Reach 3 months expenses', completed:false},
+        {stage:'Stable',  text:'Achieve 6 months runway', completed:false},
+        {stage:'Autonomous', text:'Maintain 12+ months buffer', completed:false}
       ]},
-      { name:'Lean Cost Index',         weight:2, info:{ def:'Efficiency of your baseline spend.', target:'20% reduction from current spend.', enter:'Mark recurring trims and waste cuts.', why:'Lower baseline = faster independence math.' }, milestones:[
+      { name:'Lean Cost Index', weight:2, milestones:[
         {stage:'Seed',    text:'Cancel one recurring payment', completed:false},
-        {stage:'Active',  text:'Reduce expenses by 5%',        completed:false},
-        {stage:'Growing', text:'Cut costs by 10%',             completed:false},
-        {stage:'Stable',  text:'Achieve 20% reduction',        completed:false},
-        {stage:'Autonomous',text:'Sustain lean baseline 6+ months', completed:false}
+        {stage:'Active',  text:'Reduce expenses by 5%', completed:false},
+        {stage:'Growing', text:'Cut costs by 10%', completed:false},
+        {stage:'Stable',  text:'Achieve 20% cost reduction', completed:false},
+        {stage:'Autonomous', text:'Sustain lean baseline 6+ months', completed:false}
       ]},
-      { name:'Productised Value',       weight:3, info:{ def:'Repeatable offer you can ship and sell.', target:'One live product producing revenue.', enter:'Mark steps from outline → first customer.', why:'Products decouple earnings from hours.' }, milestones:[
+      { name:'Productised Value', weight:3, milestones:[
         {stage:'Seed',    text:'Write outline for one offer', completed:false},
-        {stage:'Active',  text:'Publish a simple page / doc', completed:false},
-        {stage:'Growing', text:'Get first paying customer',   completed:false},
+        {stage:'Active',  text:'Create simple landing page or document', completed:false},
+        {stage:'Growing', text:'Get first paying customer', completed:false},
         {stage:'Stable',  text:'Earn $100+/month from product', completed:false},
-        {stage:'Autonomous',text:'Consistent revenue month over month', completed:false}
+        {stage:'Autonomous', text:'Repeatable product generating revenue', completed:false}
       ]},
-      { name:'Repair Capability',       weight:2, info:{ def:'Ability to fix key things yourself.', target:'3 core repair competencies.', enter:'Mark each learned & verified skill.', why:'Repairs save money and reduce dependency.' }, milestones:[
-        {stage:'Seed',    text:'Learn 1 basic repair (video ok)', completed:false},
-        {stage:'Active',  text:'Complete 1 repair yourself',      completed:false},
-        {stage:'Growing', text:'Master 2 distinct repair skills', completed:false},
+      { name:'Repair Capability', weight:2, milestones:[
+        {stage:'Seed',    text:'Learn 1 basic repair (YouTube counts)', completed:false},
+        {stage:'Active',  text:'Successfully complete 1 repair', completed:false},
+        {stage:'Growing', text:'Master 2 different repair skills', completed:false},
         {stage:'Stable',  text:'Achieve 3 verified competencies', completed:false},
-        {stage:'Autonomous',text:'Teach someone else a repair skill', completed:false}
+        {stage:'Autonomous', text:'Teach someone else a repair skill', completed:false}
       ]},
-      { name:'Exchange Network',        weight:2, info:{ def:'Non‑monetary exchange relationships.', target:'5+ active partners.', enter:'Mark exchanges and partners formed.', why:'Trade builds resilience and speeds learning.' }, milestones:[
-        {stage:'Seed',    text:'Do one small exchange',        completed:false},
-        {stage:'Active',  text:'Establish 2 barter relationships', completed:false},
-        {stage:'Growing', text:'Complete 5 exchanges total',   completed:false},
-        {stage:'Stable',  text:'Build network of 5+ partners', completed:false},
-        {stage:'Autonomous',text:'Weekly exchanges are routine', completed:false}
+      { name:'Exchange Network', weight:2, milestones:[
+        {stage:'Seed',    text:'Do one small exchange (even with friend)', completed:false},
+        {stage:'Active',  text:'Establish 2 barter/trade relationships', completed:false},
+        {stage:'Growing', text:'Complete 5 exchanges outside money', completed:false},
+        {stage:'Stable',  text:'Build network of 5+ active partners', completed:false},
+        {stage:'Autonomous', text:'Weekly exchanges are a normal routine', completed:false}
       ]},
-      { name:'Systems Autonomy',        weight:2, info:{ def:'Backups + SOPs for operations.', target:'All critical files backed up + 1‑page SOP.', enter:'Mark backups + documentation done.', why:'Operate without institutional IT/admin.' }, milestones:[
-        {stage:'Seed',    text:'Back up one critical folder',  completed:false},
-        {stage:'Active',  text:'Document one key process',     completed:false},
+      { name:'Systems Autonomy', weight:2, milestones:[
+        {stage:'Seed',    text:'Back up one critical folder today', completed:false},
+        {stage:'Active',  text:'Document one key process', completed:false},
         {stage:'Growing', text:'All files backed up in 2 places', completed:false},
-        {stage:'Stable',  text:'Complete 1‑page ops manual',  completed:false},
-        {stage:'Autonomous',text:'Can step away for a month',  completed:false}
+        {stage:'Stable',  text:'Complete 1‑page operations manual', completed:false},
+        {stage:'Autonomous', text:'Could step away for a month and it runs', completed:false}
       ]},
-      { name:'Multi-Source Income',     weight:3, info:{ def:'Diversity of payers / streams.', target:'4+ reliable payers.', enter:'Mark each new stream & its reliability.', why:'Avoid a single point of failure.' }, milestones:[
-        {stage:'Seed',    text:'Identify 2 potential sources', completed:false},
-        {stage:'Active',  text:'Earn from 2 sources in a month', completed:false},
-        {stage:'Growing', text:'Maintain 3 active streams',    completed:false},
-        {stage:'Stable',  text:'Achieve 4+ reliable payers',   completed:false},
-        {stage:'Autonomous',text:'No source >40% of total',    completed:false}
+      { name:'Multi-Source Income', weight:3, milestones:[
+        {stage:'Seed',    text:'Identify 2 potential income sources', completed:false},
+        {stage:'Active',  text:'Earn from 2 different sources in one month', completed:false},
+        {stage:'Growing', text:'Maintain 3 active income streams', completed:false},
+        {stage:'Stable',  text:'Achieve 4+ distinct reliable payers', completed:false},
+        {stage:'Autonomous', text:'No single source exceeds 40% of income', completed:false}
       ]},
-      { name:'Physical Base',           weight:2, info:{ def:'A regional/physical base under your control.', target:'Functional base established.', enter:'Mark steps: research → secure → operate.', why:'A base reduces cost and increases optionality.' }, milestones:[
-        {stage:'Seed',    text:'Research one lower‑cost location', completed:false},
-        {stage:'Active',  text:'Scout / visit potential base',     completed:false},
-        {stage:'Growing', text:'Secure plan or lease',              completed:false},
-        {stage:'Stable',  text:'Functional base established',       completed:false},
-        {stage:'Autonomous',text:'Working/living from base',        completed:false}
+      { name:'Physical Base', weight:2, milestones:[
+        {stage:'Seed',    text:'Research one lower-cost location', completed:false},
+        {stage:'Active',  text:'Visit or scout potential base', completed:false},
+        {stage:'Growing', text:'Secure plan or lease agreement', completed:false},
+        {stage:'Stable',  text:'Functional base established', completed:false},
+        {stage:'Autonomous', text:'Living/working from controlled base', completed:false}
       ]},
-      { name:'Compliance Mastery',      weight:1, info:{ def:'Tax, BAS, insurance, registrations — handled.', target:'Confident workflow without third‑party reliance.', enter:'Mark forms completed and processes learned.', why:'Red tape becomes routine once documented.' }, milestones:[
-        {stage:'Seed',    text:'Read one BAS/tax guide',            completed:false},
-        {stage:'Active',  text:'Complete one form yourself',        completed:false},
-        {stage:'Growing', text:'Handle quarterly obligations solo', completed:false},
-        {stage:'Stable',  text:'Confident across tax/insurance',    completed:false},
-        {stage:'Autonomous',text:'Help someone else with compliance', completed:false}
+      { name:'Compliance Mastery', weight:1, milestones:[
+        {stage:'Seed',    text:'Read one BAS/tax guide', completed:false},
+        {stage:'Active',  text:'Complete one form yourself', completed:false},
+        {stage:'Growing', text:'Handle quarterly obligations unaided', completed:false},
+        {stage:'Stable',  text:'Confident across tax/insurance processes', completed:false},
+        {stage:'Autonomous', text:'Help someone else with their compliance', completed:false}
       ]},
-      { name:'Strategic Redundancy',    weight:1, info:{ def:'Backups/duplicates for tools, power, comms.', target:'All essentials duplicated/backed up.', enter:'Mark each redundancy obtained.', why:'Resilience against single‑point failure.' }, milestones:[
-        {stage:'Seed',    text:'Back up phone contacts & photos',  completed:false},
-        {stage:'Active',  text:'Duplicate 1 critical tool',        completed:false},
-        {stage:'Growing', text:'Backup power/comms in place',      completed:false},
-        {stage:'Stable',  text:'All essential gear covered',       completed:false},
-        {stage:'Autonomous',text:'System survives any single failure', completed:false}
+      { name:'Strategic Redundancy', weight:1, milestones:[
+        {stage:'Seed',    text:'Back up phone contacts + photos', completed:false},
+        {stage:'Active',  text:'Duplicate 1 critical piece of equipment', completed:false},
+        {stage:'Growing', text:'Backup power/comms solution in place', completed:false},
+        {stage:'Stable',  text:'All essential gear covered', completed:false},
+        {stage:'Autonomous', text:'System survives any single failure', completed:false}
       ]},
-      { name:'Reflection Loop',         weight:2, info:{ def:'Meta‑measure and weekly reflection.', target:'Upward trend and weekly note.', enter:'Log the weekly reflection; keep cadence.', why:'Awareness turns motion into mastery.' }, milestones:[
-        {stage:'Seed',    text:'Write one weekly reflection',            completed:false},
-        {stage:'Active',  text:'Complete 4 reflections in a row',        completed:false},
-        {stage:'Growing', text:'Spot one pattern from notes',            completed:false},
-        {stage:'Stable',  text:'Weekly review is automatic',             completed:false},
-        {stage:'Autonomous',text:'Reflections guide all decisions',      completed:false}
-      ]},
+      { name:'Reflection Loop', weight:2, milestones:[
+        {stage:'Seed',    text:'Write one weekly reflection', completed:false},
+        {stage:'Active',  text:'Complete 4 weekly reflections in a row', completed:false},
+        {stage:'Growing', text:'Identify one pattern from your notes', completed:false},
+        {stage:'Stable',  text:'Weekly review becomes automatic habit', completed:false},
+        {stage:'Autonomous', text:'Use reflections to guide decisions', completed:false}
+      ]}
     ];
 
-    /* ==========================================================
-       Load & merge with any existing ladder (preserve progress)
-       ========================================================== */
     function loadLadder(){
-      const current = store.get('lev.ladder', null);
-      if(!current){ return defaultLadder }
-      const byName = Object.fromEntries(defaultLadder.map(m => [m.name, m]));
-      return current.map(old => {
-        const tpl = byName[old.name] || null;
-        if(!tpl) return old;
-        const mergedMilestones = (tpl.milestones || []).map(tMil => {
-          const match = (old.milestones || []).find(o => o.text === tMil.text) || {};
-          return { ...tMil, completed: !!match.completed };
+      const current = store.get('lev.ladder', null); if(!current) return defaultLadder;
+      const byName = Object.fromEntries(defaultLadder.map(m=>[m.name, m]));
+      return current.map(old=>{
+        const tpl = byName[old.name] || old; // keep unknowns
+        const merged = (tpl.milestones||[]).map(t=>{
+          const match = (old.milestones||[]).find(o=>o.text===t.text) || {}; return {...t, completed: !!match.completed};
         });
-        return { name: old.name, weight: tpl.weight || old.weight || 1, info: tpl.info || old.info || {}, milestones: mergedMilestones };
+        return { name: old.name, weight: tpl.weight||old.weight||1, milestones: merged };
       });
     }
 
-    /* ==========================================================
-       UI helpers
-       ========================================================== */
-    function fmtDate(d){ const dt = new Date(d); return dt.toLocaleDateString(); }
-    function toInputDate(d){ return new Date(d).toISOString().slice(0,10) }
-    function weekStart(date = new Date()){
-      const d = new Date(date); const day = d.getDay(); d.setHours(0,0,0,0); d.setDate(d.getDate() - day); return d;
+    /* ===================== Step engine ===================== */
+    // For each (metric, stage) provide small, plain-language steps (Gentle & Push).
+    // Steps are intentionally tiny → consistent weekly progress.
+    const steps = {
+      'Independent Cashflow':{
+        'Seed':{
+          gentle:[ 'List 1 skill you can sell in 30 words', 'Ask 1 friend if they know someone who needs that', 'Post 1 offer in 1 place (chat/group)' ],
+          push:[ 'Draft a 3-line offer and DM 3 prospects', 'Do the service free once to create a proof', 'Invoice $50 using any template' ]
+        },
+        'Active':{
+          gentle:[ 'Pick a simple price for the month', 'Message 2 past contacts about a small paid task', 'Set 1 recurring slot in calendar for delivery' ],
+          push:[ 'Publish a quick checkout (Stripe/PayPal link)', 'Book 3 micro-gigs for this month', 'Collect 1 testimonial' ]
+        },
+        'Growing':{
+          gentle:[ 'Write a one-page result you deliver', 'Raise price by 10% on next sale', 'Bundle your offer with 1 tiny add-on' ],
+          push:[ 'Pitch 5 cold leads with your 3-line script', 'Create a before/after proof page', 'Run a 2-hour sprint offer this week' ]
+        },
+        'Stable':{ gentle:[ 'Turn delivery into a checklist', 'Block weekly ops hour', 'Automate 1 step (invoice/template)' ], push:[ 'Launch a monthly retainer to 3 clients', 'Raise price 20% for new clients', 'Hire a helper for one task' ] },
+        'Autonomous':{ gentle:[ 'Document your offer in 1 page', 'Replace yourself in 1 step', 'Review churn + retention once' ], push:[ 'Spin out a second offer', 'Run a 1‑week promotion', 'Negotiate a 3‑month prepay' ] }
+      },
+      'Survival Buffer':{
+        'Seed':{ gentle:[ 'Open a dedicated savings space', 'Move $20 today', 'Name the account “Runway”' ], push:[ 'Move $100 today', 'Cancel 1 subscription and redirect saving', 'Sell 1 unused item and bank it' ] },
+        'Active':{ gentle:[ 'Total essential bills for 1 month', 'Set weekly auto-transfer (small)', 'Track buffer total in notes' ], push:[ 'Auto-transfer 5% of income', 'Cut 1 big expense for 30 days', 'Pick a small side gig to feed buffer' ] },
+        'Growing':{ gentle:[ 'Snapshot current balance', 'Add $50 this week', 'Plan the next $200' ], push:[ 'Add $200 this week', 'Bank next invoice % to buffer', 'Renegotiate 1 bill' ] },
+        'Stable':{ gentle:[ 'Review interest/account safety', 'Add $50 to keep habit', 'Record months of runway' ], push:[ 'Top up to goal', 'Move excess to safe vehicle', 'Set alert if balance dips' ] },
+        'Autonomous':{ gentle:[ 'Quarterly review', 'Write “rules of use”', 'Keep auto-transfer on' ], push:[ 'Increase goal by 1 month', 'Shift to higher-yield account', 'Fund 1 new resilience item' ] }
+      },
+      'Lean Cost Index':{
+        'Seed':{ gentle:[ 'List 3 recurring charges', 'Cancel or pause 1 now', 'Switch 1 to annual save' ], push:[ 'Negotiate 1 bill on a call', 'Sell 1 unused item', 'Batch cook 3 low-cost meals' ] },
+        'Active':{ gentle:[ 'Find 1 cheaper alternative', 'Lower 1 discretionary category 10%', 'Set spend alerts' ], push:[ 'No-spend weekend', 'Cut 1 category 25% for 2 weeks', 'Share plan with accountability buddy' ] },
+        'Growing':{ gentle:[ 'Lock new baseline', 'Audit utilities', 'Library over buy once' ], push:[ 'Trim transport cost 15%', 'Downgrade 1 plan tier', 'Switch provider' ] },
+        'Stable':{ gentle:[ 'Review every 90 days', 'Automate bills', 'Track 3-month average' ], push:[ 'Prepay to capture discount', 'Bundle services', 'Eliminate 1 whole category' ] },
+        'Autonomous':{ gentle:[ 'Write your lean rules', 'Share with future you', 'Keep one treat' ], push:[ 'Model crisis budget', 'Fund crisis buffer', 'Teach someone your method' ] }
+      },
+      'Productised Value':{
+        'Seed':{ gentle:[ 'Write the outcome you deliver in 1 sentence', 'List 3 pains your offer resolves', 'Sketch a 5‑bullet outline' ], push:[ 'Draft a 3‑screen landing page', 'Ask 3 people for feedback', 'Pre-sell to 1 buyer' ] },
+        'Active':{ gentle:[ 'Publish a simple doc/page', 'Add 1 call-to-action', 'Collect 1 email' ], push:[ 'Add payment link', 'Offer a beta price to 3 people', 'Ship v1 to 1 buyer' ] },
+        'Growing':{ gentle:[ 'Write a tiny FAQ', 'Add 1 proof screenshot', 'Clarify scope in bullets' ], push:[ 'Raise price 15%', 'Upsell a mini add-on', 'Collect 1 case study' ] },
+        'Stable':{ gentle:[ 'Automate delivery step', 'Template your onboarding', 'Block weekly product hour' ], push:[ 'Affiliate/partner with 1 person', 'Launch a time-boxed promo', 'Bundle with your service' ] },
+        'Autonomous':{ gentle:[ 'Ops checklist ready', 'Quarterly review', 'Add stop-loss rules' ], push:[ 'Second product seed', 'Licensing test', 'Raise floor price' ] }
+      },
+      // For brevity, remaining metrics reuse a generic pattern
+    };
+
+    function genericSteps(stage){
+      const g = {
+        gentle:[ 'Define the smallest move (write 1 line)', 'Do a 10‑minute test now', 'Log 1 proof line here' ],
+        push:[ 'Schedule a 30‑minute sprint', 'Invite 1 person to hold you to it', 'Ship a visible outcome today' ]
+      };
+      return g;
     }
-    function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
-    function nl2br(s){ return (s||'').replace(/\n/g,'<br/>') }
 
-    /* ==========================================================
-       Tooltips
-       ========================================================== */
-    let openTip = null;
-    function closeTip(){ if(openTip && openTip.parentNode){ openTip.parentNode.removeChild(openTip); } openTip = null; }
-    function showTip(target, metric){
-      closeTip();
-      const tip = document.createElement('div');
-      tip.className = 'tooltip';
-      tip.innerHTML = `
-        <h4>${metric.name}</h4>
-        <p><b>Definition:</b> ${metric.info.def || ''}</p>
-        <p><b>Target:</b> ${metric.info.target || ''}</p>
-        <p><b>What to enter:</b> ${metric.info.enter || ''}</p>
-        <p><b>Why it matters:</b> ${metric.info.why || ''}</p>
-      `;
-      document.body.appendChild(tip);
-      const r = target.getBoundingClientRect();
-      const top = window.scrollY + r.bottom + 8;
-      const left = Math.min(window.scrollX + r.left, window.scrollX + window.innerWidth - tip.offsetWidth - 10);
-      tip.style.top = top + 'px';
-      tip.style.left = left + 'px';
-      openTip = tip;
-    }
-    document.addEventListener('click', (e)=>{ if(openTip && !openTip.contains(e.target) && !e.target.classList.contains('info')){ closeTip(); } });
+    // Fallback for metrics not fully specified above
+    const metricNames = defaultLadder.map(m=>m.name);
 
-    /* ==========================================================
-       Percent & visuals
-       ========================================================== */
-    function percentForMetric(metric){ const done = metric.milestones.filter(m=>m.completed).length; return Math.round((done / metric.milestones.length) * 100); }
+    /* ===================== State ===================== */
+    let ladder = loadLadder();
+    store.set('lev.ladder', ladder);
+    let focus = store.get('lev.focus', 0);
+    let mode = store.get('lev.mode', 'gentle');
 
-    function metricRingStyle(pct){ return `--pct:${pct}%`; }
+    /* ===================== Render Sidebar ===================== */
+    function percentForMetric(m){ const done = m.milestones.filter(x=>x.completed).length; return Math.round(done / m.milestones.length * 100); }
 
-    /* ==========================================================
-       Render ladders (with visual ring + micro-steps)
-       ========================================================== */
-    function renderLadder(){
-      const metrics = loadLadder();
-      const evidence = store.get('lev.evidence', {});
-      const energy = store.get('lev.energy', {});
-      const micro = getMicro();
-
-      const html = metrics.map((met, idx)=>{
-        const completedCount = met.milestones.filter(m => m.completed).length;
-        const nextIdx = met.milestones.findIndex(m => !m.completed);
-        const currentStage = nextIdx === -1 ? 'Autonomous' : met.milestones[nextIdx].stage;
-        const pct = percentForMetric(met);
-
-        const rungs = met.milestones.map(m => `<div class="ladder-rung ${m.completed?'active':''}"></div>`).join('');
-
-        const evList = (evidence[met.name] || []).slice(0,3).map(e=>`
-          <div class="help">• ${fmtDate(e.date)} — ${escapeHtml(e.text)}</div>
-        `).join('') || `<div class="help muted">No evidence yet. Add one factual line when something moves.</div>`;
-
-        const lastEnergy = (energy[met.name]||[]).slice(0,1)[0]?.value ?? '';
-
-        const milestoneButtons = met.milestones.map((m, mi)=>{
-          const status = m.completed ? '✓' : (mi === nextIdx ? 'Mark ✓' : '…');
-          const disabled = m.completed || mi !== nextIdx ? 'disabled' : '';
-          return `<button class="btn" style="width:100%" ${disabled} onclick="completeMilestone(${idx}, ${mi})">${status} ${escapeHtml(m.stage)}</button>`;
-        }).join('<div class="help"></div>');
-
-        const key = microKey(met.name, nextIdx === -1 ? met.milestones.length-1 : nextIdx);
-        const microState = micro[key] || { plan:false, do:false, proof:false, note:"" };
-
-        const microHtml = `
-          <div class="row">
-            <label class="help"><b>Micro-steps</b> (repeat weekly until the rung is real)</label>
-            <div class="split">
-              ${MICRO_KEYS.map(k => `
-                <label class="pill">
-                  <input type="checkbox" ${microState[k] ? 'checked' : ''} onchange="toggleMicro('${met.name}', ${nextIdx}, '${k}', this.checked)" />
-                  ${k === 'plan' ? 'Plan' : k === 'do' ? 'Do (10-min)' : 'Proof'}
-                </label>
-              `).join('')}
-            </div>
-            <input id="micronote-${idx}" placeholder="One-line plan or proof (e.g., drafted outreach / uploaded backup)" value="${escapeHtml(microState.note||'')}" />
-            <div style="display:flex; gap:8px; justify-content:flex-end">
-              <button class="btn" onclick="saveMicroNote(${idx}, '${met.name}', ${nextIdx})">Save micro-step note</button>
-              <button class="btn btn-ghost" onclick="resetMicro('${met.name}', ${nextIdx})">Reset micro-steps</button>
-            </div>
-          </div>
-        `;
-
+    function renderSidebar(){
+      const side = document.getElementById('sideList');
+      side.innerHTML = ladder.map((m,i)=>{
+        const pct = percentForMetric(m);
+        const stageIdx = m.milestones.findIndex(x=>!x.completed);
+        const stage = stageIdx===-1? 'Autonomous' : m.milestones[stageIdx].stage;
         return `
-          <div class="metric-ladder">
-            <div class="metric-header" style="gap:10px">
-              <div style="display:flex; align-items:center; gap:10px">
-                <div class="ring" style="${metricRingStyle(pct)}"><span>${pct}%</span></div>
-                <div>
-                  <div class="metric-name">${escapeHtml(met.name)} <span class="info" title="Info" onclick="showTip(this, ladderData[${idx}])">i</span></div>
-                  <div class="help">Stage: <b>${escapeHtml(currentStage)}</b> • ${completedCount}/5 milestones</div>
-                </div>
-              </div>
-              <div class="metric-stage">Weight ×${met.weight||1}</div>
-            </div>
-
-            <div class="ladder-track">${rungs}</div>
-
-            <div class="metric-tools">
-              ${microHtml}
-
-              <div class="row">
-                <label class="help"><b>Evidence of movement</b> (one factual line)</label>
-                <div class="row-2">
-                  <input id="ev-${idx}" placeholder="e.g., Sold first $40 service"/>
-                  <button class="btn" onclick="saveEvidence(${idx})">Save evidence</button>
-                </div>
-                <div id="evlist-${idx}">${evList}</div>
-              </div>
-
-              <div class="row-2" style="align-items:center">
-                <div>
-                  <label class="help"><b>Energy / Pressure</b> this week (0–100)</label>
-                  <input type="number" min="0" max="100" id="en-${idx}" value="${lastEnergy}" placeholder="e.g., 65"/>
-                </div>
-                <button class="btn" onclick="saveEnergy(${idx})">Save</button>
-              </div>
-
-              <div class="row">
-                <label class="help"><b>Current milestone controls</b></label>
-                <div class="split"><div class="grow">${milestoneButtons}</div></div>
-              </div>
+          <div class="metric-item ${i===focus?'active':''}" onclick="selectMetric(${i})">
+            <div class="ring" style="--pct:${pct}%">${pct}%</div>
+            <div class="item-text">
+              <div class="item-name">${escapeHtml(m.name)}</div>
+              <div class="item-sub">${escapeHtml(stage)}</div>
             </div>
           </div>
         `;
       }).join('');
-
-      document.getElementById('ladderList').innerHTML = html;
-      updateSummary();
-      updateOverall();
     }
 
-    /* ==========================================================
-       Actions / Threadline
-       ========================================================== */
-    function openActionModal(){
-      document.getElementById('actionModal').style.display='flex';
-      const sel = document.getElementById('actionMetric');
-      sel.innerHTML = ladderData.map(m=>`<option>${escapeHtml(m.name)}</option>`).join('');
-      const today = new Date(); today.setHours(0,0,0,0); document.getElementById('actionDate').value = toInputDate(today);
-    }
-    function closeActionModal(){ document.getElementById('actionModal').style.display='none' }
+    /* ===================== Main Panel ===================== */
+    function renderMain(){
+      const m = ladder[focus];
+      const stageIdx = m.milestones.findIndex(x=>!x.completed);
+      const stage = stageIdx===-1? 'Autonomous' : m.milestones[stageIdx].stage;
+      const pct = percentForMetric(m);
 
-    function saveAction(){
-      const metric = document.getElementById('actionMetric').value;
-      const desc = document.getElementById('actionDesc').value.trim();
-      const picked = document.getElementById('actionDate').value || toInputDate(new Date());
-      if(!desc){ alert('Please describe the action'); return; }
+      document.getElementById('metricTitle').textContent = m.name;
+      document.getElementById('metricStage').textContent = 'Stage ' + stage;
+      document.getElementById('metricWeight').textContent = 'Weight ×' + (m.weight||1);
+      document.getElementById('modeBadge').textContent = 'Mode: ' + (mode==='push'?'Push':'Gentle');
+      document.getElementById('metricRing').style.setProperty('--pct', pct+'%');
+      document.getElementById('metricRing').textContent = pct + '%';
+      document.getElementById('milestoneSummary').textContent = `${m.milestones.filter(x=>x.completed).length}/5 milestones`;
+
+      // Overall bar (weighted average across metrics)
+      const weights = ladder.map(x=>x.weight||1);
+      const scores = ladder.map(percentForMetric);
+      const totalW = weights.reduce((a,b)=>a+b,0);
+      const weighted = Math.round(weights.reduce((acc,w,idx)=>acc + w * scores[idx], 0) / (totalW||1));
+      document.getElementById('overallFill').style.width = weighted + '%';
+      document.getElementById('overallText').textContent = 'Overall independence: ' + weighted + '%';
+
+      // Streak
+      document.getElementById('streakBadge').textContent = 'Streak ' + computeStreak() + 'w';
+
+      // Step engine
+      currentStep = pickStep(m.name, stage);
+      renderStep();
+
+      // Evidence list (last 3)
+      renderEvidence();
+
+      // Sync toggle
+      document.getElementById('pushToggle').checked = (mode==='push');
+    }
+
+    function computeStreak(){
       const actions = store.get('lev.actions', []);
-      actions.unshift({ date: new Date(picked).toISOString(), metric, description: desc });
-      store.set('lev.actions', actions);
-      document.getElementById('actionDesc').value='';
-      closeActionModal();
-      renderActions();
-      updateSummary();
+      function sunday(d){ const x = new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate() - x.getDay()); return x; }
+      let streak=0; let check = new Date();
+      for(;;){ const start=sunday(check), end=new Date(start.getTime()+7*86400000);
+        const has = actions.some(a=>{ const d=new Date(a.date); return d>=start && d<end; });
+        if(!has) break; streak++; check=new Date(start.getTime()-1);
+      }
+      return streak;
     }
 
+    /* ===================== Step selection ===================== */
+    let currentStep = null;
+
+    function getStepList(metricName, stage){
+      const lib = steps[metricName]?.[stage] || genericSteps(stage);
+      return (mode==='push'? lib.push : lib.gentle);
+    }
+
+    function pickStep(metricName, stage){
+      const list = getStepList(metricName, stage);
+      const idx = Math.floor(Math.random()*list.length);
+      return { text: list[idx], metric: metricName, stage };
+    }
+
+    function renderStep(){
+      document.getElementById('stepTitle').textContent = currentStep ? currentStep.text : '—';
+    }
+
+    function shuffleStep(){
+      const m = ladder[focus];
+      const stageIdx = m.milestones.findIndex(x=>!x.completed);
+      const stage = stageIdx===-1? 'Autonomous' : m.milestones[stageIdx].stage;
+      currentStep = pickStep(m.name, stage); renderStep();
+    }
+
+    function completeStep(){
+      if(!currentStep) return;
+      // Log action
+      const actions = store.get('lev.actions', []);
+      actions.unshift({ date:new Date().toISOString(), metric: currentStep.metric, description: 'Step: '+ currentStep.text });
+      store.set('lev.actions', actions);
+      renderActions();
+
+      // Track micro-progression: after 3 steps in this stage, auto-complete the milestone.
+      const key = `lev.progress.${currentStep.metric}.${currentStep.stage}`;
+      const c = store.get(key, 0) + 1; store.set(key, c);
+      if(c >= 3){
+        // auto-complete current milestone
+        const m = ladder[focus];
+        const idx = m.milestones.findIndex(x=>!x.completed);
+        if(idx!==-1){ m.milestones[idx].completed = true; store.set('lev.ladder', ladder); }
+        store.set(key, 0); // reset counter for next stage
+      }
+
+      renderSidebar();
+      renderMain();
+    }
+
+    function markMilestoneIfReady(){
+      const m = ladder[focus];
+      const idx = m.milestones.findIndex(x=>!x.completed);
+      if(idx===-1) return;
+      m.milestones[idx].completed = true; store.set('lev.ladder', ladder);
+      const actions = store.get('lev.actions', []);
+      actions.unshift({ date:new Date().toISOString(), metric: m.name, description: 'Completed: '+ m.milestones[idx].text });
+      store.set('lev.actions', actions);
+      renderSidebar(); renderMain(); renderActions();
+    }
+
+    /* ===================== Evidence ===================== */
+    function saveEvidenceLine(){
+      const input = document.getElementById('evidenceInput');
+      const text = (input.value||'').trim(); if(!text) return;
+      const m = ladder[focus];
+      const ev = store.get('lev.evidence', {});
+      ev[m.name] = ev[m.name] || []; ev[m.name].unshift({ date:new Date().toISOString(), text });
+      store.set('lev.evidence', ev); input.value='';
+      const actions = store.get('lev.actions', []);
+      actions.unshift({ date:new Date().toISOString(), metric: m.name, description: 'Evidence: '+ text });
+      store.set('lev.actions', actions);
+      renderEvidence(); renderActions();
+    }
+
+    function renderEvidence(){
+      const m = ladder[focus];
+      const ev = store.get('lev.evidence', {});
+      const list = (ev[m.name]||[]).slice(0,3).map(e=>`<div class="log"><div class="when">${new Date(e.date).toLocaleDateString()}</div>${escapeHtml(e.text)}</div>`).join('');
+      document.getElementById('evidenceList').innerHTML = list || '<div class="mini">No proof logged yet.</div>';
+    }
+
+    /* ===================== Actions ===================== */
     function renderActions(){
       const actions = store.get('lev.actions', []);
-      const html = actions.length ? actions.slice(0,60).map(a=>`
-        <div class="action-entry">
-          <div class="action-date">${fmtDate(a.date)} · ${escapeHtml(a.metric)}</div>
-          <div class="action-desc">${escapeHtml(a.description)}</div>
-        </div>
-      `).join('') : `<div class="help">No actions logged yet.</div>`;
+      const html = actions.length ? actions.slice(0,30).map(a=>`
+        <div class="log"><div class="when">${new Date(a.date).toLocaleDateString()} · ${a.metric}</div>${escapeHtml(a.description)}</div>
+      `).join('') : '<div class="mini">No actions yet.</div>';
       document.getElementById('actionList').innerHTML = html;
     }
 
-    function saveThread(){
-      const text = document.getElementById('threadText').value.trim();
-      if(!text) return;
-      const list = store.get('lev.thread', []);
-      list.unshift({ date: new Date().toISOString(), text });
-      store.set('lev.thread', list);
-      document.getElementById('threadText').value='';
-      renderThread();
-      const actions = store.get('lev.actions', []);
-      actions.unshift({ date: new Date().toISOString(), metric: 'Threadline', description:'Weekly continuity entry added' });
-      store.set('lev.actions', actions);
-      updateSummary();
-      renderActions();
-    }
-    function clearThreadText(){ document.getElementById('threadText').value='' }
+    /* ===================== Interactions ===================== */
+    function selectMetric(i){ focus = i; store.set('lev.focus', i); renderSidebar(); renderMain(); }
+    function toggleMode(){ mode = document.getElementById('pushToggle').checked ? 'push' : 'gentle'; store.set('lev.mode', mode); renderMain(); }
 
-    function renderThread(){
-      const list = store.get('lev.thread', []);
-      const html = list.length ? list.map(t=>`
-        <div class="thread-entry">
-          <div class="action-date">${fmtDate(t.date)}</div>
-          <div>${nl2br(escapeHtml(t.text))}</div>
-        </div>
-      `).join('') : `<div class="help">No entries yet. Add one short note per week.</div>`;
-      document.getElementById('threadList').innerHTML = html;
-    }
+    /* ===================== Utils ===================== */
+    function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
 
-    /* ==========================================================
-       Evidence & Energy
-       ========================================================== */
-    function saveEvidence(idx){
-      const metric = ladderData[idx];
-      const input = document.getElementById('ev-'+idx);
-      const text = (input.value || '').trim();
-      if(!text) return;
-      const evidence = store.get('lev.evidence', {});
-      evidence[metric.name] = evidence[metric.name] || [];
-      evidence[metric.name].unshift({ date: new Date().toISOString(), text });
-      store.set('lev.evidence', evidence);
-      input.value = '';
-      const latest = evidence[metric.name].slice(0,3).map(e=>`<div class="help">• ${fmtDate(e.date)} — ${escapeHtml(e.text)}</div>`).join('');
-      document.getElementById('evlist-'+idx).innerHTML = latest;
-      const actions = store.get('lev.actions', []);
-      actions.unshift({ date: new Date().toISOString(), metric: metric.name, description: 'Evidence: '+ text });
-      store.set('lev.actions', actions);
-      updateSummary();
-      renderActions();
-    }
-
-    function saveEnergy(idx){
-      const metric = ladderData[idx];
-      const raw = document.getElementById('en-'+idx).value.trim();
-      if(raw === '') return; const value = Math.max(0, Math.min(100, Number(raw) || 0));
-      const energy = store.get('lev.energy', {});
-      energy[metric.name] = energy[metric.name] || [];
-      energy[metric.name].unshift({ date: new Date().toISOString(), value });
-      store.set('lev.energy', energy);
-      const actions = store.get('lev.actions', []);
-      actions.unshift({ date: new Date().toISOString(), metric: metric.name, description: `Energy noted: ${value}` });
-      store.set('lev.actions', actions);
-      updateSummary();
-      renderActions();
-    }
-
-    /* ==========================================================
-       Micro-steps
-       ========================================================== */
-    function toggleMicro(metricName, milIdx, key, val){
-      const micro = getMicro();
-      const k = microKey(metricName, milIdx);
-      micro[k] = micro[k] || { plan:false, do:false, proof:false, note:"" };
-      micro[k][key] = !!val; setMicro(micro);
-      if(val){
-        const actions = store.get('lev.actions', []);
-        const label = key === 'plan' ? 'Planned move' : key === 'do' ? 'Did 10-min version' : 'Logged proof';
-        actions.unshift({ date:new Date().toISOString(), metric: metricName, description:`Micro-step: ${label}` });
-        store.set('lev.actions', actions);
-        updateSummary(); renderActions();
-      }
-    }
-    function saveMicroNote(idx, metricName, milIdx){
-      const input = document.getElementById('micronote-'+idx);
-      const text = (input.value||'').trim();
-      const micro = getMicro(); const k = microKey(metricName, milIdx);
-      micro[k] = micro[k] || { plan:false, do:false, proof:false, note:"" };
-      micro[k].note = text; setMicro(micro);
-      if(text){ const actions = store.get('lev.actions', []); actions.unshift({ date:new Date().toISOString(), metric: metricName, description:`Micro-note: ${text}` }); store.set('lev.actions', actions); updateSummary(); renderActions(); }
-    }
-    function resetMicro(metricName, milIdx){ const micro = getMicro(); delete micro[microKey(metricName, milIdx)]; setMicro(micro); renderLadder(); }
-
-    /* ==========================================================
-       Milestones
-       ========================================================== */
-    function completeMilestone(metIdx, milIdx){
-      const metrics = ladderData;
-      if(!metrics[metIdx]?.milestones[milIdx]) return;
-      metrics[metIdx].milestones[milIdx].completed = true;
-      store.set('lev.ladder', metrics);
-      const actions = store.get('lev.actions', []);
-      actions.unshift({ date: new Date().toISOString(), metric: metrics[metIdx].name, description: 'Completed: ' + metrics[metIdx].milestones[milIdx].text });
-      store.set('lev.actions', actions);
-      // Reset micro-steps for that rung
-      const micro = getMicro(); delete micro[microKey(metrics[metIdx].name, milIdx)]; setMicro(micro);
-      renderLadder(); renderActions();
-    }
-
-    /* ==========================================================
-       Summary tiles + Overall bar
-       ========================================================== */
-    function updateSummary(){
-      const actions = store.get('lev.actions', []);
-      const ws = weekStart(new Date());
-      const weekCount = actions.filter(a => new Date(a.date) >= ws).length;
-      document.getElementById('weeklyActions').textContent = weekCount;
-
-      const metrics = ladderData;
-      const totalDone = metrics.reduce((sum, m) => sum + m.milestones.filter(x=>x.completed).length, 0);
-      document.getElementById('milestonesCompleted').textContent = totalDone;
-
-      const active = metrics.filter(m => m.milestones.some(ms=>ms.completed) && m.milestones.some(ms=>!ms.completed)).length;
-      document.getElementById('activeMetrics').textContent = active;
-
-      // streak
-      let streak = 0; let check = new Date();
-      for(;;){
-        const start = weekStart(check); const end = new Date(start.getTime() + 7*24*60*60*1000);
-        const has = actions.some(a => { const d = new Date(a.date); return d >= start && d < end; });
-        if(!has) break; streak++; check = new Date(start.getTime() - 1);
-      }
-      document.getElementById('actionStreak').textContent = streak;
-
-      const last = actions[0]?.date || new Date().toISOString();
-      document.getElementById('lastUpdated').textContent = 'Last updated — ' + new Date(last).toLocaleString();
-    }
-
-    function updateOverall(){
-      const metrics = ladderData;
-      const weights = metrics.map(m=>m.weight || 1);
-      const scores = metrics.map(m=>percentForMetric(m));
-      const totalW = weights.reduce((a,b)=>a+b,0);
-      const weighted = Math.round(weights.reduce((acc, w, i)=> acc + w * scores[i], 0) / (totalW || 1));
-      document.getElementById('overallBadge').textContent = weighted + '%';
-      document.getElementById('overallFill').style.width = Math.min(100, Math.max(0, weighted)) + '%';
-      const card = document.getElementById('exitCard');
-      if(weighted >= 60){ card.classList.add('glow'); } else { card.classList.remove('glow'); }
-    }
-
-    /* ==========================================================
-       Tabs
-       ========================================================== */
-    document.querySelectorAll('.tabs button').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
-        document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
-        if(btn.dataset.tab === 'actions') renderActions();
-        if(btn.dataset.tab === 'thread') renderThread();
-      })
-    });
-
-    /* ==========================================================
-       Bootstrap: load + render
-       ========================================================== */
-    let ladderData = loadLadder();
-    store.set('lev.ladder', ladderData);
-    renderLadder();
+    /* ===================== Boot ===================== */
+    renderSidebar();
     renderActions();
-    renderThread();
-    updateSummary();
-    updateOverall();
+    selectMetric(focus || 0);
   </script>
 </body>
 </html>
