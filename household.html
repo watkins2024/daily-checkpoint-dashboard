@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Household Control</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#e8e8e8}
+  .top-nav{background:#161616;padding:10px 20px;display:flex;gap:15px;border-bottom:1px solid #333}
+  .top-nav a{color:#9aa0a6;text-decoration:none;padding:8px 14px;border-radius:6px}
+  .top-nav a:hover,.top-nav a.active{background:#2a2a2a;color:#4aa3ff}
+  .container{max-width:1100px;margin:0 auto;padding:22px}
+  header{background:#212121;border:1px solid #2c2c2c;padding:18px 20px;border-radius:10px;margin-bottom:18px}
+  header h1{font-size:22px;margin-bottom:6px}
+  header p{font-size:13px;color:#9aa0a6}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .card{background:#252525;border:1px solid #2f2f2f;border-radius:10px;padding:18px}
+  .card h2{font-size:15px;margin-bottom:10px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  label.small{font-size:12px;color:#9aa0a6}
+  input,select,button,textarea{background:#2b2b2b;border:1px solid #3a3a3a;color:#e8e8e8;padding:10px;border-radius:8px;font-size:14px}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:#4aa3ff}
+  .muted{color:#9aa0a6;font-size:12px}
+  .amt{font-size:26px;font-weight:700;color:#4aa3ff}
+  .sub{font-size:12px;color:#b0b0b0}
+  .good{color:#10b981}
+  .warn{color:#f59e0b}
+  .bad{color:#ef4444}
+  .btn{background:#4aa3ff;border:none;color:#fff;cursor:pointer}
+  .btn:hover{background:#398ff0}
+  .btn-ghost{background:transparent;border:1px solid #4aa3ff;color:#e8e8e8}
+  .kpi{display:flex;flex-direction:column;gap:4px}
+  .kpi .title{font-size:12px;color:#9aa0a6}
+  .kpi .value{font-size:22px;font-weight:700}
+  .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;border:1px solid #3a3a3a;color:#9aa0a6}
+  .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .spacer{height:8px}
+  .divider{height:1px;background:#333;margin:12px 0}
+  details{background:#232323;border:1px solid #2f2f2f;border-radius:10px;padding:12px}
+  details summary{cursor:pointer;color:#cfcfcf;margin-bottom:6px}
+  .list{display:flex;flex-direction:column;gap:10px;max-height:320px;overflow:auto}
+  .log{background:#2b2b2b;border:1px solid #363636;border-radius:8px;padding:10px}
+  .log .when{font-size:12px;color:#9aa0a6;margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<!-- Keep your site nav alive -->
+<div class="top-nav">
+  <a href="index.html">← Hub</a>
+  <a href="walks.html">Walks</a>
+  <a href="work.html">Work</a>
+  <a href="business.html">Business</a>
+  <a href="leverage.html">Leverage</a>
+  <a class="active" href="household.html">Household</a>
+</div>
+
+<div class="container">
+  <header>
+    <h1>Household Control</h1>
+    <p>Simple, rhythmic cashflow: split the money, run one weekly check, schedule one compression week.</p>
+  </header>
+
+  <!-- HOW IT WORKS -->
+  <details open>
+    <summary><strong>How it works (30-second read)</strong></summary>
+    <div class="spacer"></div>
+    <div class="grid">
+      <div class="card">
+        <h2>1) Auto-split income</h2>
+        <p class="muted">Use four envelopes. No budgets.</p>
+        <ul class="muted" style="margin-left:16px;line-height:1.6">
+          <li>Living (Ops): <strong>55%</strong></li>
+          <li>Debt + Buffer: <strong>25%</strong></li>
+          <li>Growth + Tools: <strong>10%</strong></li>
+          <li>Freedom (invest/relocate): <strong>10%</strong></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>2) Weekly check (5 min)</h2>
+        <ul class="muted" style="margin-left:16px;line-height:1.6">
+          <li>Note <strong>Debt remaining</strong> & <strong>Buffer balance</strong></li>
+          <li>Tick if <strong>food cap</strong> stayed under</li>
+          <li>Push any Ops surplus → Buffer/Freedom</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2>3) Compression week</h2>
+        <p class="muted">Once a month: pantry meals, zero extras.</p>
+        <p class="muted">Schedule it below and tick it off. That’s your reset.</p>
+      </div>
+    </div>
+  </details>
+
+  <div class="spacer"></div>
+
+  <!-- INPUTS + SPLIT -->
+  <div class="grid">
+    <div class="card">
+      <h2>Income & Split</h2>
+      <label class="small">Monthly household income (editable)</label>
+      <input id="income" type="number" step="100" value="13500" />
+      <div class="divider"></div>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div class="kpi"><div class="title">Living (55%)</div><div class="value amt" id="amtOps">$7,425</div><div class="sub" id="amtOpsWk">≈ $/wk</div></div>
+        <div class="kpi"><div class="title">Debt + Buffer (25%)</div><div class="value amt" id="amtBuf">$3,375</div><div class="sub" id="amtBufWk">≈ $/wk</div></div>
+        <div class="kpi"><div class="title">Growth + Tools (10%)</div><div class="value amt" id="amtGrowth">$1,350</div><div class="sub" id="amtGrowthWk">≈ $/wk</div></div>
+        <div class="kpi"><div class="title">Freedom Fund (10%)</div><div class="value amt" id="amtFreedom">$1,350</div><div class="sub" id="amtFreedomWk">≈ $/wk</div></div>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn" id="saveIncome">Save split</button>
+      <span class="muted">Auto-splits update all targets.</span>
+    </div>
+
+    <div class="card">
+      <h2>Compression Week</h2>
+      <label class="small">Next start (Mon)</label>
+      <input id="cwDate" type="date"/>
+      <div class="spacer"></div>
+      <button class="btn" id="saveCW">Schedule</button>
+      <button class="btn-ghost" id="markCW">✓ Mark completed</button>
+      <div class="spacer"></div>
+      <div class="muted" id="cwStatus">No week scheduled.</div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- WEEKLY QUICK LOG -->
+  <div class="grid">
+    <div class="card">
+      <h2>Weekly quick log</h2>
+      <div class="row">
+        <div>
+          <label class="small">Debt remaining</label>
+          <input id="logDebt" type="number" step="100" placeholder="e.g. 12800"/>
+        </div>
+        <div>
+          <label class="small">Buffer balance</label>
+          <input id="logBuffer" type="number" step="100" placeholder="e.g. 4500"/>
+        </div>
+        <div>
+          <label class="small">Food cap under?</label>
+          <select id="logFood"><option value="Yes">Yes</option><option value="No">No</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <textarea id="logNote" rows="2" placeholder="Optional note (what helped / what slipped)"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn" id="saveLog">Save weekly log</button>
+        <span class="pill" id="lastSaved">—</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Recent logs</h2>
+      <div class="list" id="logList"></div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- TARGETS -->
+  <div class="grid">
+    <div class="card">
+      <h2>Targets (auto from income)</h2>
+      <ul class="muted" style="margin-left:16px;line-height:1.8">
+        <li>🔥 Clear heater debt: <strong id="tDebt">$14,000</strong> (use “Debt + Buffer” envelope first)</li>
+        <li>🧱 6-month buffer: <strong id="tBuffer">$54,000</strong> (once debt = 0)</li>
+        <li>🌱 Build stream: aim for **10–15%** of total income outside employment</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Ops guardrails</h2>
+      <ul class="muted" style="margin-left:16px;line-height:1.8">
+        <li>Weekly living budget ≈ <strong id="opsWeekly">—</strong></li>
+        <li>Food cap: <strong>$550–$600/wk</strong> (pantry first during Compression Week)</li>
+        <li>End-of-week surplus → sweep to Buffer/Freedom (no top-ups mid-week)</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- Local storage helpers ---------- */
+const store = {
+  get: (k, def=null) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : def } catch{ return def } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+
+/* ---------- Elements ---------- */
+const el = id => document.getElementById(id);
+const incomeInput = el('income');
+const saveIncomeBtn = el('saveIncome');
+const amtOps = el('amtOps'), amtBuf = el('amtBuf'), amtGrowth = el('amtGrowth'), amtFreedom = el('amtFreedom');
+const amtOpsWk = el('amtOpsWk'), amtBufWk = el('amtBufWk'), amtGrowthWk = el('amtGrowthWk'), amtFreedomWk = el('amtFreedomWk');
+const tDebt = el('tDebt'), tBuffer = el('tBuffer'), opsWeekly = el('opsWeekly');
+
+const cwDate = el('cwDate'), cwStatus = el('cwStatus'), saveCW = el('saveCW'), markCW = el('markCW');
+const logDebt = el('logDebt'), logBuffer = el('logBuffer'), logFood = el('logFood'), logNote = el('logNote');
+const saveLogBtn = el('saveLog'), logList = el('logList'), lastSaved = el('lastSaved');
+
+/* ---------- Formatting ---------- */
+const fmt = n => n.toLocaleString(undefined,{style:'currency',currency:'AUD',maximumFractionDigits:0});
+const weeklyFromMonthly = m => Math.round(m / 4.345); // simple monthly->weekly
+
+/* ---------- State ---------- */
+function loadIncome(){
+  const saved = store.get('house.income', 13500);
+  incomeInput.value = saved;
+  renderSplit(saved);
+}
+function renderSplit(income){
+  const ops = Math.round(income * 0.55);
+  const buf = Math.round(income * 0.25);
+  const growth = Math.round(income * 0.10);
+  const freedom = Math.round(income * 0.10);
+
+  amtOps.textContent = fmt(ops);
+  amtBuf.textContent = fmt(buf);
+  amtGrowth.textContent = fmt(growth);
+  amtFreedom.textContent = fmt(freedom);
+
+  amtOpsWk.textContent = '≈ ' + fmt(weeklyFromMonthly(ops)) + ' / week';
+  amtBufWk.textContent = '≈ ' + fmt(weeklyFromMonthly(buf)) + ' / week';
+  amtGrowthWk.textContent = '≈ ' + fmt(weeklyFromMonthly(growth)) + ' / week';
+  amtFreedomWk.textContent = '≈ ' + fmt(weeklyFromMonthly(freedom)) + ' / week';
+
+  // Targets
+  tDebt.textContent = fmt(14000);
+  const leanMonthly = ops; // rough proxy; adjust if you want
+  const sixMonth = Math.round(leanMonthly * 6);
+  tBuffer.textContent = fmt(sixMonth);
+  opsWeekly.textContent = fmt(weeklyFromMonthly(ops));
+}
+
+/* ---------- Save income ---------- */
+saveIncomeBtn.addEventListener('click', ()=>{
+  const val = Number(incomeInput.value)||13500;
+  store.set('house.income', val);
+  renderSplit(val);
+  saveIncomeBtn.textContent = 'Saved';
+  setTimeout(()=>saveIncomeBtn.textContent='Save split', 900);
+});
+
+/* ---------- Compression week ---------- */
+function loadCW(){
+  const data = store.get('house.cw', {date:null, completed:[]});
+  if(data.date){
+    cwDate.value = data.date;
+    const next = new Date(data.date);
+    cwStatus.innerHTML = `Next compression week starts <strong>${next.toLocaleDateString()}</strong>`;
+  }else{
+    cwStatus.textContent = 'No week scheduled.';
+  }
+}
+saveCW.addEventListener('click', ()=>{
+  if(!cwDate.value){ alert('Pick a Monday start for compression week.'); return; }
+  const data = store.get('house.cw', {date:null, completed:[]});
+  data.date = cwDate.value;
+  store.set('house.cw', data);
+  loadCW();
+});
+markCW.addEventListener('click', ()=>{
+  const data = store.get('house.cw', {date:null, completed:[]});
+  data.completed = data.completed || [];
+  data.completed.unshift(new Date().toISOString());
+  store.set('house.cw', data);
+  cwStatus.innerHTML = `Compression week marked <span class="good">✓</span>. Schedule the next one when ready.`;
+});
+
+/* ---------- Weekly logs ---------- */
+function loadLogs(){
+  const logs = store.get('house.logs', []);
+  if(logs.length===0){ logList.innerHTML = '<div class="muted">No logs yet.</div>'; return; }
+  logList.innerHTML = logs.slice(0,12).map(l => `
+    <div class="log">
+      <div class="when">${new Date(l.when).toLocaleDateString()}</div>
+      <div>Debt remaining: <strong>${fmt(l.debt)}</strong></div>
+      <div>Buffer balance: <strong>${fmt(l.buffer)}</strong></div>
+      <div>Food cap under? <strong>${l.food}</strong></div>
+      ${l.note ? `<div class="muted" style="margin-top:6px">${l.note}</div>`:''}
+    </div>
+  `).join('');
+}
+saveLogBtn.addEventListener('click', ()=>{
+  const d = Number(logDebt.value||0);
+  const b = Number(logBuffer.value||0);
+  const f = logFood.value;
+  const n = (logNote.value||'').trim();
+  if(!d && !b){ alert('Enter at least a debt or buffer number.'); return; }
+  const logs = store.get('house.logs', []);
+  logs.unshift({when:new Date().toISOString(), debt:d, buffer:b, food:f, note:n});
+  store.set('house.logs', logs);
+  lastSaved.textContent = 'Saved ' + new Date().toLocaleTimeString();
+  logDebt.value=''; logBuffer.value=''; logNote.value='';
+  loadLogs();
+});
+
+/* ---------- Init ---------- */
+loadIncome();
+loadCW();
+loadLogs();
+</script>
+</body>
+</html>
