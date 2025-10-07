@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leverage Dashboard</title>
+  <title>Independence Laboratory</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #1a1a1a; color: #e0e0e0; }
@@ -14,8 +14,9 @@
     .top-nav a.active { background: #2a2a2a; color: #4a9eff; }
     
     .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-    header { background: #222; padding: 15px 20px; margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { font-size: 24px; }
+    header { background: #222; padding: 15px 20px; margin-bottom: 20px; border-radius: 8px; }
+    header h1 { font-size: 24px; margin-bottom: 5px; }
+    header p { font-size: 14px; color: #888; }
     
     .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
     .metric-card { background: #2a2a2a; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
@@ -39,54 +40,41 @@
     .btn-sm { padding: 6px 12px; font-size: 12px; }
     .btn-ghost { background: transparent; border: 1px solid #4a9eff; }
     
-    .accelerator { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 12px; position: relative; }
-    .accelerator-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .accelerator-name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-    .accelerator-progress { font-size: 18px; color: #4a9eff; font-weight: 600; }
-    .accelerator-weight { font-size: 11px; color: #f59e0b; margin-left: 8px; }
-    .progress-bar { background: #222; height: 8px; border-radius: 4px; overflow: hidden; }
-    .progress-fill { background: linear-gradient(90deg, #4a9eff, #6366f1); height: 100%; transition: width 0.3s; }
+    .metric-ladder { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 12px; }
+    .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .metric-name { font-weight: 600; font-size: 16px; }
+    .metric-stage { font-size: 14px; color: #f59e0b; }
     
-    .info-icon { cursor: pointer; color: #4a9eff; font-size: 16px; }
-    .metric-explainer { display: none; background: #222; padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 13px; line-height: 1.6; }
-    .metric-explainer.show { display: block; }
-    .metric-explainer strong { color: #4a9eff; display: block; margin-top: 8px; }
+    .ladder-track { display: flex; gap: 8px; margin-bottom: 12px; }
+    .ladder-rung { flex: 1; height: 8px; background: #222; border-radius: 4px; transition: background 0.3s; }
+    .ladder-rung.active { background: linear-gradient(90deg, #4a9eff, #6366f1); }
     
-    .action-entry { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
-    .action-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
-    .action-date { font-weight: 600; color: #4a9eff; }
-    .action-category { display: inline-block; background: #444; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin-left: 10px; }
-    .action-desc { margin: 8px 0; line-height: 1.5; }
-    .action-meta { display: flex; gap: 15px; font-size: 12px; color: #888; flex-wrap: wrap; }
+    .milestone-list { margin-top: 10px; }
+    .milestone { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 4px; margin-bottom: 5px; font-size: 13px; }
+    .milestone.completed { background: #1a3a2a; color: #10b981; }
+    .milestone.current { background: #2a3a4a; color: #4a9eff; font-weight: 600; }
+    .milestone.upcoming { opacity: 0.5; }
+    .milestone-icon { font-size: 16px; }
     
-    .weekly-goal { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
-    .weekly-goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .weekly-goal-metric { font-weight: 600; color: #f59e0b; }
-    .weekly-goal-target { font-size: 13px; color: #bbb; }
-    .weekly-goal.completed { opacity: 0.6; }
-    .weekly-goal.completed .weekly-goal-metric { text-decoration: line-through; }
+    .next-action-box { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    .next-action-box h3 { font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    .next-action-text { font-size: 18px; color: #fff; margin-bottom: 15px; }
+    
+    .momentum-card { background: #333; padding: 20px; border-radius: 8px; text-align: center; }
+    .momentum-number { font-size: 48px; font-weight: 600; color: #10b981; }
+    .momentum-label { font-size: 14px; color: #888; margin-top: 5px; }
     
     input, select, textarea { background: #333; border: 1px solid #444; color: #e0e0e0; padding: 10px; border-radius: 6px; width: 100%; margin-bottom: 10px; font-size: 14px; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: #4a9eff; }
-    
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
     
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
     .modal.open { display: flex; }
     .modal-content { background: #2a2a2a; padding: 30px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
     .modal-content h3 { margin-bottom: 20px; }
     
-    .impact-stars { display: flex; gap: 5px; margin-bottom: 10px; }
-    .impact-star { font-size: 24px; cursor: pointer; opacity: 0.3; transition: opacity 0.2s; }
-    .impact-star.active { opacity: 1; color: #f59e0b; }
-    
-    .weight-selector { display: flex; gap: 10px; margin-bottom: 10px; }
-    .weight-btn { padding: 8px 16px; background: #444; border: none; color: #e0e0e0; border-radius: 6px; cursor: pointer; }
-    .weight-btn.active { background: #f59e0b; color: #000; }
-    
-    .weekly-banner { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
-    .weekly-banner h3 { font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-    .weekly-banner .goal-count { font-size: 32px; font-weight: 600; color: #fff; }
+    .action-entry { background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px; }
+    .action-date { font-weight: 600; color: #4a9eff; margin-bottom: 5px; }
+    .action-desc { font-size: 14px; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -100,96 +88,56 @@
 </div>
 
 <header>
-  <h1>High-Leverage Independence Metrics</h1>
-  <button class="btn btn-ghost" onclick="exportData()">Export Data</button>
+  <h1>Independence Laboratory</h1>
+  <p>Experiment, learn, build — one small step at a time</p>
 </header>
 
 <div class="container">
   <!-- Key Metrics -->
   <div class="metrics">
     <div class="metric-card">
-      <div class="metric-label">Weighted Autonomy Score</div>
-      <div class="metric-value" id="autonomyScore">0%</div>
-      <div class="metric-sub">Path to functional exit</div>
+      <div class="metric-label">Momentum</div>
+      <div class="metric-value" id="weeklyActions">0</div>
+      <div class="metric-sub">actions this week</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Independent Income</div>
-      <div class="metric-value" id="independentIncome">0%</div>
-      <div class="metric-sub">Target: ≥40%</div>
+      <div class="metric-label">Milestones Hit</div>
+      <div class="metric-value" id="milestonesCompleted">0</div>
+      <div class="metric-sub">across all metrics</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Months Runway</div>
-      <div class="metric-value" id="monthsRunway">0</div>
-      <div class="metric-sub">Target: 6 months</div>
+      <div class="metric-label">Active Pathways</div>
+      <div class="metric-value" id="activeMetrics">0</div>
+      <div class="metric-sub">metrics in motion</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">Resilience Index</div>
-      <div class="metric-value" id="resilienceIndex">0</div>
-      <div class="metric-sub">Sources + Skills + Partners</div>
+      <div class="metric-label">Streak</div>
+      <div class="metric-value" id="actionStreak">0</div>
+      <div class="metric-sub">weeks of action</div>
     </div>
+  </div>
+
+  <!-- Next Action -->
+  <div class="next-action-box">
+    <h3>Your Next Small Step</h3>
+    <div class="next-action-text" id="nextActionText">Loading...</div>
+    <button class="btn" style="background: rgba(255,255,255,0.2);" onclick="completeNextAction()">✓ Done</button>
+    <button class="btn btn-ghost" style="border-color: rgba(255,255,255,0.5); color: #fff;" onclick="skipNextAction()">Skip</button>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="active" onclick="showTab('weekly')">This Week</button>
-    <button onclick="showTab('metrics')">12 Metrics</button>
-    <button onclick="showTab('actions')">Actions Log</button>
-    <button onclick="showTab('financial')">Financial</button>
-    <button onclick="showTab('reflection')">Reflection</button>
+    <button class="active" onclick="showTab('ladder')">The Ladder</button>
+    <button onclick="showTab('actions')">Action Log</button>
+    <button onclick="showTab('reflection')">Weekly Review</button>
   </div>
 
-  <!-- WEEKLY GOALS Panel -->
-  <div id="weekly" class="panel active">
-    <div class="weekly-banner">
-      <h3>Weekly Goals</h3>
-      <div class="goal-count"><span id="weeklyGoalsCompleted">0</span> / <span id="weeklyGoalsTotal">0</span> Complete</div>
-    </div>
-
+  <!-- LADDER Panel -->
+  <div id="ladder" class="panel active">
     <div class="card">
-      <h2>Set This Week's Goals</h2>
-      <p style="color: #888; font-size: 13px; margin-bottom: 15px;">Choose 2-3 small, achievable targets to move the needle this week</p>
-      <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-bottom: 10px;">
-        <select id="goalMetric">
-          <option>Independent Cashflow Ratio</option>
-          <option>Survival Buffer</option>
-          <option>Lean Cost Index</option>
-          <option>Productised Value Engine</option>
-          <option>Repair & Maintenance Capability</option>
-          <option>Exchange & Support Network</option>
-          <option>Systems Autonomy</option>
-          <option>Multi-Source Income Structure</option>
-          <option>Regional or Physical Base Autonomy</option>
-          <option>Compliance & Administration Mastery</option>
-          <option>Strategic Redundancy & Tools</option>
-          <option>Independence Metric & Reflection Loop</option>
-        </select>
-        <input id="goalTarget" placeholder="e.g., +5%" style="width: 100px; margin: 0;">
-      </div>
-      <textarea id="goalDesc" rows="2" placeholder="What will you do? (e.g., 'Call 3 potential tutoring clients')" style="margin: 0;"></textarea>
-      <button class="btn" onclick="addWeeklyGoal()" style="margin-top: 10px;">Add Goal</button>
-    </div>
-
-    <div class="card">
-      <h2>Active Weekly Goals</h2>
-      <div id="weeklyGoalsList"></div>
-    </div>
-
-    <div class="card">
-      <h2>Quick Actions</h2>
-      <button class="btn" onclick="openModal('actionModal')">Log Action</button>
-      <button class="btn" onclick="openModal('incomeModal')">Add Income Event</button>
-      <button class="btn" onclick="openModal('reflectionModal')">Weekly Reflection</button>
-    </div>
-  </div>
-
-  <!-- METRICS Panel -->
-  <div id="metrics" class="panel">
-    <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h2>12 High-Leverage Independence Metrics</h2>
-        <button class="btn btn-sm" onclick="openModal('metricModal')">Update Progress</button>
-      </div>
-      <div id="metricList"></div>
+      <h2>12 Pathways to Independence</h2>
+      <p style="color: #888; font-size: 13px; margin-bottom: 20px;">Click any pathway to see milestones and mark progress</p>
+      <div id="ladderList"></div>
     </div>
   </div>
 
@@ -198,74 +146,23 @@
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h2>Action Log</h2>
-        <button class="btn btn-sm" onclick="openModal('actionModal')">Add Action</button>
+        <button class="btn btn-sm" onclick="openModal('actionModal')">Log Action</button>
       </div>
       <div id="actionList"></div>
-    </div>
-  </div>
-
-  <!-- FINANCIAL Panel -->
-  <div id="financial" class="panel">
-    <div class="grid-2">
-      <div class="card">
-        <h2>Income Streams</h2>
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Source</label>
-          <input id="incomeSource" placeholder="e.g., Teaching Salary, Tutoring, Digital Product">
-          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Monthly Amount</label>
-          <input id="incomeAmount" type="number" placeholder="Amount">
-          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Type</label>
-          <select id="incomeType">
-            <option value="institutional">Institutional (salary/employer)</option>
-            <option value="independent">Independent (self-generated)</option>
-          </select>
-          <button class="btn" onclick="addIncomeStream()">Add Stream</button>
-        </div>
-        <div id="incomeStreamList"></div>
-      </div>
-
-      <div class="card">
-        <h2>Financial Buffer</h2>
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Total Savings</label>
-          <input id="totalSavings" type="number" placeholder="Total savings" onchange="updateFinancials()">
-          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Monthly Expenses (lean)</label>
-          <input id="monthlyExpenses" type="number" placeholder="Essential monthly spend" onchange="updateFinancials()">
-        </div>
-        <div style="background: #333; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
-          <div style="font-size: 14px; color: #999; margin-bottom: 5px;">Independent Cashflow Ratio</div>
-          <div style="font-size: 32px; font-weight: 600; color: #4a9eff;" id="cashflowRatio">0%</div>
-          <div style="font-size: 12px; color: #888; margin-top: 5px;">Non-institutional / Total income</div>
-        </div>
-        <div style="background: #333; padding: 15px; border-radius: 6px;">
-          <div style="font-size: 14px; color: #999; margin-bottom: 5px;">Lean Cost Reduction</div>
-          <div style="font-size: 32px; font-weight: 600; color: #10b981;" id="costReduction">0%</div>
-          <div style="font-size: 12px; color: #888; margin-top: 5px;">vs baseline expenses</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Skills & Network</h2>
-      <div class="grid-2">
-        <div>
-          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Repair Skills Mastered</label>
-          <input id="repairSkills" type="number" value="0" onchange="updateTopMetrics()" style="margin: 0;">
-          <div style="font-size: 12px; color: #888; margin-top: 5px;">Target: 3 core skills</div>
-        </div>
-        <div>
-          <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Exchange Partners</label>
-          <input id="exchangePartners" type="number" value="0" onchange="updateTopMetrics()" style="margin: 0;">
-          <div style="font-size: 12px; color: #888; margin-top: 5px;">Target: 5+ partners</div>
-        </div>
-      </div>
     </div>
   </div>
 
   <!-- REFLECTION Panel -->
   <div id="reflection" class="panel">
     <div class="card">
-      <h2>Weekly Reflections</h2>
+      <h2>Weekly Review</h2>
+      <p style="color: #888; font-size: 13px; margin-bottom: 15px;">What moved? What felt heavy? What will make next week lighter?</p>
+      <textarea id="reflectionText" rows="8" placeholder="Your reflection..."></textarea>
+      <button class="btn" onclick="saveReflection()">Save</button>
+    </div>
+    
+    <div class="card">
+      <h2>Past Reflections</h2>
       <div id="reflectionList"></div>
     </div>
   </div>
@@ -274,82 +171,35 @@
 <!-- Action Modal -->
 <div id="actionModal" class="modal" onclick="if(event.target===this) closeModal('actionModal')">
   <div class="modal-content">
-    <h3>Log Action</h3>
-    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Metric Category</label>
-    <select id="actionCategory">
-      <option>Independent Cashflow Ratio</option>
+    <h3>Log an Action</h3>
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Which pathway?</label>
+    <select id="actionMetric">
+      <option>Independent Cashflow</option>
       <option>Survival Buffer</option>
       <option>Lean Cost Index</option>
-      <option>Productised Value Engine</option>
-      <option>Repair & Maintenance Capability</option>
-      <option>Exchange & Support Network</option>
+      <option>Productised Value</option>
+      <option>Repair Capability</option>
+      <option>Exchange Network</option>
       <option>Systems Autonomy</option>
-      <option>Multi-Source Income Structure</option>
-      <option>Regional or Physical Base Autonomy</option>
-      <option>Compliance & Administration Mastery</option>
-      <option>Strategic Redundancy & Tools</option>
-      <option>Independence Metric & Reflection Loop</option>
+      <option>Multi-Source Income</option>
+      <option>Physical Base</option>
+      <option>Compliance Mastery</option>
+      <option>Strategic Redundancy</option>
+      <option>Reflection Loop</option>
     </select>
-    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Description</label>
-    <textarea id="actionDesc" rows="3" placeholder="What did you do?"></textarea>
-    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Time Spent (hours)</label>
-    <input id="actionTime" type="number" step="0.5" placeholder="e.g., 2.5">
-    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Impact (1-5 stars)</label>
-    <div class="impact-stars" id="impactStars">
-      <span class="impact-star" onclick="setImpact(1)">★</span>
-      <span class="impact-star" onclick="setImpact(2)">★</span>
-      <span class="impact-star" onclick="setImpact(3)">★</span>
-      <span class="impact-star" onclick="setImpact(4)">★</span>
-      <span class="impact-star" onclick="setImpact(5)">★</span>
-    </div>
-    <textarea id="actionNotes" rows="2" placeholder="Additional notes (optional)"></textarea>
-    <button class="btn" onclick="saveAction()">Save Action</button>
+    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">What did you do?</label>
+    <textarea id="actionDesc" rows="3" placeholder="Describe the action..."></textarea>
+    <button class="btn" onclick="saveAction()">Save</button>
     <button class="btn btn-ghost" onclick="closeModal('actionModal')">Cancel</button>
   </div>
 </div>
 
-<!-- Metric Modal -->
-<div id="metricModal" class="modal" onclick="if(event.target===this) closeModal('metricModal')">
+<!-- Milestone Modal -->
+<div id="milestoneModal" class="modal" onclick="if(event.target===this) closeModal('milestoneModal')">
   <div class="modal-content">
-    <h3>Update Metric Progress</h3>
-    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Select Metric</label>
-    <select id="metricSelect"></select>
-    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Progress %</label>
-    <input id="metricProgress" type="range" min="0" max="100" step="5" value="0" style="margin: 0;">
-    <div style="text-align: center; font-size: 24px; font-weight: 600; color: #4a9eff; margin: 10px 0;" id="progressDisplay">0%</div>
-    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Weight (1-3)</label>
-    <div class="weight-selector">
-      <button class="weight-btn" onclick="setWeight(1)">1× Standard</button>
-      <button class="weight-btn active" onclick="setWeight(2)">2× Important</button>
-      <button class="weight-btn" onclick="setWeight(3)">3× Critical</button>
-    </div>
-    <button class="btn" onclick="updateMetric()">Update</button>
-    <button class="btn btn-ghost" onclick="closeModal('metricModal')">Cancel</button>
-  </div>
-</div>
-
-<!-- Income Modal -->
-<div id="incomeModal" class="modal" onclick="if(event.target===this) closeModal('incomeModal')">
-  <div class="modal-content">
-    <h3>Add Income Event</h3>
-    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Source</label>
-    <input id="incomeEventSource" placeholder="e.g., Tutoring session, Product sale">
-    <label style="display: block; font-size: 13px; color: #999; margin-bottom: 5px;">Amount</label>
-    <input id="incomeEventAmount" type="number" placeholder="Amount earned">
-    <textarea id="incomeEventNotes" rows="2" placeholder="Notes (optional)"></textarea>
-    <button class="btn" onclick="saveIncomeEvent()">Save</button>
-    <button class="btn btn-ghost" onclick="closeModal('incomeModal')">Cancel</button>
-  </div>
-</div>
-
-<!-- Reflection Modal -->
-<div id="reflectionModal" class="modal" onclick="if(event.target===this) closeModal('reflectionModal')">
-  <div class="modal-content">
-    <h3>Weekly Reflection</h3>
-    <p style="color: #888; font-size: 13px; margin-bottom: 15px;">What worked? What didn't? What's next?</p>
-    <textarea id="reflectionText" rows="8" placeholder="Your reflection..."></textarea>
-    <button class="btn" onclick="saveReflection()">Save</button>
-    <button class="btn btn-ghost" onclick="closeModal('reflectionModal')">Cancel</button>
+    <h3 id="milestoneMetricName"></h3>
+    <div id="milestonesList"></div>
+    <button class="btn btn-ghost" onclick="closeModal('milestoneModal')">Close</button>
   </div>
 </div>
 
@@ -361,98 +211,128 @@ const store = {
   set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 };
 
-const metricExplainers = {
-  'Independent Cashflow Ratio': {
-    definition: 'Percentage of your total monthly income from sources not tied to institutions (salary, government, corporate systems)',
-    target: '≥40% initially, scaling to 60-80%',
-    whatToEnter: 'Independent_Income / Total_Income × 100',
-    why: 'Primary exit velocity metric — shows how much livelihood comes from self-directed work'
+const ladderMetrics = [
+  {
+    name: 'Independent Cashflow',
+    milestones: [
+      { stage: 'Seed', text: 'Earn $50 once from non-salary work', completed: false },
+      { stage: 'Active', text: 'Earn $200/month consistently for 2 months', completed: false },
+      { stage: 'Growing', text: 'Reach 20% of income from independent work', completed: false },
+      { stage: 'Stable', text: 'Reach 40% independent income ratio', completed: false },
+      { stage: 'Autonomous', text: 'Maintain 60%+ independent income for 3 months', completed: false }
+    ]
   },
-  'Survival Buffer': {
-    definition: 'Number of months you could live from savings with no income',
-    target: '6 months minimum of essential living costs',
-    whatToEnter: 'Savings / Average_Monthly_Expenses',
-    why: 'Measures freedom-to-choose — capacity to pause, pivot, or relocate without panic'
+  {
+    name: 'Survival Buffer',
+    milestones: [
+      { stage: 'Seed', text: 'Save $100 in separate account', completed: false },
+      { stage: 'Active', text: 'Build 1 month essential expenses saved', completed: false },
+      { stage: 'Growing', text: 'Reach 3 months expenses saved', completed: false },
+      { stage: 'Stable', text: 'Achieve 6 months runway', completed: false },
+      { stage: 'Autonomous', text: 'Maintain 12+ months buffer', completed: false }
+    ]
   },
-  'Lean Cost Index': {
-    definition: 'Percentage reduction of core living expenses compared to original baseline',
-    target: 'Reduce essential expenses by 20% or more',
-    whatToEnter: '(Baseline_Expenses - Current_Expenses) / Baseline_Expenses × 100',
-    why: 'Every cost cut equals earning more income; lean base makes independence durable'
+  {
+    name: 'Lean Cost Index',
+    milestones: [
+      { stage: 'Seed', text: 'Cancel one recurring payment', completed: false },
+      { stage: 'Active', text: 'Reduce expenses by 5%', completed: false },
+      { stage: 'Growing', text: 'Cut costs by 10% from baseline', completed: false },
+      { stage: 'Stable', text: 'Achieve 20% cost reduction', completed: false },
+      { stage: 'Autonomous', text: 'Sustain lean baseline for 6+ months', completed: false }
+    ]
   },
-  'Productised Value Engine': {
-    definition: 'Skill, service, or process turned into repeatable, sellable product',
-    target: 'One offer generating regular revenue',
-    whatToEnter: 'Progress % (0-100%) or monthly income from product',
-    why: 'Converts personal labour into asset that works when you don\'t'
+  {
+    name: 'Productised Value',
+    milestones: [
+      { stage: 'Seed', text: 'Write outline for one offer', completed: false },
+      { stage: 'Active', text: 'Create simple landing page or document', completed: false },
+      { stage: 'Growing', text: 'Get first paying customer', completed: false },
+      { stage: 'Stable', text: 'Earn $100+/month from product', completed: false },
+      { stage: 'Autonomous', text: 'Repeatable product generating consistent revenue', completed: false }
+    ]
   },
-  'Repair & Maintenance Capability': {
-    definition: 'Breadth of practical self-reliance skills (home, tools, tech, vehicle)',
-    target: 'Three verified competencies',
-    whatToEnter: 'Count of distinct repair skills mastered ÷ 3 × 100%',
-    why: 'Every skill replaces external dependency and compounds resilience'
+  {
+    name: 'Repair Capability',
+    milestones: [
+      { stage: 'Seed', text: 'Learn 1 basic repair (YouTube counts)', completed: false },
+      { stage: 'Active', text: 'Successfully complete 1 repair yourself', completed: false },
+      { stage: 'Growing', text: 'Master 2 different repair skills', completed: false },
+      { stage: 'Stable', text: 'Achieve 3 verified competencies', completed: false },
+      { stage: 'Autonomous', text: 'Teach someone else a repair skill', completed: false }
+    ]
   },
-  'Exchange & Support Network': {
-    definition: 'Trusted peers for trading work, goods, or knowledge outside formal markets',
-    target: '5 or more active relationships',
-    whatToEnter: 'Current partner count ÷ 5 × 100%',
-    why: 'Builds parallel economy — mutual support beyond wage systems'
+  {
+    name: 'Exchange Network',
+    milestones: [
+      { stage: 'Seed', text: 'Do one small exchange (even with friend)', completed: false },
+      { stage: 'Active', text: 'Establish 2 barter/trade relationships', completed: false },
+      { stage: 'Growing', text: 'Complete 5 exchanges outside money', completed: false },
+      { stage: 'Stable', text: 'Build network of 5+ active partners', completed: false },
+      { stage: 'Autonomous', text: 'Weekly exchanges become normal routine', completed: false }
+    ]
   },
-  'Systems Autonomy': {
-    definition: 'Completeness and portability of personal and business systems',
-    target: 'All critical files backed up; one concise SOP/manual complete',
-    whatToEnter: 'Percent of systems documented and backed up',
-    why: 'Ensures operation with zero institutional IT or admin reliance'
+  {
+    name: 'Systems Autonomy',
+    milestones: [
+      { stage: 'Seed', text: 'Back up one critical folder today', completed: false },
+      { stage: 'Active', text: 'Document one key process', completed: false },
+      { stage: 'Growing', text: 'All files backed up in 2 places', completed: false },
+      { stage: 'Stable', text: 'Complete 1-page operations manual', completed: false },
+      { stage: 'Autonomous', text: 'Could walk away for a month and it runs', completed: false }
+    ]
   },
-  'Multi-Source Income Structure': {
-    definition: 'Number of distinct paying sources (clients, products, rentals, etc.)',
-    target: '≥4 active, reliable sources',
-    whatToEnter: 'Current_Sources / 4 × 100%',
-    why: 'Reduces fragility — loss of one source doesn\'t collapse livelihood'
+  {
+    name: 'Multi-Source Income',
+    milestones: [
+      { stage: 'Seed', text: 'Identify 2 potential income sources', completed: false },
+      { stage: 'Active', text: 'Earn from 2 different sources in one month', completed: false },
+      { stage: 'Growing', text: 'Maintain 3 active income streams', completed: false },
+      { stage: 'Stable', text: 'Achieve 4+ distinct reliable payers', completed: false },
+      { stage: 'Autonomous', text: 'No single source exceeds 40% of income', completed: false }
+    ]
   },
-  'Regional or Physical Base Autonomy': {
-    definition: 'Control over living/working base outside high-cost or institution-dense zones',
-    target: 'One owned or low-overhead base under your control',
-    whatToEnter: '0% = none; 50% = secured plan/lease; 100% = functional base',
-    why: 'Physical independence lowers costs and anchors autonomy in tangible world'
+  {
+    name: 'Physical Base',
+    milestones: [
+      { stage: 'Seed', text: 'Research one lower-cost location', completed: false },
+      { stage: 'Active', text: 'Visit or scout potential base', completed: false },
+      { stage: 'Growing', text: 'Secure plan or lease agreement', completed: false },
+      { stage: 'Stable', text: 'Functional base established', completed: false },
+      { stage: 'Autonomous', text: 'Living/working from controlled base', completed: false }
+    ]
   },
-  'Compliance & Administration Mastery': {
-    definition: 'Ability to handle tax, BAS, insurance, registration without third-party reliance',
-    target: 'Complete confidence and documented workflow',
-    whatToEnter: 'Percent of processes you can execute unaided',
-    why: 'Eliminates bureaucratic fear; transforms red tape into routine'
+  {
+    name: 'Compliance Mastery',
+    milestones: [
+      { stage: 'Seed', text: 'Read one BAS/tax guide', completed: false },
+      { stage: 'Active', text: 'Complete one form yourself', completed: false },
+      { stage: 'Growing', text: 'Handle quarterly obligations unaided', completed: false },
+      { stage: 'Stable', text: 'Confident with all tax/insurance processes', completed: false },
+      { stage: 'Autonomous', text: 'Help someone else with their compliance', completed: false }
+    ]
   },
-  'Strategic Redundancy & Tools': {
-    definition: 'Level of backup and duplication for critical tools, data, communications',
-    target: 'All essential gear duplicated or securely backed up',
-    whatToEnter: 'Percent of critical items covered (laptop, phone, ID, storage, power)',
-    why: 'Protects against single-point failure; ensures continuity if systems go down'
+  {
+    name: 'Strategic Redundancy',
+    milestones: [
+      { stage: 'Seed', text: 'Back up phone contacts + photos', completed: false },
+      { stage: 'Active', text: 'Duplicate 1 critical piece of equipment', completed: false },
+      { stage: 'Growing', text: 'Backup power/comms solution in place', completed: false },
+      { stage: 'Stable', text: 'All essential gear covered', completed: false },
+      { stage: 'Autonomous', text: 'System survives any single failure', completed: false }
+    ]
   },
-  'Independence Metric & Reflection Loop': {
-    definition: 'Overall autonomy score updated weekly, paired with reflection log',
-    target: 'Continuous upward trend toward 100%',
-    whatToEnter: 'Mean % of all other metrics; link to weekly notes',
-    why: 'Keeps awareness alive — feedback loop that transforms motion into mastery'
+  {
+    name: 'Reflection Loop',
+    milestones: [
+      { stage: 'Seed', text: 'Write one weekly reflection', completed: false },
+      { stage: 'Active', text: 'Complete 4 weekly reflections in a row', completed: false },
+      { stage: 'Growing', text: 'Identify one pattern from your notes', completed: false },
+      { stage: 'Stable', text: 'Weekly review becomes automatic habit', completed: false },
+      { stage: 'Autonomous', text: 'Use reflections to guide all decisions', completed: false }
+    ]
   }
-};
-
-const defaultMetrics = [
-  { name: 'Independent Cashflow Ratio', target: '≥40% non-institutional income', progress: 0, weight: 3 },
-  { name: 'Survival Buffer', target: '6 months lean expenses saved', progress: 0, weight: 3 },
-  { name: 'Lean Cost Index', target: '20% reduction in expenses', progress: 0, weight: 2 },
-  { name: 'Productised Value Engine', target: 'One repeatable revenue product', progress: 0, weight: 3 },
-  { name: 'Repair & Maintenance Capability', target: '3 core self-reliance skills', progress: 0, weight: 2 },
-  { name: 'Exchange & Support Network', target: '5+ trusted partners', progress: 0, weight: 2 },
-  { name: 'Systems Autonomy', target: 'Ops backed up + SOP exists', progress: 0, weight: 2 },
-  { name: 'Multi-Source Income Structure', target: '4+ distinct payers', progress: 0, weight: 3 },
-  { name: 'Regional or Physical Base Autonomy', target: 'One base under your control', progress: 0, weight: 2 },
-  { name: 'Compliance & Administration Mastery', target: 'Self-file BAS, tax, insurance', progress: 0, weight: 1 },
-  { name: 'Strategic Redundancy & Tools', target: 'Critical equipment duplicated', progress: 0, weight: 1 },
-  { name: 'Independence Metric & Reflection Loop', target: 'Track weekly with journal', progress: 0, weight: 2 }
 ];
-
-let currentImpact = 3;
-let currentWeight = 2;
 
 function showTab(tab) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -460,216 +340,157 @@ function showTab(tab) {
   document.getElementById(tab).classList.add('active');
   event.target.classList.add('active');
   
-  if (tab === 'weekly') renderWeeklyGoals();
   if (tab === 'actions') renderActions();
   if (tab === 'reflection') renderReflections();
-  if (tab === 'financial') renderIncomeStreams();
 }
 
 function openModal(id) {
   document.getElementById(id).classList.add('open');
-  if (id === 'metricModal') populateMetricSelect();
-  if (id === 'actionModal') currentImpact = 3;
 }
 
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-// Weekly Goals
-function getWeekKey() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const week = Math.ceil((d - new Date(year, 0, 1)) / (7 * 24 * 60 * 60 * 1000));
-  return `${year}-W${week}`;
-}
-
-function addWeeklyGoal() {
-  const metric = document.getElementById('goalMetric').value;
-  const target = document.getElementById('goalTarget').value.trim();
-  const desc = document.getElementById('goalDesc').value.trim();
-  
-  if (!target || !desc) {
-    alert('Please enter a target and description');
-    return;
-  }
-  
-  const goals = store.get('lev.weeklyGoals', []);
-  const weekKey = getWeekKey();
-  
-  goals.push({
-    id: Date.now(),
-    week: weekKey,
-    metric,
-    target,
-    description: desc,
-    completed: false
-  });
-  
-  store.set('lev.weeklyGoals', goals);
-  document.getElementById('goalTarget').value = '';
-  document.getElementById('goalDesc').value = '';
-  renderWeeklyGoals();
-}
-
-function renderWeeklyGoals() {
-  const goals = store.get('lev.weeklyGoals', []);
-  const weekKey = getWeekKey();
-  const weekGoals = goals.filter(g => g.week === weekKey);
-  
-  document.getElementById('weeklyGoalsTotal').textContent = weekGoals.length;
-  document.getElementById('weeklyGoalsCompleted').textContent = weekGoals.filter(g => g.completed).length;
-  
-  if (weekGoals.length === 0) {
-    document.getElementById('weeklyGoalsList').innerHTML = '<p style="color:#888">No goals set for this week. Add 2-3 small targets above.</p>';
-    return;
-  }
-  
-  const html = weekGoals.map((goal, i) => `
-    <div class="weekly-goal ${goal.completed ? 'completed' : ''}">
-      <div class="weekly-goal-header">
-        <div>
-          <div class="weekly-goal-metric">${goal.metric}</div>
-          <div class="weekly-goal-target">Target: ${goal.target}</div>
-        </div>
-        <input type="checkbox" ${goal.completed ? 'checked' : ''} onchange="toggleGoalComplete(${goal.id})" style="width: 20px; height: 20px; cursor: pointer;">
-      </div>
-      <div style="font-size: 13px; color: #bbb; margin-top: 8px;">${goal.description}</div>
-    </div>
-  `).join('');
-  
-  document.getElementById('weeklyGoalsList').innerHTML = html;
-}
-
-function toggleGoalComplete(id) {
-  const goals = store.get('lev.weeklyGoals', []);
-  const goal = goals.find(g => g.id === id);
-  if (goal) {
-    goal.completed = !goal.completed;
-    store.set('lev.weeklyGoals', goals);
-    renderWeeklyGoals();
-  }
-}
-
-// Metrics
-function renderMetrics() {
-  const metrics = store.get('lev.metrics', defaultMetrics);
-  const html = metrics.map((met, i) => {
-    const explainer = metricExplainers[met.name];
+// Render ladder
+function renderLadder() {
+  const metrics = store.get('lev.ladder', ladderMetrics);
+  const html = metrics.map((met, metIdx) => {
+    const completedCount = met.milestones.filter(m => m.completed).length;
+    const currentMilestone = met.milestones.find(m => !m.completed);
+    const currentStage = currentMilestone ? currentMilestone.stage : 'Autonomous';
+    
     return `
-      <div class="accelerator">
-        <div class="accelerator-header">
-          <div>
-            <span class="accelerator-name">
-              ${met.name}
-              <span class="info-icon" onclick="toggleExplainer(${i})">ℹ️</span>
-            </span>
-            <span class="accelerator-weight">${met.weight}× weight</span>
-          </div>
-          <div class="accelerator-progress">${met.progress}%</div>
+      <div class="metric-ladder" onclick="openMilestoneModal(${metIdx})">
+        <div class="metric-header">
+          <div class="metric-name">${met.name}</div>
+          <div class="metric-stage">${currentStage}</div>
         </div>
-        <div style="font-size: 12px; color: #888; margin-bottom: 8px;">${met.target}</div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${met.progress}%;"></div>
+        <div class="ladder-track">
+          ${met.milestones.map((m, i) => `<div class="ladder-rung ${m.completed ? 'active' : ''}"></div>`).join('')}
         </div>
-        <div class="metric-explainer" id="explainer-${i}">
-          <div style="color: #bbb;">${explainer.definition}</div>
-          <strong>Target:</strong> ${explainer.target}
-          <strong>What to enter:</strong> ${explainer.whatToEnter}
-          <strong>Why it matters:</strong> ${explainer.why}
-        </div>
+        <div style="font-size: 12px; color: #888;">${completedCount}/5 milestones · Click to see next step</div>
       </div>
     `;
   }).join('');
-  document.getElementById('metricList').innerHTML = html;
-}
-
-function toggleExplainer(i) {
-  const explainer = document.getElementById(`explainer-${i}`);
-  explainer.classList.toggle('show');
-}
-
-function populateMetricSelect() {
-  const metrics = store.get('lev.metrics', defaultMetrics);
-  const html = metrics.map((met, i) => `<option value="${i}">${met.name} (${met.progress}%)</option>`).join('');
-  document.getElementById('metricSelect').innerHTML = html;
-  document.getElementById('metricProgress').value = metrics[0].progress;
-  document.getElementById('progressDisplay').textContent = metrics[0].progress + '%';
-  currentWeight = metrics[0].weight;
-  updateWeightButtons();
-  
-  document.getElementById('metricProgress').oninput = (e) => {
-    document.getElementById('progressDisplay').textContent = e.target.value + '%';
-  };
-  
-  document.getElementById('metricSelect').onchange = (e) => {
-    const idx = parseInt(e.target.value);
-    document.getElementById('metricProgress').value = metrics[idx].progress;
-    document.getElementById('progressDisplay').textContent = metrics[idx].progress + '%';
-    currentWeight = metrics[idx].weight;
-    updateWeightButtons();
-  };
-}
-
-function setWeight(w) {
-  currentWeight = w;
-  updateWeightButtons();
-}
-
-function updateWeightButtons() {
-  document.querySelectorAll('.weight-btn').forEach((btn, i) => {
-    btn.classList.toggle('active', i+1 === currentWeight);
-  });
-}
-
-function updateMetric() {
-  const metrics = store.get('lev.metrics', defaultMetrics);
-  const idx = parseInt(document.getElementById('metricSelect').value);
-  const progress = parseInt(document.getElementById('metricProgress').value);
-  
-  metrics[idx].progress = progress;
-  metrics[idx].weight = currentWeight;
-  store.set('lev.metrics', metrics);
-  renderMetrics();
-  closeModal('metricModal');
+  document.getElementById('ladderList').innerHTML = html;
   updateTopMetrics();
+  updateNextAction();
+}
+
+function openMilestoneModal(metIdx) {
+  const metrics = store.get('lev.ladder', ladderMetrics);
+  const metric = metrics[metIdx];
+  document.getElementById('milestoneMetricName').textContent = metric.name;
+  
+  const html = metric.milestones.map((milestone, milIdx) => {
+    const statusClass = milestone.completed ? 'completed' : (milIdx === metric.milestones.findIndex(m => !m.completed) ? 'current' : 'upcoming');
+    const icon = milestone.completed ? '✓' : (statusClass === 'current' ? '→' : '○');
+    
+    return `
+      <div class="milestone ${statusClass}">
+        <span class="milestone-icon">${icon}</span>
+        <div style="flex: 1;">
+          <strong>${milestone.stage}</strong>: ${milestone.text}
+        </div>
+        ${!milestone.completed && statusClass === 'current' ? `<button class="btn btn-sm" onclick="completeMilestone(${metIdx}, ${milIdx})">✓ Done</button>` : ''}
+      </div>
+    `;
+  }).join('');
+  
+  document.getElementById('milestonesList').innerHTML = html;
+  openModal('milestoneModal');
+}
+
+function completeMilestone(metIdx, milIdx) {
+  const metrics = store.get('lev.ladder', ladderMetrics);
+  metrics[metIdx].milestones[milIdx].completed = true;
+  store.set('lev.ladder', metrics);
+  
+  // Log action
+  const actions = store.get('lev.actions', []);
+  actions.unshift({
+    date: new Date().toISOString(),
+    metric: metrics[metIdx].name,
+    description: `Completed: ${metrics[metIdx].milestones[milIdx].text}`
+  });
+  store.set('lev.actions', actions);
+  
+  closeModal('milestoneModal');
+  renderLadder();
+}
+
+// Next action
+function updateNextAction() {
+  const metrics = store.get('lev.ladder', ladderMetrics);
+  let nextActions = [];
+  
+  metrics.forEach(met => {
+    const nextMilestone = met.milestones.find(m => !m.completed);
+    if (nextMilestone) {
+      nextActions.push({
+        metric: met.name,
+        text: nextMilestone.text,
+        stage: nextMilestone.stage
+      });
+    }
+  });
+  
+  if (nextActions.length > 0) {
+    const random = nextActions[Math.floor(Math.random() * nextActions.length)];
+    document.getElementById('nextActionText').textContent = `${random.metric}: ${random.text}`;
+    store.set('lev.currentNextAction', random);
+  } else {
+    document.getElementById('nextActionText').textContent = 'All milestones complete! 🎉';
+  }
+}
+
+function completeNextAction() {
+  const nextAction = store.get('lev.currentNextAction', null);
+  if (!nextAction) return;
+  
+  const metrics = store.get('lev.ladder', ladderMetrics);
+  const metric = metrics.find(m => m.name === nextAction.metric);
+  const milestone = metric.milestones.find(m => m.text === nextAction.text);
+  if (milestone) {
+    milestone.completed = true;
+    store.set('lev.ladder', metrics);
+    
+    const actions = store.get('lev.actions', []);
+    actions.unshift({
+      date: new Date().toISOString(),
+      metric: nextAction.metric,
+      description: `Completed: ${nextAction.text}`
+    });
+    store.set('lev.actions', actions);
+    
+    renderLadder();
+  }
+}
+
+function skipNextAction() {
+  updateNextAction();
 }
 
 // Actions
-function setImpact(stars) {
-  currentImpact = stars;
-  document.querySelectorAll('.impact-star').forEach((star, i) => {
-    star.classList.toggle('active', i < stars);
-  });
-}
-
 function saveAction() {
-  const category = document.getElementById('actionCategory').value;
+  const metric = document.getElementById('actionMetric').value;
   const desc = document.getElementById('actionDesc').value.trim();
-  const time = parseFloat(document.getElementById('actionTime').value) || 0;
-  const notes = document.getElementById('actionNotes').value.trim();
   
   if (!desc) {
-    alert('Please enter a description');
+    alert('Please describe the action');
     return;
   }
   
   const actions = store.get('lev.actions', []);
   actions.unshift({
-    id: Date.now(),
     date: new Date().toISOString(),
-    category,
-    description: desc,
-    time,
-    impact: currentImpact,
-    notes,
-    status: 'completed'
+    metric,
+    description: desc
   });
   store.set('lev.actions', actions);
   
   document.getElementById('actionDesc').value = '';
-  document.getElementById('actionTime').value = '';
-  document.getElementById('actionNotes').value = '';
   closeModal('actionModal');
   updateTopMetrics();
   renderActions();
@@ -682,141 +503,13 @@ function renderActions() {
     return;
   }
   
-  const html = actions.map((action, i) => `
+  const html = actions.slice(0, 20).map(action => `
     <div class="action-entry">
-      <div class="action-header">
-        <div>
-          <span class="action-date">${new Date(action.date).toLocaleDateString()}</span>
-          <span class="action-category">${action.category}</span>
-        </div>
-      </div>
+      <div class="action-date">${new Date(action.date).toLocaleDateString()} · ${action.metric}</div>
       <div class="action-desc">${action.description}</div>
-      <div class="action-meta">
-        <span>⏱ ${action.time}h</span>
-        <span>⭐ ${'★'.repeat(action.impact)}${'☆'.repeat(5-action.impact)}</span>
-        ${action.notes ? `<span>📝 ${action.notes}</span>` : ''}
-      </div>
-      <button class="btn btn-sm btn-ghost" onclick="deleteAction(${i})" style="margin-top: 8px;">Delete</button>
     </div>
   `).join('');
   document.getElementById('actionList').innerHTML = html;
-}
-
-function deleteAction(i) {
-  if (!confirm('Delete this action?')) return;
-  const actions = store.get('lev.actions', []);
-  actions.splice(i, 1);
-  store.set('lev.actions', actions);
-  renderActions();
-  updateTopMetrics();
-}
-
-// Financial
-function addIncomeStream() {
-  const source = document.getElementById('incomeSource').value.trim();
-  const amount = parseFloat(document.getElementById('incomeAmount').value) || 0;
-  const type = document.getElementById('incomeType').value;
-  
-  if (!source || amount <= 0) {
-    alert('Please enter source and amount');
-    return;
-  }
-  
-  const streams = store.get('lev.incomeStreams', []);
-  streams.push({ id: Date.now(), source, amount, type });
-  store.set('lev.incomeStreams', streams);
-  
-  document.getElementById('incomeSource').value = '';
-  document.getElementById('incomeAmount').value = '';
-  renderIncomeStreams();
-  updateTopMetrics();
-}
-
-function renderIncomeStreams() {
-  const streams = store.get('lev.incomeStreams', []);
-  if (streams.length === 0) {
-    document.getElementById('incomeStreamList').innerHTML = '<p style="color:#888; font-size: 13px;">No income streams yet.</p>';
-    return;
-  }
-  
-  const html = streams.map((stream, i) => `
-    <div style="background: #222; padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-      <div>
-        <div style="font-weight: 600;">${stream.source}</div>
-        <div style="font-size: 12px; color: #888;">$${stream.amount}/month · ${stream.type === 'independent' ? '🟢 Independent' : '🔵 Institutional'}</div>
-      </div>
-      <button class="btn btn-sm btn-ghost" onclick="deleteIncomeStream(${i})">×</button>
-    </div>
-  `).join('');
-  document.getElementById('incomeStreamList').innerHTML = html;
-  
-  const financial = store.get('lev.financial', { savings: 0, monthlyExpenses: 0, baselineExpenses: 0 });
-  document.getElementById('totalSavings').value = financial.savings || '';
-  document.getElementById('monthlyExpenses').value = financial.monthlyExpenses || '';
-  updateFinancials();
-}
-
-function deleteIncomeStream(i) {
-  const streams = store.get('lev.incomeStreams', []);
-  streams.splice(i, 1);
-  store.set('lev.incomeStreams', streams);
-  renderIncomeStreams();
-  updateTopMetrics();
-}
-
-function saveIncomeEvent() {
-  const source = document.getElementById('incomeEventSource').value.trim();
-  const amount = parseFloat(document.getElementById('incomeEventAmount').value) || 0;
-  const notes = document.getElementById('incomeEventNotes').value.trim();
-  
-  if (!source || amount <= 0) {
-    alert('Please enter source and amount');
-    return;
-  }
-  
-  const events = store.get('lev.incomeEvents', []);
-  events.unshift({
-    id: Date.now(),
-    date: new Date().toISOString(),
-    source,
-    amount,
-    notes
-  });
-  store.set('lev.incomeEvents', events);
-  
-  document.getElementById('incomeEventSource').value = '';
-  document.getElementById('incomeEventAmount').value = '';
-  document.getElementById('incomeEventNotes').value = '';
-  closeModal('incomeModal');
-}
-
-function updateFinancials() {
-  const savings = parseFloat(document.getElementById('totalSavings').value) || 0;
-  const monthlyExpenses = parseFloat(document.getElementById('monthlyExpenses').value) || 0;
-  
-  const financial = store.get('lev.financial', { savings: 0, monthlyExpenses: 0, baselineExpenses: monthlyExpenses || 0 });
-  
-  if (!financial.baselineExpenses && monthlyExpenses > 0) {
-    financial.baselineExpenses = monthlyExpenses;
-  }
-  
-  financial.savings = savings;
-  financial.monthlyExpenses = monthlyExpenses;
-  store.set('lev.financial', financial);
-  
-  const streams = store.get('lev.incomeStreams', []);
-  const totalIncome = streams.reduce((sum, s) => sum + s.amount, 0);
-  const independentIncome = streams.filter(s => s.type === 'independent').reduce((sum, s) => sum + s.amount, 0);
-  
-  const cashflowRatio = totalIncome > 0 ? ((independentIncome / totalIncome) * 100).toFixed(0) : 0;
-  document.getElementById('cashflowRatio').textContent = cashflowRatio + '%';
-  
-  const costReduction = financial.baselineExpenses > 0 
-    ? (((financial.baselineExpenses - monthlyExpenses) / financial.baselineExpenses) * 100).toFixed(0)
-    : 0;
-  document.getElementById('costReduction').textContent = Math.max(0, costReduction) + '%';
-  
-  updateTopMetrics();
 }
 
 // Reflection
@@ -826,15 +519,23 @@ function saveReflection() {
   
   const reflections = store.get('lev.reflections', []);
   reflections.unshift({
-    id: Date.now(),
     date: new Date().toISOString(),
     text
   });
   store.set('lev.reflections', reflections);
   
   document.getElementById('reflectionText').value = '';
-  closeModal('reflectionModal');
   renderReflections();
+  
+  // Log as action
+  const actions = store.get('lev.actions', []);
+  actions.unshift({
+    date: new Date().toISOString(),
+    metric: 'Reflection Loop',
+    description: 'Completed weekly reflection'
+  });
+  store.set('lev.actions', actions);
+  updateTopMetrics();
 }
 
 function renderReflections() {
@@ -844,86 +545,59 @@ function renderReflections() {
     return;
   }
   
-  const html = reflections.map((ref, i) => `
+  const html = reflections.map(ref => `
     <div style="background: #333; padding: 15px; border-radius: 6px; margin-bottom: 10px;">
       <div style="font-weight: 600; color: #4a9eff; margin-bottom: 8px;">${new Date(ref.date).toLocaleDateString()}</div>
       <div style="line-height: 1.6;">${ref.text}</div>
-      <button class="btn btn-sm btn-ghost" onclick="deleteReflection(${i})" style="margin-top: 8px;">Delete</button>
     </div>
   `).join('');
   document.getElementById('reflectionList').innerHTML = html;
 }
 
-function deleteReflection(i) {
-  if (!confirm('Delete this reflection?')) return;
-  const reflections = store.get('lev.reflections', []);
-  reflections.splice(i, 1);
-  store.set('lev.reflections', reflections);
-  renderReflections();
-}
-
-// Top Metrics
+// Top metrics
 function updateTopMetrics() {
-  const metrics = store.get('lev.metrics', defaultMetrics);
-  const totalWeight = metrics.reduce((sum, m) => sum + m.weight, 0);
-  const weightedProgress = metrics.reduce((sum, m) => sum + (m.progress * m.weight), 0);
-  const autonomyScore = totalWeight > 0 ? Math.round(weightedProgress / totalWeight) : 0;
-  document.getElementById('autonomyScore').textContent = autonomyScore + '%';
+  const actions = store.get('lev.actions', []);
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  weekStart.setHours(0,0,0,0);
+  const weekActions = actions.filter(a => new Date(a.date) >= weekStart);
+  document.getElementById('weeklyActions').textContent = weekActions.length;
   
-  const streams = store.get('lev.incomeStreams', []);
-  const totalIncome = streams.reduce((sum, s) => sum + s.amount, 0);
-  const independentIncome = streams.filter(s => s.type === 'independent').reduce((sum, s) => sum + s.amount, 0);
-  const independentPercent = totalIncome > 0 ? Math.round((independentIncome / totalIncome) * 100) : 0;
-  document.getElementById('independentIncome').textContent = independentPercent + '%';
+  const metrics = store.get('lev.ladder', ladderMetrics);
+  const totalMilestones = metrics.reduce((sum, m) => sum + m.milestones.filter(ms => ms.completed).length, 0);
+  document.getElementById('milestonesCompleted').textContent = totalMilestones;
   
-  const financial = store.get('lev.financial', { savings: 0, monthlyExpenses: 0 });
-  const monthsRunway = financial.monthlyExpenses > 0 
-    ? (financial.savings / financial.monthlyExpenses).toFixed(1)
-    : 0;
-  document.getElementById('monthsRunway').textContent = monthsRunway;
+  const activeMetrics = metrics.filter(m => m.milestones.some(ms => ms.completed) && m.milestones.some(ms => !ms.completed)).length;
+  document.getElementById('activeMetrics').textContent = activeMetrics;
   
-  const repairSkills = parseInt(document.getElementById('repairSkills')?.value || 0);
-  const exchangePartners = parseInt(document.getElementById('exchangePartners')?.value || 0);
-  const resilienceIndex = streams.length + repairSkills + exchangePartners;
-  document.getElementById('resilienceIndex').textContent = resilienceIndex;
-}
-
-function exportData() {
-  const data = {
-    metrics: store.get('lev.metrics', defaultMetrics),
-    weeklyGoals: store.get('lev.weeklyGoals', []),
-    actions: store.get('lev.actions', []),
-    incomeStreams: store.get('lev.incomeStreams', []),
-    incomeEvents: store.get('lev.incomeEvents', []),
-    financial: store.get('lev.financial', {}),
-    reflections: store.get('lev.reflections', []),
-    exportDate: new Date().toISOString(),
-    topMetrics: {
-      autonomyScore: document.getElementById('autonomyScore').textContent,
-      independentIncome: document.getElementById('independentIncome').textContent,
-      monthsRunway: document.getElementById('monthsRunway').textContent,
-      resilienceIndex: document.getElementById('resilienceIndex').textContent,
-      cashflowRatio: document.getElementById('cashflowRatio')?.textContent || '0%'
-    }
-  };
+  // Calculate streak
+  let streak = 0;
+  let checkDate = new Date();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
   
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `leverage-data-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  alert('Data exported! Import into Excel or Google Sheets for analysis.');
+  while (true) {
+    const weekStart = new Date(checkDate);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    weekStart.setHours(0,0,0,0);
+    const weekEnd = new Date(weekStart.getTime() + weekMs);
+    
+    const hasAction = actions.some(a => {
+      const d = new Date(a.date);
+      return d >= weekStart && d < weekEnd;
+    });
+    
+    if (!hasAction) break;
+    streak++;
+    checkDate = new Date(weekStart.getTime() - 1);
+  }
+  
+  document.getElementById('actionStreak').textContent = streak;
 }
 
 // Initialize
-renderMetrics();
-renderWeeklyGoals();
+renderLadder();
 renderActions();
-renderIncomeStreams();
 renderReflections();
-updateTopMetrics();
 </script>
 
 </body>
