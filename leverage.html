@@ -280,6 +280,23 @@
       });
     }
 
+    // ---- One-time name migration to map your older metric names to the new step libraries ----
+    const NAME_ALIASES = {
+      'Independent Cashflow': 'Independent Cashflow (Airbnb Ops)',
+      'Lean Cost Index': 'Lean Cost Index (Family Cash Design)',
+      'Productised Value': 'Productised Value (Add‑on Offers)',
+      'Compliance Mastery': 'Compliance Mastery (AU)'
+    };
+    function migrateNames(list){
+      const seen = new Set();
+      return list.map(m => {
+        const target = NAME_ALIASES[m.name] || m.name; // if alias exists, rename to target
+        // prevent duplicate entries if user already has both old and new
+        const uniqueName = seen.has(target) ? m.name : target;
+        seen.add(uniqueName);
+        return { ...m, name: uniqueName };
+      });
+    }
     /* ===================== Evidence-based Step Library ===================== */
     // Structure: steps[metric][stage] = { gentle: [...], push: [...] }
     // Concrete, field-tested. Focused on Airbnb Host Support business.
@@ -482,6 +499,7 @@
 
     /* ===================== State ===================== */
     let ladder = loadLadder();
+    ladder = migrateNames(ladder);
     store.set('lev.ladder', ladder);
     let focus = store.get('lev.focus', 0);
     let mode = store.get('lev.mode', 'gentle');
