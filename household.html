@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Household Control</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#e8e8e8}
@@ -24,17 +25,13 @@
   .muted{color:#9aa0a6;font-size:12px}
   .amt{font-size:26px;font-weight:700;color:#4aa3ff}
   .sub{font-size:12px;color:#b0b0b0}
-  .good{color:#10b981}
-  .warn{color:#f59e0b}
-  .bad{color:#ef4444}
-  .btn{background:#4aa3ff;border:none;color:#fff;cursor:pointer}
+  .btn{background:#4aa3ff;border:none;color:#fff;cursor:pointer;padding:8px 14px;border-radius:8px}
   .btn:hover{background:#398ff0}
-  .btn-ghost{background:transparent;border:1px solid #4aa3ff;color:#e8e8e8}
+  .btn-ghost{background:transparent;border:1px solid #4aa3ff;color:#e8e8e8;padding:8px 14px;border-radius:8px}
   .kpi{display:flex;flex-direction:column;gap:4px}
   .kpi .title{font-size:12px;color:#9aa0a6}
   .kpi .value{font-size:22px;font-weight:700}
   .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;border:1px solid #3a3a3a;color:#9aa0a6}
-  .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .spacer{height:8px}
   .divider{height:1px;background:#333;margin:12px 0}
   details{background:#232323;border:1px solid #2f2f2f;border-radius:10px;padding:12px}
@@ -46,7 +43,7 @@
 </head>
 <body>
 
-<!-- Keep your site nav alive -->
+<!-- NAV -->
 <div class="top-nav">
   <a href="index.html">← Hub</a>
   <a href="walks.html">Walks</a>
@@ -59,127 +56,44 @@
 <div class="container">
   <header>
     <h1>Household Control</h1>
-    <p>Simple, rhythmic cashflow: split the money, run one weekly check, schedule one compression week.</p>
+    <p>Split income, track balances, and see the rhythm of independence.</p>
   </header>
 
-  <!-- HOW IT WORKS -->
-  <details open>
-    <summary><strong>How it works (30-second read)</strong></summary>
-    <div class="spacer"></div>
-    <div class="grid">
-      <div class="card">
-        <h2>1) Auto-split income</h2>
-        <p class="muted">Use four envelopes. No budgets.</p>
-        <ul class="muted" style="margin-left:16px;line-height:1.6">
-          <li>Living (Ops): <strong>55%</strong></li>
-          <li>Debt + Buffer: <strong>25%</strong></li>
-          <li>Growth + Tools: <strong>10%</strong></li>
-          <li>Freedom (invest/relocate): <strong>10%</strong></li>
-        </ul>
-      </div>
-      <div class="card">
-        <h2>2) Weekly check (5 min)</h2>
-        <ul class="muted" style="margin-left:16px;line-height:1.6">
-          <li>Note <strong>Debt remaining</strong> & <strong>Buffer balance</strong></li>
-          <li>Tick if <strong>food cap</strong> stayed under</li>
-          <li>Push any Ops surplus → Buffer/Freedom</li>
-        </ul>
-      </div>
-      <div class="card">
-        <h2>3) Compression week</h2>
-        <p class="muted">Once a month: pantry meals, zero extras.</p>
-        <p class="muted">Schedule it below and tick it off. That’s your reset.</p>
-      </div>
-    </div>
-  </details>
-
-  <div class="spacer"></div>
-
-  <!-- INPUTS + SPLIT -->
+  <!-- SPLIT INPUT -->
   <div class="grid">
     <div class="card">
       <h2>Income & Split</h2>
-      <label class="small">Monthly household income (editable)</label>
-      <input id="income" type="number" step="100" value="13500" />
+      <label class="small">Monthly household income</label>
+      <input id="income" type="number" step="100" value="13500"/>
       <div class="divider"></div>
       <div class="grid" style="grid-template-columns:1fr 1fr">
-        <div class="kpi"><div class="title">Living (55%)</div><div class="value amt" id="amtOps">$7,425</div><div class="sub" id="amtOpsWk">≈ $/wk</div></div>
-        <div class="kpi"><div class="title">Debt + Buffer (25%)</div><div class="value amt" id="amtBuf">$3,375</div><div class="sub" id="amtBufWk">≈ $/wk</div></div>
-        <div class="kpi"><div class="title">Growth + Tools (10%)</div><div class="value amt" id="amtGrowth">$1,350</div><div class="sub" id="amtGrowthWk">≈ $/wk</div></div>
-        <div class="kpi"><div class="title">Freedom Fund (10%)</div><div class="value amt" id="amtFreedom">$1,350</div><div class="sub" id="amtFreedomWk">≈ $/wk</div></div>
+        <div class="kpi"><div class="title">Living (55%)</div><div class="value amt" id="amtOps">$7,425</div><div class="sub" id="amtOpsWk">≈ /wk</div></div>
+        <div class="kpi"><div class="title">Debt + Buffer (25%)</div><div class="value amt" id="amtBuf">$3,375</div><div class="sub" id="amtBufWk">≈ /wk</div></div>
+        <div class="kpi"><div class="title">Growth + Tools (10%)</div><div class="value amt" id="amtGrowth">$1,350</div><div class="sub" id="amtGrowthWk">≈ /wk</div></div>
+        <div class="kpi"><div class="title">Freedom (10%)</div><div class="value amt" id="amtFreedom">$1,350</div><div class="sub" id="amtFreedomWk">≈ /wk</div></div>
       </div>
       <div class="spacer"></div>
       <button class="btn" id="saveIncome">Save split</button>
-      <span class="muted">Auto-splits update all targets.</span>
-    </div>
-
-    <div class="card">
-      <h2>Compression Week</h2>
-      <label class="small">Next start (Mon)</label>
-      <input id="cwDate" type="date"/>
-      <div class="spacer"></div>
-      <button class="btn" id="saveCW">Schedule</button>
-      <button class="btn-ghost" id="markCW">✓ Mark completed</button>
-      <div class="spacer"></div>
-      <div class="muted" id="cwStatus">No week scheduled.</div>
     </div>
   </div>
 
   <div class="spacer"></div>
 
-  <!-- WEEKLY QUICK LOG -->
-  <div class="grid">
-    <div class="card">
-      <h2>Weekly quick log</h2>
-      <div class="row">
-        <div>
-          <label class="small">Debt remaining</label>
-          <input id="logDebt" type="number" step="100" placeholder="e.g. 12800"/>
-        </div>
-        <div>
-          <label class="small">Buffer balance</label>
-          <input id="logBuffer" type="number" step="100" placeholder="e.g. 4500"/>
-        </div>
-        <div>
-          <label class="small">Food cap under?</label>
-          <select id="logFood"><option value="Yes">Yes</option><option value="No">No</option></select>
-        </div>
-      </div>
-      <div class="row">
-        <textarea id="logNote" rows="2" placeholder="Optional note (what helped / what slipped)"></textarea>
-      </div>
-      <div class="row">
-        <button class="btn" id="saveLog">Save weekly log</button>
-        <span class="pill" id="lastSaved">—</span>
-      </div>
+  <!-- BALANCES + GRAPH -->
+  <div class="card">
+    <h2>Current Balances</h2>
+    <p class="muted">Enter balances from each account to compare against targets.</p>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
+      <div><label class="small">Living</label><input id="balOps" type="number" step="100" placeholder="e.g. 7400"></div>
+      <div><label class="small">Debt + Buffer</label><input id="balBuf" type="number" step="100" placeholder="e.g. 3300"></div>
+      <div><label class="small">Growth + Tools</label><input id="balGrowth" type="number" step="100" placeholder="e.g. 1350"></div>
+      <div><label class="small">Freedom</label><input id="balFreedom" type="number" step="100" placeholder="e.g. 1350"></div>
     </div>
-
-    <div class="card">
-      <h2>Recent logs</h2>
-      <div class="list" id="logList"></div>
-    </div>
-  </div>
-
-  <div class="spacer"></div>
-
-  <!-- TARGETS -->
-  <div class="grid">
-    <div class="card">
-      <h2>Targets (auto from income)</h2>
-      <ul class="muted" style="margin-left:16px;line-height:1.8">
-        <li>🔥 Clear heater debt: <strong id="tDebt">$14,000</strong> (use “Debt + Buffer” envelope first)</li>
-        <li>🧱 6-month buffer: <strong id="tBuffer">$54,000</strong> (once debt = 0)</li>
-        <li>🌱 Build stream: aim for **10–15%** of total income outside employment</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h2>Ops guardrails</h2>
-      <ul class="muted" style="margin-left:16px;line-height:1.8">
-        <li>Weekly living budget ≈ <strong id="opsWeekly">—</strong></li>
-        <li>Food cap: <strong>$550–$600/wk</strong> (pantry first during Compression Week)</li>
-        <li>End-of-week surplus → sweep to Buffer/Freedom (no top-ups mid-week)</li>
-      </ul>
-    </div>
+    <div class="spacer"></div>
+    <button class="btn" id="saveBalances">Save Balances</button>
+    <span class="pill" id="balStatus">—</span>
+    <div class="spacer"></div>
+    <canvas id="balanceChart" style="width:100%;max-width:700px;height:260px;background:#1a1a1a;border-radius:8px;"></canvas>
   </div>
 
 </div>
@@ -190,120 +104,96 @@ const store = {
   get: (k, def=null) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : def } catch{ return def } },
   set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
 };
-
-/* ---------- Elements ---------- */
 const el = id => document.getElementById(id);
+
+/* ---------- Income ---------- */
 const incomeInput = el('income');
 const saveIncomeBtn = el('saveIncome');
 const amtOps = el('amtOps'), amtBuf = el('amtBuf'), amtGrowth = el('amtGrowth'), amtFreedom = el('amtFreedom');
 const amtOpsWk = el('amtOpsWk'), amtBufWk = el('amtBufWk'), amtGrowthWk = el('amtGrowthWk'), amtFreedomWk = el('amtFreedomWk');
-const tDebt = el('tDebt'), tBuffer = el('tBuffer'), opsWeekly = el('opsWeekly');
-
-const cwDate = el('cwDate'), cwStatus = el('cwStatus'), saveCW = el('saveCW'), markCW = el('markCW');
-const logDebt = el('logDebt'), logBuffer = el('logBuffer'), logFood = el('logFood'), logNote = el('logNote');
-const saveLogBtn = el('saveLog'), logList = el('logList'), lastSaved = el('lastSaved');
-
-/* ---------- Formatting ---------- */
 const fmt = n => n.toLocaleString(undefined,{style:'currency',currency:'AUD',maximumFractionDigits:0});
-const weeklyFromMonthly = m => Math.round(m / 4.345); // simple monthly->weekly
+const weeklyFromMonthly = m => Math.round(m / 4.345);
+let targets = {ops:0,buf:0,growth:0,freedom:0};
 
-/* ---------- State ---------- */
-function loadIncome(){
-  const saved = store.get('house.income', 13500);
-  incomeInput.value = saved;
-  renderSplit(saved);
-}
 function renderSplit(income){
-  const ops = Math.round(income * 0.55);
-  const buf = Math.round(income * 0.25);
-  const growth = Math.round(income * 0.10);
-  const freedom = Math.round(income * 0.10);
+  targets.ops = Math.round(income * 0.55);
+  targets.buf = Math.round(income * 0.25);
+  targets.growth = Math.round(income * 0.10);
+  targets.freedom = Math.round(income * 0.10);
 
-  amtOps.textContent = fmt(ops);
-  amtBuf.textContent = fmt(buf);
-  amtGrowth.textContent = fmt(growth);
-  amtFreedom.textContent = fmt(freedom);
+  amtOps.textContent = fmt(targets.ops);
+  amtBuf.textContent = fmt(targets.buf);
+  amtGrowth.textContent = fmt(targets.growth);
+  amtFreedom.textContent = fmt(targets.freedom);
 
-  amtOpsWk.textContent = '≈ ' + fmt(weeklyFromMonthly(ops)) + ' / week';
-  amtBufWk.textContent = '≈ ' + fmt(weeklyFromMonthly(buf)) + ' / week';
-  amtGrowthWk.textContent = '≈ ' + fmt(weeklyFromMonthly(growth)) + ' / week';
-  amtFreedomWk.textContent = '≈ ' + fmt(weeklyFromMonthly(freedom)) + ' / week';
-
-  // Targets
-  tDebt.textContent = fmt(14000);
-  const leanMonthly = ops; // rough proxy; adjust if you want
-  const sixMonth = Math.round(leanMonthly * 6);
-  tBuffer.textContent = fmt(sixMonth);
-  opsWeekly.textContent = fmt(weeklyFromMonthly(ops));
+  amtOpsWk.textContent = '≈ ' + fmt(weeklyFromMonthly(targets.ops)) + '/wk';
+  amtBufWk.textContent = '≈ ' + fmt(weeklyFromMonthly(targets.buf)) + '/wk';
+  amtGrowthWk.textContent = '≈ ' + fmt(weeklyFromMonthly(targets.growth)) + '/wk';
+  amtFreedomWk.textContent = '≈ ' + fmt(weeklyFromMonthly(targets.freedom)) + '/wk';
 }
-
-/* ---------- Save income ---------- */
-saveIncomeBtn.addEventListener('click', ()=>{
+function loadIncome(){
+  const val = store.get('house.income',13500);
+  incomeInput.value = val;
+  renderSplit(val);
+}
+saveIncomeBtn.addEventListener('click',()=>{
   const val = Number(incomeInput.value)||13500;
   store.set('house.income', val);
   renderSplit(val);
-  saveIncomeBtn.textContent = 'Saved';
-  setTimeout(()=>saveIncomeBtn.textContent='Save split', 900);
+  updateChart();
+  saveIncomeBtn.textContent='Saved';
+  setTimeout(()=>saveIncomeBtn.textContent='Save split',800);
 });
 
-/* ---------- Compression week ---------- */
-function loadCW(){
-  const data = store.get('house.cw', {date:null, completed:[]});
-  if(data.date){
-    cwDate.value = data.date;
-    const next = new Date(data.date);
-    cwStatus.innerHTML = `Next compression week starts <strong>${next.toLocaleDateString()}</strong>`;
-  }else{
-    cwStatus.textContent = 'No week scheduled.';
-  }
-}
-saveCW.addEventListener('click', ()=>{
-  if(!cwDate.value){ alert('Pick a Monday start for compression week.'); return; }
-  const data = store.get('house.cw', {date:null, completed:[]});
-  data.date = cwDate.value;
-  store.set('house.cw', data);
-  loadCW();
-});
-markCW.addEventListener('click', ()=>{
-  const data = store.get('house.cw', {date:null, completed:[]});
-  data.completed = data.completed || [];
-  data.completed.unshift(new Date().toISOString());
-  store.set('house.cw', data);
-  cwStatus.innerHTML = `Compression week marked <span class="good">✓</span>. Schedule the next one when ready.`;
-});
+/* ---------- Balances ---------- */
+const balOps = el('balOps'), balBuf = el('balBuf'), balGrowth = el('balGrowth'), balFreedom = el('balFreedom');
+const saveBalancesBtn = el('saveBalances'), balStatus = el('balStatus');
+let chart;
 
-/* ---------- Weekly logs ---------- */
-function loadLogs(){
-  const logs = store.get('house.logs', []);
-  if(logs.length===0){ logList.innerHTML = '<div class="muted">No logs yet.</div>'; return; }
-  logList.innerHTML = logs.slice(0,12).map(l => `
-    <div class="log">
-      <div class="when">${new Date(l.when).toLocaleDateString()}</div>
-      <div>Debt remaining: <strong>${fmt(l.debt)}</strong></div>
-      <div>Buffer balance: <strong>${fmt(l.buffer)}</strong></div>
-      <div>Food cap under? <strong>${l.food}</strong></div>
-      ${l.note ? `<div class="muted" style="margin-top:6px">${l.note}</div>`:''}
-    </div>
-  `).join('');
+function loadBalances(){
+  const b = store.get('house.balances',{ops:0,buf:0,growth:0,freedom:0});
+  balOps.value = b.ops || '';
+  balBuf.value = b.buf || '';
+  balGrowth.value = b.growth || '';
+  balFreedom.value = b.freedom || '';
+  updateChart();
 }
-saveLogBtn.addEventListener('click', ()=>{
-  const d = Number(logDebt.value||0);
-  const b = Number(logBuffer.value||0);
-  const f = logFood.value;
-  const n = (logNote.value||'').trim();
-  if(!d && !b){ alert('Enter at least a debt or buffer number.'); return; }
-  const logs = store.get('house.logs', []);
-  logs.unshift({when:new Date().toISOString(), debt:d, buffer:b, food:f, note:n});
-  store.set('house.logs', logs);
-  lastSaved.textContent = 'Saved ' + new Date().toLocaleTimeString();
-  logDebt.value=''; logBuffer.value=''; logNote.value='';
-  loadLogs();
+function updateChart(){
+  const b = store.get('house.balances',{ops:0,buf:0,growth:0,freedom:0});
+  const ctx = document.getElementById('balanceChart').getContext('2d');
+  const actual = [b.ops,b.buf,b.growth,b.freedom];
+  const target = [targets.ops,targets.buf,targets.growth,targets.freedom];
+  const labels = ['Living','Debt+Buffer','Growth+Tools','Freedom'];
+  const colorsA = '#4aa3ff', colorsT = '#9aa0a6';
+  if(chart) chart.destroy();
+  chart = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Actual',data:actual,backgroundColor:colorsA,borderRadius:6},
+        {label:'Target',data:target,backgroundColor:colorsT,borderRadius:6}
+      ]
+    },
+    options:{
+      scales:{
+        y:{beginAtZero:true,grid:{color:'#333'},ticks:{color:'#999'}},
+        x:{grid:{display:false},ticks:{color:'#ccc'}}
+      },
+      plugins:{legend:{labels:{color:'#ccc'}}}
+    }
+  });
+}
+saveBalancesBtn.addEventListener('click',()=>{
+  const b={ops:Number(balOps.value)||0,buf:Number(balBuf.value)||0,growth:Number(balGrowth.value)||0,freedom:Number(balFreedom.value)||0};
+  store.set('house.balances',b);
+  updateChart();
+  balStatus.textContent='Saved '+new Date().toLocaleTimeString();
 });
 
 /* ---------- Init ---------- */
 loadIncome();
-loadCW();
-loadLogs();
+loadBalances();
 </script>
 </body>
 </html>
