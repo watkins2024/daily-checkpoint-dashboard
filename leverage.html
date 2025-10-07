@@ -528,7 +528,7 @@ function renderIncomeStreams() {
   `).join('');
   document.getElementById('incomeStreamList').innerHTML = html;
   
-  const financial = store.get('const financial = store.get('lev.financial', { savings: 0, monthlyExpenses: 0, baselineExpenses: 0 });
+  const financial = store.get('lev.financial', { savings: 0, monthlyExpenses: 0, baselineExpenses: 0 });}
   document.getElementById('totalSavings').value = financial.savings || '';
   document.getElementById('monthlyExpenses').value = financial.monthlyExpenses || '';
   updateFinancials();
