@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Independence Laboratory</title>
   <style>
-    /* ----------------------------
-       Independence Laboratory v2
-       “Studio” look: clearer contrast,
-       calmer typography, crisp sections
-       ---------------------------- */
+    /* ---------------------------------------------
+       Independence Laboratory v2.1
+       - Adds Micro-steps (Plan → Do → Proof)
+       - Visual progress rings per pathway
+       - Preserves your existing localStorage keys
+       --------------------------------------------- */
 
     :root{
       --bg: #f6f7f9;
@@ -44,79 +45,47 @@
       position: sticky; top:0; z-index: 20;
       display:flex; gap:10px; padding:10px 16px;
     }
-    .top-nav a{
-      padding:8px 14px; border-radius:10px; color: var(--muted)
-    }
+    .top-nav a{ padding:8px 14px; border-radius:10px; color: var(--muted) }
     .top-nav a:hover{ background:#f0f3f7; color: var(--primary-ink) }
     .top-nav a.active{ background:#e8f0ff; color: var(--primary-ink) }
 
-    header{
-      max-width: 1200px; margin: 18px auto 0; padding: 16px;
-    }
+    header{ max-width: 1200px; margin: 18px auto 0; padding: 16px; }
     header h1{ margin:0 0 4px 0; font-size: 28px; letter-spacing:.2px }
     header p{ margin:0; color: var(--muted) }
 
     .container{ max-width:1200px; margin: 16px auto 40px; padding: 0 16px }
 
     /* Summary metrics */
-    .metrics{
-      display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
-      gap: 12px; margin-top: 16px;
-    }
-    .metric-card{
-      background: var(--panel); border:1px solid var(--border); border-radius: var(--radius);
-      padding:16px; box-shadow: var(--shadow);
-    }
+    .metrics{ display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 12px; margin-top: 16px; }
+    .metric-card{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:16px; box-shadow: var(--shadow); }
     .metric-label{ font-size:12px; color: var(--muted); letter-spacing:.3px; text-transform: uppercase }
     .metric-value{ font-size:32px; font-weight:700; margin-top:6px }
     .metric-sub{ font-size:12px; color: var(--muted); margin-top:4px }
 
     /* Big threshold bar */
-    .exit-wrap{
-      background: var(--panel); border:1px solid var(--border); border-radius: var(--radius);
-      padding:18px; margin-top:14px; box-shadow: var(--shadow);
-    }
-    .bar{
-      height:14px; width:100%; background:#eef1f7; border-radius:999px; position:relative; overflow:hidden
-    }
-    .bar-fill{
-      position:absolute; left:0; top:0; height:100%; width:0%;
-      background: linear-gradient(90deg, var(--ok), #46c0f9);
-      transition: width .4s ease;
-    }
-    .bar-line{
-      position:absolute; top:-6px; width:2px; height:26px; background: var(--warn);
-      left: 60%;
-    }
-    .bar-label{
-      display:flex; justify-content: space-between; margin-top:8px; color: var(--muted); font-size:12px
-    }
+    .exit-wrap{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:18px; margin-top:14px; box-shadow: var(--shadow); }
+    .bar{ height:14px; width:100%; background:#eef1f7; border-radius:999px; position:relative; overflow:hidden }
+    .bar-fill{ position:absolute; left:0; top:0; height:100%; width:0%; background: linear-gradient(90deg, var(--ok), #46c0f9); transition: width .4s ease; }
+    .bar-line{ position:absolute; top:-6px; width:2px; height:26px; background: var(--warn); left: 60%; }
+    .bar-label{ display:flex; justify-content: space-between; margin-top:8px; color: var(--muted); font-size:12px }
     .exit-note{ margin-top:10px; font-size:13px; color: var(--muted) }
     .glow{ box-shadow: 0 0 0 3px rgba(16,185,129,.15), 0 0 0 1px rgba(16,185,129,.25) }
 
     /* Tabs */
     .tabs{ display:flex; flex-wrap: wrap; gap:8px; margin-top:18px }
-    .tabs button{
-      border:1px solid var(--border); background: #fff; color: var(--ink);
-      padding:10px 14px; border-radius: 10px; cursor:pointer;
-    }
+    .tabs button{ border:1px solid var(--border); background: #fff; color: var(--ink); padding:10px 14px; border-radius: 10px; cursor:pointer; }
     .tabs button.active{ background: #e8f0ff; color: var(--primary-ink); border-color:#dbe6ff }
     .panel{ display:none; margin-top:14px }
     .panel.active{ display:block }
 
     /* Cards / sections */
-    .card{
-      background: var(--panel); border:1px solid var(--border); border-radius: var(--radius);
-      padding:20px; box-shadow: var(--shadow); margin-bottom: 14px;
-    }
+    .card{ background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:20px; box-shadow: var(--shadow); margin-bottom: 14px; }
     .card h2{ margin:0 0 8px 0; font-size:18px }
     .help{ font-size:13px; color: var(--muted) }
 
     /* Metric ladders */
-    .ladder-list{ display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 12px }
-    .metric-ladder{
-      border:1px solid var(--border); border-radius: 12px; padding:14px; background:#fff;
-    }
+    .ladder-list{ display:grid; grid-template-columns: repeat(auto-fit,minmax(310px,1fr)); gap: 12px }
+    .metric-ladder{ border:1px solid var(--border); border-radius: 12px; padding:14px; background:#fff; }
     .metric-header{ display:flex; align-items:center; justify-content: space-between; gap:6px }
     .metric-name{ font-weight:700 }
     .metric-stage{ font-size:12px; color: var(--warn) }
@@ -127,37 +96,20 @@
 
     .metric-tools{ display:grid; gap:10px }
     .row{ display:grid; grid-template-columns: 1fr; gap:8px }
-    .row-2{ display:grid; grid-template-columns: 1fr 100px; gap:8px }
+    .row-2{ display:grid; grid-template-columns: 1fr 110px; gap:8px }
 
-    textarea,input,select{
-      width:100%; border:1px solid var(--border); background:#fbfcff; border-radius:10px;
-      padding:10px 12px; font-size:14px; color: var(--ink);
-    }
-    textarea:focus, input:focus, select:focus{
-      outline:none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring);
-      background:#fff;
-    }
+    textarea,input,select{ width:100%; border:1px solid var(--border); background:#fbfcff; border-radius:10px; padding:10px 12px; font-size:14px; color: var(--ink); }
+    textarea:focus, input:focus, select:focus{ outline:none; border-color: var(--ring); box-shadow: 0 0 0 3px var(--ring); background:#fff; }
 
-    .btn{
-      border:1px solid #dbe6ff; background: #eaf2ff; color: var(--primary-ink);
-      padding:8px 12px; border-radius: 10px; cursor:pointer; font-size:14px;
-    }
+    .btn{ border:1px solid #dbe6ff; background: #eaf2ff; color: var(--primary-ink); padding:8px 12px; border-radius: 10px; cursor:pointer; font-size:14px; }
     .btn:hover{ background:#dfeaff }
-    .btn-ghost{
-      background:#fff; border:1px dashed var(--border); color: var(--muted)
-    }
+    .btn-ghost{ background:#fff; border:1px dashed var(--border); color: var(--muted) }
 
     .badge{ font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); background:#fff; color: var(--muted) }
 
     /* Tooltips */
-    .info{
-      width:20px; height:20px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center;
-      background:#eef4ff; border:1px solid #dbe6ff; color:#487ef7; cursor:pointer; font-size:12px;
-    }
-    .tooltip{
-      position: absolute; z-index:50; background:#0f172a; color:#dbeafe; padding:12px; border-radius:10px;
-      width:min(320px, 80vw); font-size:13px; box-shadow: 0 14px 36px rgba(2,8,23,.3); border:1px solid #1e293b;
-    }
+    .info{ width:20px; height:20px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:#eef4ff; border:1px solid #dbe6ff; color:#487ef7; cursor:pointer; font-size:12px; }
+    .tooltip{ position: absolute; z-index:50; background:#0f172a; color:#dbeafe; padding:12px; border-radius:10px; width:min(320px, 80vw); font-size:13px; box-shadow: 0 14px 36px rgba(2,8,23,.3); border:1px solid #1e293b; }
     .tooltip h4{ margin:0 0 6px 0; color:#93c5fd }
     .tooltip p{ margin:6px 0 }
 
@@ -167,10 +119,19 @@
     .action-desc{ font-size:14px }
     .thread-entry{ padding:12px; border:1px solid var(--border); border-radius:10px; background:#fff; margin-bottom:8px }
 
-    /* Small helper */
     .muted{ color: var(--muted) }
     .split{ display:flex; gap:12px; flex-wrap: wrap }
     .grow{ flex: 1 1 300px }
+
+    /* Visual progress ring */
+    .ring{ width: 64px; height: 64px; border-radius: 50%; background:
+      conic-gradient(var(--ok) var(--pct,0%), #e9eef6 0);
+      display:grid; place-items:center; font-weight:700; color:#0f5132; }
+    .ring span{ font-size:12px; color:#0f5132 }
+
+    /* Micro-step pills */
+    .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--border); border-radius:9999px; background:#fff; font-size:12px }
+    .pill input{ width:16px; height:16px }
   </style>
 </head>
 <body>
@@ -190,43 +151,7 @@
   </header>
 
   <div class="container">
-
-    <!-- Quick instructions (open by default) -->
-    <div class="card">
-      <div class="split">
-        <div class="grow">
-          <h2>How this page works</h2>
-          <p class="help">
-            Each week, do this 5-minute loop:
-          </p>
-          <ol class="help" style="margin:8px 0 0 18px">
-            <li>Open 1–3 “active” pathways.</li>
-            <li>Complete one small milestone or log one concrete action.</li>
-            <li>Write one line of <b>Evidence</b> (“what actually happened”).</li>
-            <li>Slide <b>Energy</b> for the pathway (0–100).</li>
-            <li>Add a short entry to the <b>Threadline</b> (what shifted / what resisted / what’s next).</li>
-          </ol>
-        </div>
-        <div style="min-width:260px">
-          <div class="exit-wrap" id="exitCard">
-            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:10px">
-              <div><b>Overall Independence</b></div>
-              <div class="badge" id="overallBadge">0%</div>
-            </div>
-            <div class="bar" aria-label="Overall independence progress bar">
-              <div class="bar-fill" id="overallFill"></div>
-              <div class="bar-line" title="Exit threshold (60%)"></div>
-            </div>
-            <div class="bar-label">
-              <span>0%</span><span>Target 60%</span><span>100%</span>
-            </div>
-            <div class="exit-note">≥ 60% = baseline fit for independent work as default.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Summary tiles -->
+    <!-- Summary + Exit threshold -->
     <div class="metrics">
       <div class="metric-card">
         <div class="metric-label">Momentum</div>
@@ -250,6 +175,21 @@
       </div>
     </div>
 
+    <div class="exit-wrap" id="exitCard">
+      <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:10px">
+        <div><b>Overall Independence</b></div>
+        <div class="badge" id="overallBadge">0%</div>
+      </div>
+      <div class="bar" aria-label="Overall independence progress bar">
+        <div class="bar-fill" id="overallFill"></div>
+        <div class="bar-line" title="Exit threshold (60%)"></div>
+      </div>
+      <div class="bar-label">
+        <span>0%</span><span>Target 60%</span><span>100%</span>
+      </div>
+      <div class="exit-note">≥ 60% = baseline fit for independent work as default.</div>
+    </div>
+
     <!-- Tabs -->
     <div class="tabs">
       <button class="active" data-tab="ladder">Pathways</button>
@@ -262,7 +202,7 @@
     <div id="ladder" class="panel active">
       <div class="card">
         <h2>12 Pathways to Independence</h2>
-        <p class="help">Click ℹ️ for definitions and targets. Mark milestones. Add one line of evidence when something actually moves.</p>
+        <p class="help">Each pathway shows: a progress ring, your next milestone, a 5‑rung ladder, micro‑steps (Plan → Do → Proof), evidence box, and an energy slider.</p>
         <div class="ladder-list" id="ladderList"></div>
       </div>
     </div>
@@ -280,7 +220,7 @@
     <div id="thread" class="panel">
       <div class="card">
         <h2>Threadline — weekly continuity</h2>
-        <p class="help">One short entry per week: <b>What shifted</b> / <b>What resisted</b> / <b>What’s next</b>. Keep it scrappy — show reality.</p>
+        <p class="help">One short entry per week: <b>What shifted</b> / <b>What resisted</b> / <b>What’s next</b>.</p>
         <div class="row">
           <textarea id="threadText" rows="5" placeholder="This week: shifted / resisted / next focus…"></textarea>
           <div style="display:flex; gap:8px; justify-content:flex-end">
@@ -299,12 +239,11 @@
       <div class="card">
         <h2>Quick reference</h2>
         <ul class="help" style="margin-left:18px">
-          <li><b>Mark a milestone</b>: Click the button beside the current rung. It will log an action automatically.</li>
-          <li><b>Add evidence</b>: Type one factual sentence (e.g., “Sold first $40 service”), then click <i>Save evidence</i>.</li>
-          <li><b>Energy slider</b>: Rate the weekly energy/pressure for this pathway (0–100). Lower number = heavy / low clarity.</li>
-          <li><b>Action Log</b>: Use for anything concrete you did. It drives Momentum and Streak.</li>
-          <li><b>Threadline</b>: One short note per week that connects the dots — what moved, what didn’t, what’s next.</li>
-          <li><b>Exit threshold</b>: The big bar turns subtly greener as you approach 60%. That’s your independent baseline.</li>
+          <li><b>Micro‑steps</b>: Tick <i>Plan</i> → <i>Do (10‑min)</i> → <i>Proof</i>. Repeat weekly until the rung is truly done.</li>
+          <li><b>Mark a milestone</b>: Use the button beside the current rung. It auto‑logs an action and resets micro‑steps for that rung.</li>
+          <li><b>Evidence</b>: One factual sentence (e.g., “Sold first $40 service”).</li>
+          <li><b>Energy</b>: Rate the weekly energy/pressure for this pathway (0–100). Lower = heavy; use as an early‑warning signal.</li>
+          <li><b>Exit threshold</b>: The big bar glows as you approach 60% (independence baseline).</li>
         </ul>
       </div>
     </div>
@@ -329,215 +268,150 @@
 
   <script>
     /* ==========================================================
-       Data + Storage helpers
+       Storage helpers (kept from v2; extended)
        ========================================================== */
     const store = {
       get(k, def){ try { return JSON.parse(localStorage.getItem(k)) ?? def } catch(_) { return def } },
       set(k, v){ localStorage.setItem(k, JSON.stringify(v)) }
     };
 
-    // We’ll keep your existing keys to preserve data:
-    // lev.ladder, lev.actions, lev.reflections
-    // New keys added:
-    // lev.evidence  -> { [metricName]: [{date, text}] }
-    // lev.energy    -> { [metricName]: [{date, value}] }
-    // lev.thread    -> [{date, text}]
+    // Existing keys preserved:
+    //  - lev.ladder, lev.actions, lev.reflections (if you used it elsewhere)
+    // New keys:
+    //  - lev.evidence  -> { [metricName]: [{date, text}] }
+    //  - lev.energy    -> { [metricName]: [{date, value}] }
+    //  - lev.thread    -> [{date, text}]
+    //  - lev.micro     -> { "<metric>|<milIdx>": { plan:boolean, do:boolean, proof:boolean, note:string } }
 
+    const MICRO_KEYS = ["plan","do","proof"];
+    function microKey(metricName, milIdx){ return `${metricName}|${milIdx}`; }
+    function getMicro(){ return store.get('lev.micro', {}); }
+    function setMicro(v){ store.set('lev.micro', v); }
+
+    /* ==========================================================
+       Default ladder with info + weights
+       ========================================================== */
     const defaultLadder = [
-      { name:'Independent Cashflow',    weight:3, info:{
-          def:'Your ratio of income that comes from non-institutional sources.',
-          target:'≥ 40% income from independent sources.',
-          enter:'Mark milestones as you earn.',
-          why:'Cashflow buys you calendar control and negotiation power.'
-        }, milestones:[
-          {stage:'Seed',    text:'Earn $50 once from non-salary work', completed:false},
-          {stage:'Active',  text:'Earn $200/month for 2 months',       completed:false},
-          {stage:'Growing', text:'Reach 20% independent income',       completed:false},
-          {stage:'Stable',  text:'Reach 40% independent income',       completed:false},
-          {stage:'Autonomous',text:'Maintain 60%+ for 3 months',       completed:false}
-        ]},
-      { name:'Survival Buffer',         weight:3, info:{
-          def:'Cash runway to handle lean periods.',
-          target:'6 months of essential expenses.',
-          enter:'Mark milestones as you fund the buffer.',
-          why:'Runway turns urgency into patience and better decisions.'
-        }, milestones:[
-          {stage:'Seed',    text:'Save $100 in separate account', completed:false},
-          {stage:'Active',  text:'Build 1 month of essentials',   completed:false},
-          {stage:'Growing', text:'Reach 3 months saved',          completed:false},
-          {stage:'Stable',  text:'Achieve 6 months runway',       completed:false},
-          {stage:'Autonomous',text:'Maintain 12+ months',        completed:false}
-        ]},
-      { name:'Lean Cost Index',         weight:2, info:{
-          def:'How efficiently you run your baseline.',
-          target:'20% reduction from current spend.',
-          enter:'Mark milestones as you trim recurring / waste.',
-          why:'Lower baseline = faster independence math.'
-        }, milestones:[
-          {stage:'Seed',    text:'Cancel one recurring payment', completed:false},
-          {stage:'Active',  text:'Reduce expenses by 5%',        completed:false},
-          {stage:'Growing', text:'Cut costs by 10%',             completed:false},
-          {stage:'Stable',  text:'Achieve 20% reduction',        completed:false},
-          {stage:'Autonomous',text:'Sustain lean baseline 6+ months', completed:false}
-        ]},
-      { name:'Productised Value',       weight:3, info:{
-          def:'A repeatable offer you can ship and sell.',
-          target:'One live product producing revenue.',
-          enter:'Mark milestones from outline → first customer.',
-          why:'Products decouple earnings from hours.'
-        }, milestones:[
-          {stage:'Seed',    text:'Write outline for one offer', completed:false},
-          {stage:'Active',  text:'Publish a simple page / doc', completed:false},
-          {stage:'Growing', text:'Get first paying customer',   completed:false},
-          {stage:'Stable',  text:'Earn $100+/month from product', completed:false},
-          {stage:'Autonomous',text:'Consistent revenue month over month', completed:false}
-        ]},
-      { name:'Repair Capability',       weight:2, info:{
-          def:'Ability to fix key things yourself.',
-          target:'3 core repair competencies.',
-          enter:'Mark each learned & verified skill.',
-          why:'Repairs save money and reduce dependency.'
-        }, milestones:[
-          {stage:'Seed',    text:'Learn 1 basic repair (video ok)', completed:false},
-          {stage:'Active',  text:'Complete 1 repair yourself',      completed:false},
-          {stage:'Growing', text:'Master 2 distinct repair skills', completed:false},
-          {stage:'Stable',  text:'Achieve 3 verified competencies', completed:false},
-          {stage:'Autonomous',text:'Teach someone else a repair skill', completed:false}
-        ]},
-      { name:'Exchange Network',        weight:2, info:{
-          def:'Non-monetary exchange relationships.',
-          target:'5+ active partners.',
-          enter:'Mark exchanges and partners formed.',
-          why:'Trade builds resilience and speeds learning.'
-        }, milestones:[
-          {stage:'Seed',    text:'Do one small exchange',        completed:false},
-          {stage:'Active',  text:'Establish 2 barter relationships', completed:false},
-          {stage:'Growing', text:'Complete 5 exchanges total',   completed:false},
-          {stage:'Stable',  text:'Build network of 5+ partners', completed:false},
-          {stage:'Autonomous',text:'Weekly exchanges are routine', completed:false}
-        ]},
-      { name:'Systems Autonomy',        weight:2, info:{
-          def:'Backups + SOPs for operations.',
-          target:'All critical files backed up + 1-page SOP.',
-          enter:'Mark backups + documentation done.',
-          why:'Operate without institutional IT/admin.'
-        }, milestones:[
-          {stage:'Seed',    text:'Back up one critical folder',  completed:false},
-          {stage:'Active',  text:'Document one key process',     completed:false},
-          {stage:'Growing', text:'All files backed up in 2 places', completed:false},
-          {stage:'Stable',  text:'Complete 1-page ops manual',  completed:false},
-          {stage:'Autonomous',text:'Can step away for a month',  completed:false}
-        ]},
-      { name:'Multi-Source Income',     weight:3, info:{
-          def:'Diversity of payers / streams.',
-          target:'4+ reliable payers.',
-          enter:'Mark each new stream and reliability.',
-          why:'No single point of failure.'
-        }, milestones:[
-          {stage:'Seed',    text:'Identify 2 potential sources', completed:false},
-          {stage:'Active',  text:'Earn from 2 sources in a month', completed:false},
-          {stage:'Growing', text:'Maintain 3 active streams',    completed:false},
-          {stage:'Stable',  text:'Achieve 4+ reliable payers',   completed:false},
-          {stage:'Autonomous',text:'No source >40% of total',    completed:false}
-        ]},
-      { name:'Physical Base',           weight:2, info:{
-          def:'A regional/physical base under your control.',
-          target:'Functional base established.',
-          enter:'Mark steps: research → secure → operate.',
-          why:'A base reduces cost and increases optionality.'
-        }, milestones:[
-          {stage:'Seed',    text:'Research one lower-cost location', completed:false},
-          {stage:'Active',  text:'Scout / visit potential base',     completed:false},
-          {stage:'Growing', text:'Secure plan or lease',              completed:false},
-          {stage:'Stable',  text:'Functional base established',       completed:false},
-          {stage:'Autonomous',text:'Working/living from base',        completed:false}
-        ]},
-      { name:'Compliance Mastery',      weight:1, info:{
-          def:'Tax, BAS, insurance, registrations — handled.',
-          target:'Confident workflow without third-party reliance.',
-          enter:'Mark forms completed and processes learned.',
-          why:'Red tape turns routine once documented.'
-        }, milestones:[
-          {stage:'Seed',    text:'Read one BAS/tax guide',            completed:false},
-          {stage:'Active',  text:'Complete one form yourself',        completed:false},
-          {stage:'Growing', text:'Handle quarterly obligations solo', completed:false},
-          {stage:'Stable',  text:'Confident across tax/insurance',    completed:false},
-          {stage:'Autonomous',text:'Help someone else with compliance', completed:false}
-        ]},
-      { name:'Strategic Redundancy',    weight:1, info:{
-          def:'Backups/duplicates for tools, power, comms.',
-          target:'All essentials duplicated/backed up.',
-          enter:'Mark each redundancy obtained.',
-          why:'Resilience against single-point failure.'
-        }, milestones:[
-          {stage:'Seed',    text:'Back up phone contacts & photos',  completed:false},
-          {stage:'Active',  text:'Duplicate 1 critical tool',        completed:false},
-          {stage:'Growing', text:'Backup power/comms in place',      completed:false},
-          {stage:'Stable',  text:'All essential gear covered',       completed:false},
-          {stage:'Autonomous',text:'System survives any single failure', completed:false}
-        ]},
-      { name:'Reflection Loop',         weight:2, info:{
-          def:'Meta-measure and weekly reflection.',
-          target:'Continuous upward trend and weekly note.',
-          enter:'Log the weekly reflection; keep cadence.',
-          why:'Awareness turns motion into mastery.'
-        }, milestones:[
-          {stage:'Seed',    text:'Write one weekly reflection',            completed:false},
-          {stage:'Active',  text:'Complete 4 reflections in a row',        completed:false},
-          {stage:'Growing', text:'Spot one pattern from notes',            completed:false},
-          {stage:'Stable',  text:'Weekly review is automatic',             completed:false},
-          {stage:'Autonomous',text:'Reflections guide all decisions',      completed:false}
-        ]},
+      { name:'Independent Cashflow',    weight:3, info:{ def:'Ratio of income from non‑institutional sources.', target:'≥ 40% independent income.', enter:'Mark milestones as you earn.', why:'Cashflow buys calendar control and negotiation power.' }, milestones:[
+        {stage:'Seed',    text:'Earn $50 once from non-salary work', completed:false},
+        {stage:'Active',  text:'Earn $200/month for 2 months',       completed:false},
+        {stage:'Growing', text:'Reach 20% independent income',       completed:false},
+        {stage:'Stable',  text:'Reach 40% independent income',       completed:false},
+        {stage:'Autonomous',text:'Maintain 60%+ for 3 months',       completed:false}
+      ]},
+      { name:'Survival Buffer',         weight:3, info:{ def:'Cash runway for lean periods.', target:'6 months of essentials.', enter:'Mark milestones as you fund the buffer.', why:'Runway turns urgency into patience and better decisions.' }, milestones:[
+        {stage:'Seed',    text:'Save $100 in separate account', completed:false},
+        {stage:'Active',  text:'Build 1 month of essentials',   completed:false},
+        {stage:'Growing', text:'Reach 3 months saved',          completed:false},
+        {stage:'Stable',  text:'Achieve 6 months runway',       completed:false},
+        {stage:'Autonomous',text:'Maintain 12+ months',        completed:false}
+      ]},
+      { name:'Lean Cost Index',         weight:2, info:{ def:'Efficiency of your baseline spend.', target:'20% reduction from current spend.', enter:'Mark recurring trims and waste cuts.', why:'Lower baseline = faster independence math.' }, milestones:[
+        {stage:'Seed',    text:'Cancel one recurring payment', completed:false},
+        {stage:'Active',  text:'Reduce expenses by 5%',        completed:false},
+        {stage:'Growing', text:'Cut costs by 10%',             completed:false},
+        {stage:'Stable',  text:'Achieve 20% reduction',        completed:false},
+        {stage:'Autonomous',text:'Sustain lean baseline 6+ months', completed:false}
+      ]},
+      { name:'Productised Value',       weight:3, info:{ def:'Repeatable offer you can ship and sell.', target:'One live product producing revenue.', enter:'Mark steps from outline → first customer.', why:'Products decouple earnings from hours.' }, milestones:[
+        {stage:'Seed',    text:'Write outline for one offer', completed:false},
+        {stage:'Active',  text:'Publish a simple page / doc', completed:false},
+        {stage:'Growing', text:'Get first paying customer',   completed:false},
+        {stage:'Stable',  text:'Earn $100+/month from product', completed:false},
+        {stage:'Autonomous',text:'Consistent revenue month over month', completed:false}
+      ]},
+      { name:'Repair Capability',       weight:2, info:{ def:'Ability to fix key things yourself.', target:'3 core repair competencies.', enter:'Mark each learned & verified skill.', why:'Repairs save money and reduce dependency.' }, milestones:[
+        {stage:'Seed',    text:'Learn 1 basic repair (video ok)', completed:false},
+        {stage:'Active',  text:'Complete 1 repair yourself',      completed:false},
+        {stage:'Growing', text:'Master 2 distinct repair skills', completed:false},
+        {stage:'Stable',  text:'Achieve 3 verified competencies', completed:false},
+        {stage:'Autonomous',text:'Teach someone else a repair skill', completed:false}
+      ]},
+      { name:'Exchange Network',        weight:2, info:{ def:'Non‑monetary exchange relationships.', target:'5+ active partners.', enter:'Mark exchanges and partners formed.', why:'Trade builds resilience and speeds learning.' }, milestones:[
+        {stage:'Seed',    text:'Do one small exchange',        completed:false},
+        {stage:'Active',  text:'Establish 2 barter relationships', completed:false},
+        {stage:'Growing', text:'Complete 5 exchanges total',   completed:false},
+        {stage:'Stable',  text:'Build network of 5+ partners', completed:false},
+        {stage:'Autonomous',text:'Weekly exchanges are routine', completed:false}
+      ]},
+      { name:'Systems Autonomy',        weight:2, info:{ def:'Backups + SOPs for operations.', target:'All critical files backed up + 1‑page SOP.', enter:'Mark backups + documentation done.', why:'Operate without institutional IT/admin.' }, milestones:[
+        {stage:'Seed',    text:'Back up one critical folder',  completed:false},
+        {stage:'Active',  text:'Document one key process',     completed:false},
+        {stage:'Growing', text:'All files backed up in 2 places', completed:false},
+        {stage:'Stable',  text:'Complete 1‑page ops manual',  completed:false},
+        {stage:'Autonomous',text:'Can step away for a month',  completed:false}
+      ]},
+      { name:'Multi-Source Income',     weight:3, info:{ def:'Diversity of payers / streams.', target:'4+ reliable payers.', enter:'Mark each new stream & its reliability.', why:'Avoid a single point of failure.' }, milestones:[
+        {stage:'Seed',    text:'Identify 2 potential sources', completed:false},
+        {stage:'Active',  text:'Earn from 2 sources in a month', completed:false},
+        {stage:'Growing', text:'Maintain 3 active streams',    completed:false},
+        {stage:'Stable',  text:'Achieve 4+ reliable payers',   completed:false},
+        {stage:'Autonomous',text:'No source >40% of total',    completed:false}
+      ]},
+      { name:'Physical Base',           weight:2, info:{ def:'A regional/physical base under your control.', target:'Functional base established.', enter:'Mark steps: research → secure → operate.', why:'A base reduces cost and increases optionality.' }, milestones:[
+        {stage:'Seed',    text:'Research one lower‑cost location', completed:false},
+        {stage:'Active',  text:'Scout / visit potential base',     completed:false},
+        {stage:'Growing', text:'Secure plan or lease',              completed:false},
+        {stage:'Stable',  text:'Functional base established',       completed:false},
+        {stage:'Autonomous',text:'Working/living from base',        completed:false}
+      ]},
+      { name:'Compliance Mastery',      weight:1, info:{ def:'Tax, BAS, insurance, registrations — handled.', target:'Confident workflow without third‑party reliance.', enter:'Mark forms completed and processes learned.', why:'Red tape becomes routine once documented.' }, milestones:[
+        {stage:'Seed',    text:'Read one BAS/tax guide',            completed:false},
+        {stage:'Active',  text:'Complete one form yourself',        completed:false},
+        {stage:'Growing', text:'Handle quarterly obligations solo', completed:false},
+        {stage:'Stable',  text:'Confident across tax/insurance',    completed:false},
+        {stage:'Autonomous',text:'Help someone else with compliance', completed:false}
+      ]},
+      { name:'Strategic Redundancy',    weight:1, info:{ def:'Backups/duplicates for tools, power, comms.', target:'All essentials duplicated/backed up.', enter:'Mark each redundancy obtained.', why:'Resilience against single‑point failure.' }, milestones:[
+        {stage:'Seed',    text:'Back up phone contacts & photos',  completed:false},
+        {stage:'Active',  text:'Duplicate 1 critical tool',        completed:false},
+        {stage:'Growing', text:'Backup power/comms in place',      completed:false},
+        {stage:'Stable',  text:'All essential gear covered',       completed:false},
+        {stage:'Autonomous',text:'System survives any single failure', completed:false}
+      ]},
+      { name:'Reflection Loop',         weight:2, info:{ def:'Meta‑measure and weekly reflection.', target:'Upward trend and weekly note.', enter:'Log the weekly reflection; keep cadence.', why:'Awareness turns motion into mastery.' }, milestones:[
+        {stage:'Seed',    text:'Write one weekly reflection',            completed:false},
+        {stage:'Active',  text:'Complete 4 reflections in a row',        completed:false},
+        {stage:'Growing', text:'Spot one pattern from notes',            completed:false},
+        {stage:'Stable',  text:'Weekly review is automatic',             completed:false},
+        {stage:'Autonomous',text:'Reflections guide all decisions',      completed:false}
+      ]},
     ];
 
     /* ==========================================================
-       Read/merge existing ladder to preserve your progress
+       Load & merge with any existing ladder (preserve progress)
        ========================================================== */
     function loadLadder(){
       const current = store.get('lev.ladder', null);
       if(!current){ return defaultLadder }
-      // Merge: keep your completed milestones; add weights & info if missing
       const byName = Object.fromEntries(defaultLadder.map(m => [m.name, m]));
       return current.map(old => {
         const tpl = byName[old.name] || null;
-        if(!tpl) return old; // unknown metric -> keep
-        // Align milestones by text; if mismatch, fall back to old.completed flags where possible
+        if(!tpl) return old;
         const mergedMilestones = (tpl.milestones || []).map(tMil => {
           const match = (old.milestones || []).find(o => o.text === tMil.text) || {};
           return { ...tMil, completed: !!match.completed };
         });
-        return {
-          name: old.name,
-          weight: tpl.weight || old.weight || 1,
-          info: tpl.info || old.info || {},
-          milestones: mergedMilestones
-        }
+        return { name: old.name, weight: tpl.weight || old.weight || 1, info: tpl.info || old.info || {}, milestones: mergedMilestones };
       });
     }
 
     /* ==========================================================
        UI helpers
        ========================================================== */
-    function fmtDate(d){
-      const dt = new Date(d);
-      return dt.toLocaleDateString();
-    }
+    function fmtDate(d){ const dt = new Date(d); return dt.toLocaleDateString(); }
+    function toInputDate(d){ return new Date(d).toISOString().slice(0,10) }
     function weekStart(date = new Date()){
-      const d = new Date(date);
-      const day = d.getDay(); // 0 Sun
-      d.setHours(0,0,0,0);
-      d.setDate(d.getDate() - day);
-      return d;
+      const d = new Date(date); const day = d.getDay(); d.setHours(0,0,0,0); d.setDate(d.getDate() - day); return d;
     }
+    function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+    function nl2br(s){ return (s||'').replace(/\n/g,'<br/>') }
 
     /* ==========================================================
-       Tooltip (click to toggle; positioned near target)
+       Tooltips
        ========================================================== */
     let openTip = null;
-    function closeTip(){
-      if(openTip && openTip.parentNode){ openTip.parentNode.removeChild(openTip); }
-      openTip = null;
-    }
+    function closeTip(){ if(openTip && openTip.parentNode){ openTip.parentNode.removeChild(openTip); } openTip = null; }
     function showTip(target, metric){
       closeTip();
       const tip = document.createElement('div');
@@ -557,24 +431,23 @@
       tip.style.left = left + 'px';
       openTip = tip;
     }
-    document.addEventListener('click', (e)=>{
-      if(openTip && !openTip.contains(e.target) && !e.target.classList.contains('info')){
-        closeTip();
-      }
-    });
+    document.addEventListener('click', (e)=>{ if(openTip && !openTip.contains(e.target) && !e.target.classList.contains('info')){ closeTip(); } });
 
     /* ==========================================================
-       Render ladders
+       Percent & visuals
        ========================================================== */
-    function percentForMetric(metric){
-      const done = metric.milestones.filter(m=>m.completed).length;
-      return Math.round((done / metric.milestones.length) * 100);
-    }
+    function percentForMetric(metric){ const done = metric.milestones.filter(m=>m.completed).length; return Math.round((done / metric.milestones.length) * 100); }
 
+    function metricRingStyle(pct){ return `--pct:${pct}%`; }
+
+    /* ==========================================================
+       Render ladders (with visual ring + micro-steps)
+       ========================================================== */
     function renderLadder(){
       const metrics = loadLadder();
       const evidence = store.get('lev.evidence', {});
       const energy = store.get('lev.energy', {});
+      const micro = getMicro();
 
       const html = metrics.map((met, idx)=>{
         const completedCount = met.milestones.filter(m => m.completed).length;
@@ -596,20 +469,46 @@
           return `<button class="btn" style="width:100%" ${disabled} onclick="completeMilestone(${idx}, ${mi})">${status} ${escapeHtml(m.stage)}</button>`;
         }).join('<div class="help"></div>');
 
+        const key = microKey(met.name, nextIdx === -1 ? met.milestones.length-1 : nextIdx);
+        const microState = micro[key] || { plan:false, do:false, proof:false, note:"" };
+
+        const microHtml = `
+          <div class="row">
+            <label class="help"><b>Micro-steps</b> (repeat weekly until the rung is real)</label>
+            <div class="split">
+              ${MICRO_KEYS.map(k => `
+                <label class="pill">
+                  <input type="checkbox" ${microState[k] ? 'checked' : ''} onchange="toggleMicro('${met.name}', ${nextIdx}, '${k}', this.checked)" />
+                  ${k === 'plan' ? 'Plan' : k === 'do' ? 'Do (10-min)' : 'Proof'}
+                </label>
+              `).join('')}
+            </div>
+            <input id="micronote-${idx}" placeholder="One-line plan or proof (e.g., drafted outreach / uploaded backup)" value="${escapeHtml(microState.note||'')}" />
+            <div style="display:flex; gap:8px; justify-content:flex-end">
+              <button class="btn" onclick="saveMicroNote(${idx}, '${met.name}', ${nextIdx})">Save micro-step note</button>
+              <button class="btn btn-ghost" onclick="resetMicro('${met.name}', ${nextIdx})">Reset micro-steps</button>
+            </div>
+          </div>
+        `;
+
         return `
           <div class="metric-ladder">
-            <div class="metric-header">
-              <div style="display:flex; align-items:center; gap:8px">
-                <div class="metric-name">${escapeHtml(met.name)}</div>
-                <div class="info" title="Info" onclick="showTip(this, ladderData[${idx}])">i</div>
+            <div class="metric-header" style="gap:10px">
+              <div style="display:flex; align-items:center; gap:10px">
+                <div class="ring" style="${metricRingStyle(pct)}"><span>${pct}%</span></div>
+                <div>
+                  <div class="metric-name">${escapeHtml(met.name)} <span class="info" title="Info" onclick="showTip(this, ladderData[${idx}])">i</span></div>
+                  <div class="help">Stage: <b>${escapeHtml(currentStage)}</b> • ${completedCount}/5 milestones</div>
+                </div>
               </div>
-              <div class="metric-stage">${escapeHtml(currentStage)} • ${pct}%</div>
+              <div class="metric-stage">Weight ×${met.weight||1}</div>
             </div>
 
             <div class="ladder-track">${rungs}</div>
-            <div class="help" style="margin-bottom:8px">${completedCount}/5 milestones</div>
 
             <div class="metric-tools">
+              ${microHtml}
+
               <div class="row">
                 <label class="help"><b>Evidence of movement</b> (one factual line)</label>
                 <div class="row-2">
@@ -629,9 +528,7 @@
 
               <div class="row">
                 <label class="help"><b>Current milestone controls</b></label>
-                <div class="split">
-                  <div class="grow">${milestoneButtons}</div>
-                </div>
+                <div class="split"><div class="grow">${milestoneButtons}</div></div>
               </div>
             </div>
           </div>
@@ -644,28 +541,21 @@
     }
 
     /* ==========================================================
-       Actions / Threadline / Reflections
+       Actions / Threadline
        ========================================================== */
     function openActionModal(){
       document.getElementById('actionModal').style.display='flex';
-      // populate metric dropdown
       const sel = document.getElementById('actionMetric');
-      const names = ladderData.map(m=>m.name);
-      sel.innerHTML = names.map(n=>`<option>${escapeHtml(n)}</option>`).join('');
-      // default date = today
-      const today = new Date(); today.setHours(0,0,0,0);
-      document.getElementById('actionDate').value = toInputDate(today);
+      sel.innerHTML = ladderData.map(m=>`<option>${escapeHtml(m.name)}</option>`).join('');
+      const today = new Date(); today.setHours(0,0,0,0); document.getElementById('actionDate').value = toInputDate(today);
     }
     function closeActionModal(){ document.getElementById('actionModal').style.display='none' }
-
-    function toInputDate(d){ return new Date(d).toISOString().slice(0,10) }
 
     function saveAction(){
       const metric = document.getElementById('actionMetric').value;
       const desc = document.getElementById('actionDesc').value.trim();
       const picked = document.getElementById('actionDate').value || toInputDate(new Date());
       if(!desc){ alert('Please describe the action'); return; }
-
       const actions = store.get('lev.actions', []);
       actions.unshift({ date: new Date(picked).toISOString(), metric, description: desc });
       store.set('lev.actions', actions);
@@ -677,7 +567,7 @@
 
     function renderActions(){
       const actions = store.get('lev.actions', []);
-      const html = actions.length ? actions.slice(0,40).map(a=>`
+      const html = actions.length ? actions.slice(0,60).map(a=>`
         <div class="action-entry">
           <div class="action-date">${fmtDate(a.date)} · ${escapeHtml(a.metric)}</div>
           <div class="action-desc">${escapeHtml(a.description)}</div>
@@ -694,7 +584,6 @@
       store.set('lev.thread', list);
       document.getElementById('threadText').value='';
       renderThread();
-      // also log as an action
       const actions = store.get('lev.actions', []);
       actions.unshift({ date: new Date().toISOString(), metric: 'Threadline', description:'Weekly continuity entry added' });
       store.set('lev.actions', actions);
@@ -718,23 +607,17 @@
        Evidence & Energy
        ========================================================== */
     function saveEvidence(idx){
-      const metrics = ladderData;
-      const metric = metrics[idx];
+      const metric = ladderData[idx];
       const input = document.getElementById('ev-'+idx);
       const text = (input.value || '').trim();
       if(!text) return;
-
       const evidence = store.get('lev.evidence', {});
       evidence[metric.name] = evidence[metric.name] || [];
       evidence[metric.name].unshift({ date: new Date().toISOString(), text });
       store.set('lev.evidence', evidence);
       input.value = '';
-
-      // refresh only that block’s evidence list
       const latest = evidence[metric.name].slice(0,3).map(e=>`<div class="help">• ${fmtDate(e.date)} — ${escapeHtml(e.text)}</div>`).join('');
       document.getElementById('evlist-'+idx).innerHTML = latest;
-
-      // optional: also log as action
       const actions = store.get('lev.actions', []);
       actions.unshift({ date: new Date().toISOString(), metric: metric.name, description: 'Evidence: '+ text });
       store.set('lev.actions', actions);
@@ -743,23 +626,45 @@
     }
 
     function saveEnergy(idx){
-      const metrics = ladderData;
-      const metric = metrics[idx];
+      const metric = ladderData[idx];
       const raw = document.getElementById('en-'+idx).value.trim();
-      if(raw === '') return;
-      const value = Math.max(0, Math.min(100, Number(raw) || 0));
+      if(raw === '') return; const value = Math.max(0, Math.min(100, Number(raw) || 0));
       const energy = store.get('lev.energy', {});
       energy[metric.name] = energy[metric.name] || [];
       energy[metric.name].unshift({ date: new Date().toISOString(), value });
       store.set('lev.energy', energy);
-
-      // Log as action (tiny)
       const actions = store.get('lev.actions', []);
       actions.unshift({ date: new Date().toISOString(), metric: metric.name, description: `Energy noted: ${value}` });
       store.set('lev.actions', actions);
       updateSummary();
       renderActions();
     }
+
+    /* ==========================================================
+       Micro-steps
+       ========================================================== */
+    function toggleMicro(metricName, milIdx, key, val){
+      const micro = getMicro();
+      const k = microKey(metricName, milIdx);
+      micro[k] = micro[k] || { plan:false, do:false, proof:false, note:"" };
+      micro[k][key] = !!val; setMicro(micro);
+      if(val){
+        const actions = store.get('lev.actions', []);
+        const label = key === 'plan' ? 'Planned move' : key === 'do' ? 'Did 10-min version' : 'Logged proof';
+        actions.unshift({ date:new Date().toISOString(), metric: metricName, description:`Micro-step: ${label}` });
+        store.set('lev.actions', actions);
+        updateSummary(); renderActions();
+      }
+    }
+    function saveMicroNote(idx, metricName, milIdx){
+      const input = document.getElementById('micronote-'+idx);
+      const text = (input.value||'').trim();
+      const micro = getMicro(); const k = microKey(metricName, milIdx);
+      micro[k] = micro[k] || { plan:false, do:false, proof:false, note:"" };
+      micro[k].note = text; setMicro(micro);
+      if(text){ const actions = store.get('lev.actions', []); actions.unshift({ date:new Date().toISOString(), metric: metricName, description:`Micro-note: ${text}` }); store.set('lev.actions', actions); updateSummary(); renderActions(); }
+    }
+    function resetMicro(metricName, milIdx){ const micro = getMicro(); delete micro[microKey(metricName, milIdx)]; setMicro(micro); renderLadder(); }
 
     /* ==========================================================
        Milestones
@@ -769,18 +674,12 @@
       if(!metrics[metIdx]?.milestones[milIdx]) return;
       metrics[metIdx].milestones[milIdx].completed = true;
       store.set('lev.ladder', metrics);
-
-      // Log action
       const actions = store.get('lev.actions', []);
-      actions.unshift({
-        date: new Date().toISOString(),
-        metric: metrics[metIdx].name,
-        description: 'Completed: ' + metrics[metIdx].milestones[milIdx].text
-      });
+      actions.unshift({ date: new Date().toISOString(), metric: metrics[metIdx].name, description: 'Completed: ' + metrics[metIdx].milestones[milIdx].text });
       store.set('lev.actions', actions);
-
-      renderLadder();
-      renderActions();
+      // Reset micro-steps for that rung
+      const micro = getMicro(); delete micro[microKey(metrics[metIdx].name, milIdx)]; setMicro(micro);
+      renderLadder(); renderActions();
     }
 
     /* ==========================================================
@@ -788,51 +687,38 @@
        ========================================================== */
     function updateSummary(){
       const actions = store.get('lev.actions', []);
-      // actions this week
       const ws = weekStart(new Date());
       const weekCount = actions.filter(a => new Date(a.date) >= ws).length;
       document.getElementById('weeklyActions').textContent = weekCount;
 
-      // milestones completed
       const metrics = ladderData;
       const totalDone = metrics.reduce((sum, m) => sum + m.milestones.filter(x=>x.completed).length, 0);
       document.getElementById('milestonesCompleted').textContent = totalDone;
 
-      // active metrics = have some done and some remaining
       const active = metrics.filter(m => m.milestones.some(ms=>ms.completed) && m.milestones.some(ms=>!ms.completed)).length;
       document.getElementById('activeMetrics').textContent = active;
 
       // streak
-      let streak = 0;
-      let check = new Date();
+      let streak = 0; let check = new Date();
       for(;;){
-        const start = weekStart(check);
-        const end = new Date(start.getTime() + 7*24*60*60*1000);
-        const has = actions.some(a => {
-          const d = new Date(a.date); return d >= start && d < end;
-        });
-        if(!has) break;
-        streak++;
-        check = new Date(start.getTime() - 1);
+        const start = weekStart(check); const end = new Date(start.getTime() + 7*24*60*60*1000);
+        const has = actions.some(a => { const d = new Date(a.date); return d >= start && d < end; });
+        if(!has) break; streak++; check = new Date(start.getTime() - 1);
       }
       document.getElementById('actionStreak').textContent = streak;
 
-      // last updated
       const last = actions[0]?.date || new Date().toISOString();
       document.getElementById('lastUpdated').textContent = 'Last updated — ' + new Date(last).toLocaleString();
     }
 
     function updateOverall(){
       const metrics = ladderData;
-      // Weighted average by “weight” (3x/2x/1x)
       const weights = metrics.map(m=>m.weight || 1);
       const scores = metrics.map(m=>percentForMetric(m));
       const totalW = weights.reduce((a,b)=>a+b,0);
       const weighted = Math.round(weights.reduce((acc, w, i)=> acc + w * scores[i], 0) / (totalW || 1));
-
       document.getElementById('overallBadge').textContent = weighted + '%';
       document.getElementById('overallFill').style.width = Math.min(100, Math.max(0, weighted)) + '%';
-
       const card = document.getElementById('exitCard');
       if(weighted >= 60){ card.classList.add('glow'); } else { card.classList.remove('glow'); }
     }
@@ -852,25 +738,10 @@
     });
 
     /* ==========================================================
-       Small utils
-       ========================================================== */
-    function escapeHtml(s){
-      return (s+'')
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;')
-        .replace(/'/g,'&#039;');
-    }
-    function nl2br(s){ return s.replace(/\n/g,'<br/>') }
-
-    /* ==========================================================
        Bootstrap: load + render
        ========================================================== */
-    // Seed ladder if not present; else merge
     let ladderData = loadLadder();
     store.set('lev.ladder', ladderData);
-
     renderLadder();
     renderActions();
     renderThread();
