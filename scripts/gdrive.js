@@ -10,46 +10,80 @@ const GDrive = (function(){
   let tokenClient = null;
   let accessToken = null;
   let userInfo = null;
+  const authListeners = new Set();
 
-  function init() {
-    // load GSI script dynamically if not already present
-    if (!window.google || !window.google.accounts) {
-      const s = document.createElement('script');
-      s.src = 'https://accounts.google.com/gsi/client';
-      s.onload = () => console.log('GSI loaded');
-      document.head.appendChild(s);
-    }
-
-    tokenClient = window.google && window.google.accounts && window.google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: (resp) => {
-        if (resp.error) return console.error('Token error', resp);
-        accessToken = resp.access_token;
-        // Note: we do not fetch profile info here because appDataFolder is not profile scope
-        // But we can call tokeninfo to get sub if needed
-        if (typeof onAuthChange === 'function') onAuthChange(true);
-      }
+  function notifyAuth(state) {
+    authListeners.forEach(fn => {
+      try { fn(state); } catch (err) { console.error('auth listener error', err); }
     });
   }
 
-  // Exposed hook; pages can override to receive auth state changes
-  let onAuthChange = null;
+  function handleTokenResponse(resp) {
+    if (resp && resp.error) {
+      console.error('Token error', resp);
+      return;
+    }
+    if (resp && resp.access_token) {
+      accessToken = resp.access_token;
+      notifyAuth(true);
+    }
+  }
+
+  function buildTokenClient() {
+    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) return null;
+    return window.google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: handleTokenResponse
+    });
+  }
+
+  function init() {
+    if (!window.google || !window.google.accounts) {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.onload = () => {
+        tokenClient = buildTokenClient();
+      };
+      document.head.appendChild(s);
+    } else {
+      tokenClient = buildTokenClient();
+    }
+  }
+
+  async function ensureTokenClient() {
+    if (tokenClient) return tokenClient;
+    await new Promise((resolve) => {
+      const poll = () => {
+        if (tokenClient) return resolve(tokenClient);
+        if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+          tokenClient = buildTokenClient();
+          return resolve(tokenClient);
+        }
+        setTimeout(poll, 50);
+      };
+      poll();
+    });
+    return tokenClient;
+  }
 
   function signIn() {
-    if (!tokenClient) init();
-    tokenClient.requestAccessToken({prompt: 'consent'});
+    init();
+    ensureTokenClient().then(() => {
+      tokenClient.callback = handleTokenResponse;
+      tokenClient.requestAccessToken({prompt: 'consent'});
+    });
   }
 
   function signOut() {
     accessToken = null;
-    if (typeof onAuthChange === 'function') onAuthChange(false);
+    notifyAuth(false);
   }
 
   // Upload JSON to Drive. Uses appDataFolder by default.
   // Behavior: creates timestamped file and updates/creates a "latest" file.
   async function uploadJson(filename, data) {
-    if (!accessToken) throw new Error('Not authenticated');
+  if (!accessToken) throw new Error('Not authenticated');
 
     const json = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 
@@ -144,23 +178,45 @@ const GDrive = (function(){
 
   // Simple helper to request token and then call fn
   async function withAuth(fn) {
+    init();
+    await ensureTokenClient();
     if (!accessToken) {
       await new Promise((resolve, reject) => {
-        const cb = (resp) => {
-          if (resp && resp.error) return reject(resp);
-          accessToken = resp && resp.access_token;
-          if (typeof onAuthChange === 'function') onAuthChange(true);
+        tokenClient.callback = (resp) => {
+          if (resp && resp.error) {
+            console.error('Token error', resp);
+            reject(resp);
+            return;
+          }
+          handleTokenResponse(resp);
           resolve();
         };
-        // requestAccessToken's callback is the global token client callback
-        tokenClient = window.google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: cb });
         tokenClient.requestAccessToken({ prompt: 'consent' });
       });
     }
-    return fn();
+    return fn(accessToken);
   }
 
-  return { init, signIn, signOut, uploadJson, withAuth, setOnAuthChange: (fn) => { onAuthChange = fn } };
+  function setOnAuthChange(fn) {
+    authListeners.clear();
+    if (typeof fn === 'function') authListeners.add(fn);
+  }
+
+  function addAuthListener(fn) {
+    if (typeof fn !== 'function') return () => {};
+    authListeners.add(fn);
+    return () => authListeners.delete(fn);
+  }
+
+  function hasToken() {
+    return !!accessToken;
+  }
+
+  function getAccessToken() {
+    return accessToken;
+  }
+
+  return { init, signIn, signOut, uploadJson, withAuth, setOnAuthChange, addAuthListener, hasToken, getAccessToken };
 })();
 
 // Auto-init if script loaded

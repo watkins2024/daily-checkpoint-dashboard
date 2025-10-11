@@ -16,6 +16,7 @@
   const pending = new Map();
   const timers = new Map();
   let statusHandlers = [];
+  let loadingFromDrive = false;
 
   function setStatus(s) { statusHandlers.forEach(h => { try { h(s); } catch(e){} }); }
 
@@ -66,11 +67,14 @@
 
   // load all app keys from Drive (best-effort) into localStorage on init
   async function initialLoad() {
+    if (loadingFromDrive) return;
+    loadingFromDrive = true;
     setStatus('loading');
     try {
-      if (!window.GDrive) {
+      if (!window.GDrive || typeof window.GDrive.hasToken !== 'function' || !window.GDrive.hasToken()) {
         // nothing to do
         setStatus('idle');
+        loadingFromDrive = false;
         return;
       }
 
@@ -78,10 +82,10 @@
       const q = `name contains 'backup' and 'appDataFolder' in parents and trashed=false`;
       const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&spaces=appDataFolder&fields=files(id,name)`;
       const token = await ensureToken();
-      if (!token) { setStatus('idle'); return; }
+      if (!token) { setStatus('idle'); loadingFromDrive = false; return; }
 
       const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
-      if (!res.ok) { setStatus('idle'); return; }
+      if (!res.ok) { setStatus('idle'); loadingFromDrive = false; return; }
       const js = await res.json();
       const files = js.files || [];
 
@@ -102,18 +106,17 @@
     } catch (err) {
       console.error('initialLoad error', err);
       setStatus('error');
+    } finally {
+      loadingFromDrive = false;
     }
   }
 
   async function ensureToken() {
-    if (!window.GDrive) return null;
+    if (!window.GDrive || typeof window.GDrive.withAuth !== 'function') return null;
+    if (typeof window.GDrive.hasToken === 'function' && !window.GDrive.hasToken()) return null;
     try {
-      let token = null;
-      await window.GDrive.withAuth(() => { token = true; });
-      // the GDrive helper keeps accessToken internally; fetch() calls in this module will directly re-use window.GDrive's fetch flows
-      // but we need an Authorization header: GDrive exposes no token; instead we'll rely on GDrive.uploadJson and file fetch above.
-      // For listing we used a direct fetch with token retrieval via window.GDrive.withAuth earlier.
-      return window.GDrive && true;
+      const token = await window.GDrive.withAuth((t) => t);
+      return token;
     } catch (e) {
       return null;
     }
@@ -134,4 +137,12 @@
     }
     console.log('Pending uploads:', Array.from(pending.keys()));
   };
+
+  if (window.GDrive && typeof window.GDrive.addAuthListener === 'function') {
+    window.GDrive.addAuthListener((authed) => {
+      if (authed) {
+        initialLoad();
+      }
+    });
+  }
 })();
