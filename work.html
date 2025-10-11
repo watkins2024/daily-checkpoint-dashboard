@@ -94,8 +94,12 @@
   <a href="walks.html">Walks</a>
   <a href="work.html" class="active">Work</a>
   <a href="business.html">Business</a>
-  <button id="gdriveSignBtn" class="btn btn-sm btn-ghost" style="margin-left:auto;">Sign in</button>
-  <span id="syncStatus" style="margin-left:8px;align-self:center;color:#9aa0a6;font-size:13px">sync: —</span>
+  <a href="leverage.html">Leverage</a>
+  <a href="household.html">Household</a>
+  <button id="syncNowBtn" class="btn btn-sm btn-ghost" style="margin-left:auto;">Sync now</button>
+  <button id="gdriveSignBtn" class="btn btn-sm btn-ghost" style="margin-left:8px;">Sign in</button>
+  <span id="authStatus" style="margin-left:8px;align-self:center;color:#9aa0a6;font-size:13px">Not signed in</span>
+  <span id="syncStatus" style="margin-left:8px;align-self:center;color:#9aa0a6;font-size:13px">sync: idle</span>
 </div>
 
 <header>
@@ -215,8 +219,9 @@
 </div>
 
 <!-- load GDrive helper + shared store-sync (store will be available as window.store) -->
-<script src="scripts/gdrive.js"></script>
+<script src="scripts/gdrive.js?v=20241011"></script>
 <script src="scripts/store-sync.js"></script>
+<script src="scripts/gdrive-ui.js?v=20241011"></script>
 <script>
 let timerInterval = null;
 let timerSeconds = 25 * 60;
@@ -564,10 +569,8 @@ function exportData() {
   // Attempt Drive upload (appDataFolder). If Drive not available or fails, fallback to download.
   (async function(){
     try {
-      if (!window.GDrive) {
-        await new Promise(resolve => {
-          const s = document.createElement('script'); s.src = 'scripts/gdrive.js'; s.onload = resolve; document.head.appendChild(s);
-        });
+      if (window.GDriveUI && typeof window.GDriveUI.ensureLoaded === 'function') {
+        await window.GDriveUI.ensureLoaded();
       }
 
       if (window.GDrive) {
@@ -590,28 +593,6 @@ function exportData() {
   })();
 }
 
-function gdriveSignIn() {
-  // lazy-load and call signIn; update button text when signed in
-  if (!window.GDrive) {
-    const s = document.createElement('script'); s.src = 'scripts/gdrive.js'; s.onload = () => { window.GDrive && window.GDrive.signIn(); attachSignHandlers(); }; document.head.appendChild(s);
-  } else {
-    window.GDrive.signIn();
-    attachSignHandlers();
-  }
-}
-
-function attachSignHandlers() {
-  // set simple UI handlers that update the sign button state
-  if (!window.GDrive) return;
-  window.GDrive.setOnAuthChange((signedIn) => {
-    const btn = document.getElementById('gdriveSignBtn');
-    if (!btn) return;
-    btn.textContent = signedIn ? 'Signed in' : 'Sign in';
-  });
-  const btn = document.getElementById('gdriveSignBtn');
-  if (btn) btn.onclick = () => { if (window.GDrive) window.GDrive.signIn(); };
-}
-
 // Request notification permission
 if (Notification.permission === 'default') {
   Notification.requestPermission();
@@ -623,11 +604,23 @@ renderWorkLog();
 renderTasks();
 renderDailySummaries();
 updateTimerDisplay();
-// sync status UI
-if (window.store && typeof window.store.onSyncStatus === 'function') {
-  window.store.onSyncStatus((s) => {
-    const el = document.getElementById('syncStatus');
-    if (el) el.textContent = 'sync: ' + s;
+
+const driveUI = window.GDriveUI && window.GDriveUI.attach({
+  signInButtonId: 'gdriveSignBtn',
+  authLabelId: 'authStatus',
+  syncStatusId: 'syncStatus',
+  syncButtonId: 'syncNowBtn',
+  onSyncIdle: () => {
+    renderTodayClasses();
+    renderWorkLog();
+    renderTasks();
+    renderDailySummaries();
+  }
+});
+
+if (!driveUI && document.getElementById('syncNowBtn')) {
+  document.getElementById('syncNowBtn').addEventListener('click', () => {
+    alert('Sync helper failed to load. Please refresh the page.');
   });
 }
 </script>

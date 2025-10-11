@@ -26,6 +26,9 @@ const GDrive = (function(){
     if (resp && resp.access_token) {
       accessToken = resp.access_token;
       notifyAuth(true);
+      fetchUserProfile(accessToken).finally(() => {
+        notifyAuth(true);
+      });
     }
   }
 
@@ -77,6 +80,7 @@ const GDrive = (function(){
 
   function signOut() {
     accessToken = null;
+    userInfo = null;
     notifyAuth(false);
   }
 
@@ -216,7 +220,29 @@ const GDrive = (function(){
     return accessToken;
   }
 
-  return { init, signIn, signOut, uploadJson, withAuth, setOnAuthChange, addAuthListener, hasToken, getAccessToken };
+  function getUser() {
+    return userInfo;
+  }
+
+  async function fetchUserProfile(token) {
+    try {
+      const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress,displayName)', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!res.ok) throw new Error('profile request failed');
+      const data = await res.json();
+      if (data && data.user) {
+        userInfo = data.user;
+      } else {
+        userInfo = null;
+      }
+    } catch (err) {
+      console.warn('Unable to fetch Drive user profile', err);
+      userInfo = null;
+    }
+  }
+
+  return { init, signIn, signOut, uploadJson, withAuth, setOnAuthChange, addAuthListener, hasToken, getAccessToken, getUser };
 })();
 
 // Auto-init if script loaded

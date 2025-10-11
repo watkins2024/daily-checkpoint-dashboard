@@ -31,7 +31,9 @@
       // schedule remote write
       scheduleUpload(k, v);
     },
-    onSyncStatus(fn) { statusHandlers.push(fn); }
+    onSyncStatus(fn) { statusHandlers.push(fn); },
+    async syncFromDrive() { await initialLoad(true); },
+    async flushPending() { await flushAll(); }
   };
 
   function scheduleUpload(k, v) {
@@ -65,9 +67,20 @@
     }
   }
 
+  async function flushAll() {
+    const keys = Array.from(pending.keys());
+    for (const key of keys) {
+      if (timers.has(key)) {
+        clearTimeout(timers.get(key));
+        timers.delete(key);
+      }
+      await flushKey(key);
+    }
+  }
+
   // load all app keys from Drive (best-effort) into localStorage on init
-  async function initialLoad() {
-    if (loadingFromDrive) return;
+  async function initialLoad(force=false) {
+    if (loadingFromDrive && !force) return;
     loadingFromDrive = true;
     setStatus('loading');
     try {
@@ -78,9 +91,9 @@
         return;
       }
 
-      // List files in appDataFolder and fetch ones that look like backups
-      const q = `name contains 'backup' and 'appDataFolder' in parents and trashed=false`;
-      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&spaces=appDataFolder&fields=files(id,name)`;
+    // List files in appDataFolder and fetch ones that look like backups
+    const q = `name contains 'backup' and 'appDataFolder' in parents and trashed=false`;
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&spaces=appDataFolder&fields=files(id,name,modifiedTime)`;
       const token = await ensureToken();
       if (!token) { setStatus('idle'); loadingFromDrive = false; return; }
 
@@ -90,17 +103,33 @@
       const files = js.files || [];
 
       // fetch each file and write to localStorage by key
+      const latestByKey = {};
+
       await Promise.all(files.map(async f => {
         try {
           const getUrl = `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`;
           const r = await fetch(getUrl, { headers: { 'Authorization': 'Bearer ' + token } });
           if (!r.ok) return;
           const body = await r.json();
-          if (body && body.key) {
-            localStorage.setItem(localKey(body.key), JSON.stringify(body.value));
+          if (!body || !body.key) return;
+
+          const existing = latestByKey[body.key];
+          const incomingStamp = body.updated || f.modifiedTime || '';
+          const existingStamp = existing ? (existing.updated || '') : '';
+          if (!existing || incomingStamp > existingStamp) {
+            latestByKey[body.key] = {
+              value: body.value,
+              updated: incomingStamp
+            };
           }
         } catch (e) { /* ignore individual file errors */ }
       }));
+
+      Object.entries(latestByKey).forEach(([key, payload]) => {
+        try {
+          localStorage.setItem(localKey(key), JSON.stringify(payload.value));
+        } catch (e) { /* ignore storage errors */ }
+      });
 
       setStatus('idle');
     } catch (err) {
