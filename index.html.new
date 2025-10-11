@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-0: #05060a;
+      --bg-1: linear-gradient(180deg,#071020,#081226);
+      --card-0: rgba(10,16,24,0.55);
+      --muted: #95b0c8;
+      --accent: #7be3ff;
+      --accent-2: #6cf3b1;
+      --glow: rgba(60,180,255,0.06);
+    }
+
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Noto Sans JP', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;background:var(--bg-1);color:#e8f7ff;-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1100px;margin:28px auto;padding:32px}
+    h1{font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:0.12em;margin:0 0 6px;text-align:center;color:#dff8ff}
+    .sub{color:var(--muted);margin-bottom:20px;text-align:center;font-size:13px}
+
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:980px;margin:0 auto}
+    @media (max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:640px){.grid{grid-template-columns:1fr}}
+
+    .tile{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(120,180,255,0.05);padding:24px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px;backdrop-filter:blur(6px);transition:transform .22s,box-shadow .22s}
+    .tile:hover{transform:translateY(-6px);box-shadow:0 20px 50px rgba(60,140,255,0.12)}
+    .tile h2{margin:0 0 6px;font-size:20px;font-weight:600;color:#e8f9ff}
+    .tile p{margin:0;color:var(--muted);font-size:13px}
+    .action-link{display:inline-block;margin-top:14px;padding:10px 16px;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#021426;text-decoration:none;font-weight:700;box-shadow:0 8px 20px rgba(60,180,255,0.06)}
+    .accent-line{height:3px;width:56px;border-radius:3px;margin-top:12px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Dashboard</h1>
+    <div class="sub">Refined, high‑tech UI — select an area to begin</div>
+
+    <div class="grid">
+      <a class="tile" href="/walks.html">
+        <h2>Walks</h2>
+        <p>Log a short walk & reflection</p>
+        <span class="action-link">Open</span>
+        <div class="accent-line"></div>
+      </a>
+
+      <a class="tile" href="/work.html">
+        <h2>Work & Study</h2>
+        <p>Notes, tasks, timer</p>
+        <span class="action-link">Open</span>
+        <div class="accent-line"></div>
+      </a>
+
+      <a class="tile" href="/household.html">
+        <h2>Household</h2>
+        <p>Net worth & quick entry</p>
+        <span class="action-link">Open</span>
+        <div class="accent-line"></div>
+      </a>
+
+      <a class="tile" href="/leverage.html">
+        <h2>Leverage</h2>
+        <p>Micro‑steps to progress</p>
+        <span class="action-link">Open</span>
+        <div class="accent-line"></div>
+      </a>
+
+      <a class="tile" href="/business.html">
+        <h2>Business</h2>
+        <p>Operations & leads</p>
+        <span class="action-link">Open</span>
+        <div class="accent-line"></div>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

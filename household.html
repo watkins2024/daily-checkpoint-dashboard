@@ -1,254 +1,912 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Household Control</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#1a1a1a;color:#e8e8e8}
-  .top-nav{background:#161616;padding:10px 20px;display:flex;gap:15px;border-bottom:1px solid #333}
-  .top-nav a{color:#9aa0a6;text-decoration:none;padding:8px 14px;border-radius:6px}
-  .top-nav a:hover,.top-nav a.active{background:#2a2a2a;color:#4aa3ff}
-  .container{max-width:1100px;margin:0 auto;padding:22px}
-  header{background:#212121;border:1px solid #2c2c2c;padding:18px 20px;border-radius:10px;margin-bottom:18px}
-  header h1{font-size:22px;margin-bottom:6px}
-  header p{font-size:13px;color:#9aa0a6}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-  .card{background:#252525;border:1px solid #2f2f2f;border-radius:10px;padding:18px}
-  .card h2{font-size:15px;margin-bottom:10px}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
-  label.small{font-size:12px;color:#9aa0a6}
-  input,select,button,textarea{background:#2b2b2b;border:1px solid #3a3a3a;color:#e8e8e8;padding:10px;border-radius:8px;font-size:14px}
-  input:focus,textarea:focus,select:focus{outline:none;border-color:#4aa3ff}
-  .muted{color:#9aa0a6;font-size:12px}
-  .amt{font-size:26px;font-weight:700;color:#4aa3ff}
-  .sub{font-size:12px;color:#b0b0b0}
-  .btn{background:#4aa3ff;border:none;color:#fff;cursor:pointer;padding:8px 14px;border-radius:8px}
-  .btn:hover{background:#398ff0}
-  .btn-ghost{background:transparent;border:1px solid #4aa3ff;color:#e8e8e8;padding:8px 14px;border-radius:8px}
-  .kpi{display:flex;flex-direction:column;gap:4px}
-  .kpi .title{font-size:12px;color:#9aa0a6}
-  .kpi .value{font-size:22px;font-weight:700}
-  .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;border:1px solid #3a3a3a;color:#9aa0a6}
-  .spacer{height:8px}
-  .divider{height:1px;background:#333;margin:12px 0}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Household — Runway Control</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg-primary:#04080f;
+      --bg-secondary:#0b1524;
+      --text-muted:#9fb0c8;
+      --accent:#7be3ff;
+      --accent-2:#6cf3b1;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Noto Sans JP',system-ui,-apple-system,'Segoe UI',Arial;
+      background:linear-gradient(180deg,#05060a,#0a1422);
+      color:#e8f7ff;
+      min-height:100vh;
+    }
+    .matrix{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background-image:linear-gradient(to right,rgba(123,227,255,0.04) 1px,transparent 1px),linear-gradient(to bottom,rgba(123,227,255,0.04) 1px,transparent 1px);
+      background-size:48px 48px;
+      opacity:0.2;
+    }
+    .top-nav{
+      position:sticky;
+      top:0;
+      z-index:20;
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:12px 20px;
+      background:rgba(8,16,26,0.85);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid rgba(123,227,255,0.08);
+    }
+    .top-nav a{
+      color:#8ea6c0;
+      text-decoration:none;
+      padding:8px 12px;
+      border-radius:8px;
+      transition:background 0.2s,color 0.2s;
+    }
+    .top-nav a:hover,
+    .top-nav a.active{
+      color:#7be3ff;
+      background:rgba(123,227,255,0.12);
+    }
+    .top-nav .spacer{flex:1}
+    .nav-btn{
+      background:rgba(123,227,255,0.12);
+      color:#d7f6ff;
+      border:1px solid rgba(123,227,255,0.25);
+      border-radius:8px;
+      padding:6px 14px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:13px;
+      transition:background 0.2s,transform 0.2s;
+    }
+    .nav-btn:hover{background:rgba(123,227,255,0.2);transform:translateY(-1px);}
+    .nav-btn.secondary{
+      background:rgba(255,120,140,0.14);
+      border-color:rgba(255,120,140,0.3);
+      color:#ffbac8;
+    }
+    .sync-pill{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:30px;
+      border:1px solid rgba(123,227,255,0.2);
+      color:#a5b7cc;
+    }
+    .container{
+      max-width:1120px;
+      margin:32px auto 40px;
+      padding:0 24px 60px;
+    }
+    .hero{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:20px;
+      margin-bottom:26px;
+    }
+    .hero h1{
+      margin:0 0 8px;
+      font-size:26px;
+      font-family:'Rajdhani',sans-serif;
+      letter-spacing:0.04em;
+    }
+    .hero p{margin:0;color:var(--text-muted);font-size:14px;max-width:640px;}
+    .status-block{
+      text-align:right;
+    }
+    .status-pill{
+      display:inline-block;
+      padding:8px 16px;
+      border-radius:999px;
+      font-weight:700;
+      font-size:13px;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      margin-bottom:6px;
+      background:rgba(123,227,255,0.12);
+      color:#d7f6ff;
+    }
+    .status-pill.good{background:rgba(60,200,140,0.18);color:#b4f8d3;}
+    .status-pill.ok{background:rgba(255,200,120,0.16);color:#ffe9b8;}
+    .status-pill.warn{background:rgba(255,110,110,0.18);color:#ffc8d0;}
+    .status-pill.idle{background:rgba(123,227,255,0.08);color:#cfe2ff;}
+    .status-block p{margin:0;color:var(--text-muted);font-size:13px;width:220px;}
+    .grid{
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:22px;
+    }
+    .card{
+      background:rgba(8,16,26,0.85);
+      border:1px solid rgba(123,227,255,0.12);
+      border-radius:18px;
+      padding:22px;
+      box-shadow:0 20px 40px rgba(3,10,20,0.35);
+    }
+    .card h2{
+      margin:0;
+      font-size:18px;
+      font-family:'Rajdhani',sans-serif;
+      letter-spacing:0.04em;
+    }
+    .total-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:16px;
+      align-items:flex-end;
+      margin-bottom:18px;
+    }
+    .field{
+      flex:1;
+      min-width:220px;
+    }
+    label{
+      display:block;
+      font-size:13px;
+      color:var(--text-muted);
+      margin-bottom:6px;
+    }
+    input[type=number]{
+      width:100%;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid rgba(123,227,255,0.16);
+      background:rgba(4,12,20,0.7);
+      color:#e8f7ff;
+      font-size:16px;
+    }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button{
+      -webkit-appearance:none;
+      margin:0;
+    }
+    input[type=number]:focus{
+      outline:none;
+      border-color:rgba(123,227,255,0.45);
+      box-shadow:0 0 0 3px rgba(123,227,255,0.18);
+    }
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:11px 18px;
+      font-size:14px;
+      font-family:inherit;
+      cursor:pointer;
+      transition:transform 0.18s,box-shadow 0.18s,background 0.18s;
+      background:rgba(123,227,255,0.12);
+      color:#d7f6ff;
+      border:1px solid rgba(123,227,255,0.18);
+    }
+    .btn:hover{transform:translateY(-1px);box-shadow:0 10px 20px rgba(123,227,255,0.18);}
+    .btn.primary{
+      background:linear-gradient(90deg,var(--accent),var(--accent-2));
+      color:#05121d;
+      border:none;
+      box-shadow:0 12px 30px rgba(123,227,255,0.24);
+    }
+    .btn.small{padding:7px 12px;font-size:12px;border-radius:10px;}
+    .btn.tiny{padding:6px 10px;font-size:11px;border-radius:8px;}
+    .btn.ghost{
+      background:transparent;
+      border:1px dashed rgba(123,227,255,0.25);
+      color:var(--text-muted);
+      box-shadow:none;
+    }
+    .buttons{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .kpi-row{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:14px;
+      margin-bottom:18px;
+    }
+    .kpi{
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(123,227,255,0.08);
+      border-radius:14px;
+      padding:14px;
+      display:grid;
+      gap:6px;
+    }
+    .kpi .label{font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);}
+    .kpi .value{font-size:20px;font-weight:700;color:#e9fbff;}
+    canvas{
+      width:100%;
+      background:rgba(4,12,20,0.6);
+      border-radius:14px;
+      border:1px solid rgba(123,227,255,0.08);
+      margin-bottom:18px;
+    }
+    .timeline-section h2{
+      font-size:16px;
+      margin-bottom:10px;
+    }
+    .timeline-list{
+      list-style:none;
+      margin:0;
+      padding:0;
+      display:grid;
+      gap:8px;
+    }
+    .timeline-list li{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(123,227,255,0.08);
+      border-radius:10px;
+      font-size:13px;
+      color:#cfe2ff;
+    }
+    .timeline-list li span:last-child{font-weight:600;color:#fff;}
+    .muted{color:var(--text-muted);}
+    .reminder{
+      margin-bottom:18px;
+      padding:14px;
+      border-radius:12px;
+      background:rgba(123,227,255,0.08);
+      border:1px solid rgba(123,227,255,0.12);
+    }
+    .reminder strong{display:block;margin-bottom:6px;font-size:13px;letter-spacing:0.04em;}
+    .schedule-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    .schedule-list{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+    .schedule-row{
+      display:grid;
+      grid-template-columns:minmax(120px,1fr) 70px 110px auto;
+      gap:10px;
+      align-items:center;
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(123,227,255,0.1);
+      border-radius:12px;
+      padding:10px 12px;
+    }
+    .schedule-row input{
+      padding:8px 10px;
+      font-size:13px;
+      border-radius:10px;
+      border:1px solid rgba(123,227,255,0.16);
+      background:rgba(4,10,18,0.65);
+      color:#e8f7ff;
+    }
+    .schedule-row input:focus{
+      outline:none;
+      border-color:rgba(123,227,255,0.4);
+      box-shadow:0 0 0 3px rgba(123,227,255,0.18);
+    }
+    .schedule-foot{
+      margin-top:18px;
+      display:grid;
+      gap:8px;
+      font-size:13px;
+      color:var(--text-muted);
+    }
+    .schedule-foot .value{
+      display:block;
+      color:#e8f7ff;
+      font-weight:600;
+      margin-top:2px;
+    }
+    @media (max-width:980px){
+      .grid{grid-template-columns:1fr;}
+      .hero{flex-direction:column;align-items:flex-start;}
+      .status-block{text-align:left;}
+    }
+    @media (max-width:640px){
+      .total-row{flex-direction:column;align-items:stretch;}
+      .schedule-row{grid-template-columns:1fr 70px;grid-template-rows:auto auto;grid-row-gap:8px;}
+      .schedule-row input:nth-child(3){grid-column:1/3;}
+      .schedule-row button{grid-column:2/3;justify-self:flex-end;}
+      .buttons{flex-direction:column;align-items:stretch;}
+      .nav-btn{line-height:1.2;}
+    }
+  </style>
 </head>
 <body>
+  <div class="matrix" aria-hidden="true"></div>
+  <nav class="top-nav">
+    <a href="index.html">← Hub</a>
+    <a href="walks.html">Walks</a>
+    <a href="work.html">Work</a>
+    <a href="business.html">Business</a>
+    <a href="leverage.html">Leverage</a>
+    <a href="household.html" class="active">Household</a>
+    <div class="spacer"></div>
+    <button id="gdriveSignBtn" class="nav-btn">Drive sign-in</button>
+    <button id="signOutBtn" class="nav-btn secondary">Sign out</button>
+    <span id="syncStatus" class="sync-pill">sync: —</span>
+  </nav>
 
-<!-- NAV -->
-<div class="top-nav">
-  <a href="index.html">← Hub</a>
-  <a href="walks.html">Walks</a>
-  <a href="work.html">Work</a>
-  <a href="business.html">Business</a>
-  <a href="leverage.html">Leverage</a>
-  <a class="active" href="household.html">Household</a>
-</div>
-
-<div class="container">
-  <header>
-    <h1>Household Control</h1>
-    <p>Split income, track balances, and see your independence progress over time.</p>
-  </header>
-
-  <!-- INCOME SPLIT -->
-  <div class="grid">
-    <div class="card">
-      <h2>Income & Split</h2>
-      <label class="small">Monthly household income</label>
-      <input id="income" type="number" step="100" value="13500"/>
-      <div class="divider"></div>
-      <div class="grid" style="grid-template-columns:1fr 1fr">
-        <div class="kpi"><div class="title">Living (55%)</div><div class="value amt" id="amtOps">$7,425</div><div class="sub" id="amtOpsWk">≈ /wk</div></div>
-        <div class="kpi"><div class="title">Debt + Buffer (25%)</div><div class="value amt" id="amtBuf">$3,375</div><div class="sub" id="amtBufWk">≈ /wk</div></div>
-        <div class="kpi"><div class="title">Growth + Tools (10%)</div><div class="value amt" id="amtGrowth">$1,350</div><div class="sub" id="amtGrowthWk">≈ /wk</div></div>
-        <div class="kpi"><div class="title">Freedom (10%)</div><div class="value amt" id="amtFreedom">$1,350</div><div class="sub" id="amtFreedomWk">≈ /wk</div></div>
+  <main class="container">
+    <section class="hero">
+      <div>
+        <h1>Household runway control</h1>
+        <p>Log a single combined total, monitor weekly progress toward a $1k target, and keep staggered inflows mapped in one place.</p>
       </div>
-      <div class="spacer"></div>
-      <button class="btn" id="saveIncome">Save split</button>
-    </div>
-  </div>
+      <div class="status-block">
+        <span id="statusBadge" class="status-pill idle">Status</span>
+        <p id="statusCopy">Waiting for your first entry.</p>
+      </div>
+    </section>
 
-  <div class="spacer"></div>
+    <section class="grid">
+      <article class="card stretch">
+        <div class="total-row">
+          <div class="field">
+            <label for="totalInput">Current combined total</label>
+            <input id="totalInput" type="number" inputmode="decimal" placeholder="0" />
+          </div>
+          <div class="buttons">
+            <button id="saveTotal" class="btn primary">Save total</button>
+            <button id="exportBtn" class="btn">Export backup</button>
+          </div>
+        </div>
 
-  <!-- BALANCES -->
-  <div class="card">
-    <h2>Current Balances</h2>
-    <p class="muted">Enter balances from each account to compare against targets.</p>
-    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">
-      <div><label class="small">Living</label><input id="balOps" type="number" step="100" placeholder="e.g. 7400"></div>
-      <div><label class="small">Debt + Buffer</label><input id="balBuf" type="number" step="100" placeholder="e.g. 3300"></div>
-      <div><label class="small">Growth + Tools</label><input id="balGrowth" type="number" step="100" placeholder="e.g. 1350"></div>
-      <div><label class="small">Freedom</label><input id="balFreedom" type="number" step="100" placeholder="e.g. 1350"></div>
-    </div>
-    <div class="spacer"></div>
-    <button class="btn" id="saveBalances">Save Balances</button>
-    <span class="pill" id="balStatus">—</span>
-    <div class="spacer"></div>
-    <canvas id="balanceChart" style="width:100%;max-width:700px;height:260px;background:#1a1a1a;border-radius:8px;"></canvas>
-  </div>
+        <div class="kpi-row">
+          <div class="kpi">
+            <span class="label">Average change / week</span>
+            <span id="avgChange" class="value">—</span>
+          </div>
+          <div class="kpi">
+            <span class="label">Δ last 7 days</span>
+            <span id="lastChange" class="value">—</span>
+          </div>
+          <div class="kpi">
+            <span class="label">Scheduled per week</span>
+            <span id="schedulePerWeek" class="value">—</span>
+          </div>
+          <div class="kpi">
+            <span class="label">Entries logged</span>
+            <span id="entryCount" class="value">0</span>
+          </div>
+        </div>
 
-  <div class="spacer"></div>
+        <canvas id="timelineChart" height="220"></canvas>
 
-  <!-- PROGRESS OVER TIME -->
-  <div class="card">
-    <h2>Progress Over Time</h2>
-    <p class="muted">Tracks total household reserves (sum of all balances). The dotted line shows projected growth at a steady rate.</p>
-    <canvas id="progressChart" style="width:100%;max-width:700px;height:260px;background:#1a1a1a;border-radius:8px;"></canvas>
-  </div>
+        <div class="reminder">
+          <strong>Next reminder</strong>
+          <p id="reminderCopy" class="muted">No reminder scheduled yet.</p>
+          <button id="snoozeReminder" class="btn ghost small">Snooze 3 days</button>
+        </div>
 
-</div>
+        <div class="timeline-section">
+          <h2>Recent totals</h2>
+          <ul id="timelineList" class="timeline-list"></ul>
+        </div>
+      </article>
 
-<script>
-/* ---------- Local storage helpers ---------- */
-const store = {
-  get: (k, def=null) => { try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : def } catch{ return def } },
-  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
-};
-const el = id => document.getElementById(id);
+      <aside class="card">
+        <div class="schedule-header">
+          <h2>Scheduled inflows</h2>
+          <button id="addSchedule" class="btn ghost small">+ Add</button>
+        </div>
+        <p class="muted">Model recurring transfers/clients. Totals roll into weekly pressure so you can sense available buffer.</p>
+        <div id="scheduleList" class="schedule-list"></div>
+        <div class="schedule-foot">
+          <div>
+            <span class="label">Monthly sum</span>
+            <span id="scheduleMonthly" class="value">—</span>
+          </div>
+          <div>
+            <span class="label">Weekly equivalent</span>
+            <span id="scheduleWeekly" class="value">—</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
 
-/* ---------- Income Split ---------- */
-const incomeInput = el('income');
-const saveIncomeBtn = el('saveIncome');
-const amtOps = el('amtOps'), amtBuf = el('amtBuf'), amtGrowth = el('amtGrowth'), amtFreedom = el('amtFreedom');
-const amtOpsWk = el('amtOpsWk'), amtBufWk = el('amtBufWk'), amtGrowthWk = el('amtGrowthWk'), amtFreedomWk = el('amtFreedomWk');
-const fmt = n => n.toLocaleString(undefined,{style:'currency',currency:'AUD',maximumFractionDigits:0});
-const weeklyFromMonthly = m => Math.round(m / 4.345);
-let targets = {ops:0,buf:0,growth:0,freedom:0};
+  <script src="scripts/auth.js"></script>
+  <script src="scripts/gdrive.js"></script>
+  <script src="scripts/store-sync.js"></script>
+  <script>
+    (function(){
+      const fallbackStore = {
+        get(key, def){
+          try{
+            const raw = localStorage.getItem('dash.' + key);
+            return raw ? JSON.parse(raw) : def;
+          }catch(err){
+            return def;
+          }
+        },
+        set(key, value){
+          try{
+            localStorage.setItem('dash.' + key, JSON.stringify(value));
+          }catch(err){
+            console.error('local fallback set failed', err);
+          }
+        },
+        onSyncStatus(){/* no-op */}
+      };
 
-function renderSplit(income){
-  targets.ops = Math.round(income * 0.55);
-  targets.buf = Math.round(income * 0.25);
-  targets.growth = Math.round(income * 0.10);
-  targets.freedom = Math.round(income * 0.10);
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const weeklyGoal = 1000;
+      const weeklyWin = 500;
 
-  amtOps.textContent = fmt(targets.ops);
-  amtBuf.textContent = fmt(targets.buf);
-  amtGrowth.textContent = fmt(targets.growth);
-  amtFreedom.textContent = fmt(targets.freedom);
+      const timelineKey = 'house.timeline';
+      const totalKey = 'household.total';
+      const lastEntryKey = 'household.lastEntry';
+      const reminderKey = 'household.reminderSet';
+      const scheduleKey = 'house.scheduled';
 
-  amtOpsWk.textContent = '≈ ' + fmt(weeklyFromMonthly(targets.ops)) + '/wk';
-  amtBufWk.textContent = '≈ ' + fmt(weeklyFromMonthly(targets.buf)) + '/wk';
-  amtGrowthWk.textContent = '≈ ' + fmt(weeklyFromMonthly(targets.growth)) + '/wk';
-  amtFreedomWk.textContent = '≈ ' + fmt(weeklyFromMonthly(targets.freedom)) + '/wk';
-}
-function loadIncome(){
-  const val = store.get('house.income',13500);
-  incomeInput.value = val;
-  renderSplit(val);
-}
-saveIncomeBtn.addEventListener('click',()=>{
-  const val = Number(incomeInput.value)||13500;
-  store.set('house.income', val);
-  renderSplit(val);
-  updateChart();
-  drawTimeline();
-  saveIncomeBtn.textContent='Saved';
-  setTimeout(()=>saveIncomeBtn.textContent='Save split',800);
-});
+      let storeApi = fallbackStore;
+      let timelineChart = null;
 
-/* ---------- Balances ---------- */
-const balOps = el('balOps'), balBuf = el('balBuf'), balGrowth = el('balGrowth'), balFreedom = el('balFreedom');
-const saveBalancesBtn = el('saveBalances'), balStatus = el('balStatus');
-let chart;
+      function fmtCurrency(value){
+        if (value === null || value === undefined || isNaN(value)) return '—';
+        return Number(value).toLocaleString(undefined, { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 });
+      }
 
-function loadBalances(){
-  const b = store.get('house.balances',{ops:0,buf:0,growth:0,freedom:0});
-  balOps.value = b.ops || '';
-  balBuf.value = b.buf || '';
-  balGrowth.value = b.growth || '';
-  balFreedom.value = b.freedom || '';
-  updateChart();
-}
-function updateChart(){
-  const b = store.get('house.balances',{ops:0,buf:0,growth:0,freedom:0});
-  const ctx = document.getElementById('balanceChart').getContext('2d');
-  const actual = [b.ops,b.buf,b.growth,b.freedom];
-  const target = [targets.ops,targets.buf,targets.growth,targets.freedom];
-  const labels = ['Living','Debt+Buffer','Growth+Tools','Freedom'];
-  if(chart) chart.destroy();
-  chart = new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels,
-      datasets:[
-        {label:'Actual',data:actual,backgroundColor:'#4aa3ff',borderRadius:6},
-        {label:'Target',data:target,backgroundColor:'#777',borderRadius:6}
-      ]
-    },
-    options:{
-      scales:{
-        y:{beginAtZero:true,grid:{color:'#333'},ticks:{color:'#999'}},
-        x:{grid:{display:false},ticks:{color:'#ccc'}}
-      },
-      plugins:{legend:{labels:{color:'#ccc'}}}
-    }
-  });
-}
+      function getTimeline(){
+        const data = storeApi.get(timelineKey, []);
+        return Array.isArray(data) ? data : [];
+      }
 
-/* ---------- Progress Over Time ---------- */
-let progressChart;
+      function setTimeline(entries){
+        storeApi.set(timelineKey, entries);
+      }
 
-function logTimeline(total){
-  const logs = store.get('house.timeline', []);
-  logs.unshift({when:new Date().toISOString(), total});
-  store.set('house.timeline', logs.slice(0,100));
-  drawTimeline();
-}
+      function loadSchedule(){
+        const data = storeApi.get(scheduleKey, []);
+        return Array.isArray(data) ? data : [];
+      }
 
-function drawTimeline(){
-  const logs = store.get('house.timeline', []);
-  if(logs.length === 0) return;
-  const ctx = document.getElementById('progressChart').getContext('2d');
+      function saveSchedule(items){
+        storeApi.set(scheduleKey, items);
+      }
 
-  const dates = logs.map(l => new Date(l.when).toLocaleDateString()).reverse();
-  const actual = logs.map(l => l.total).reverse();
+      function renderTimelineList(){
+        const list = document.getElementById('timelineList');
+        const logs = getTimeline().slice().sort((a,b) => new Date(b.when || b.date) - new Date(a.when || a.date));
+        if (!logs.length){
+          list.innerHTML = '<li class="muted">No totals logged yet.</li>';
+          return;
+        }
+        list.innerHTML = logs.slice(0,6).map(entry => {
+          const date = new Date(entry.when || entry.date || Date.now());
+          const total = Number(entry.total ?? entry.value ?? 0);
+          return '<li><span>' + date.toLocaleDateString() + '</span><span>' + fmtCurrency(total) + '</span></li>';
+        }).join('');
+      }
 
-  const start = actual[0] || 0;
-  const projection = actual.map((v,i)=>Math.round(start*Math.pow(1.008,i)));
+      function computeScheduleMonthly(){
+        const items = loadSchedule();
+        return items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+      }
 
-  if(progressChart) progressChart.destroy();
-  progressChart = new Chart(ctx,{
-    type:'line',
-    data:{
-      labels:dates,
-      datasets:[
-        {label:'Actual',data:actual,borderColor:'#4aa3ff',tension:0.25,borderWidth:2,fill:false,pointRadius:2},
-        {label:'Projected',data:projection,borderColor:'#888',borderDash:[5,5],tension:0.25,borderWidth:1.5,fill:false}
-      ]
-    },
-    options:{
-      scales:{
-        y:{beginAtZero:true,grid:{color:'#333'},ticks:{color:'#999'}},
-        x:{grid:{display:false},ticks:{color:'#ccc',maxRotation:0}}
-      },
-      plugins:{legend:{labels:{color:'#ccc'}}}
-    }
-  });
-}
+      function computeScheduleWeekly(){
+        const monthly = computeScheduleMonthly();
+        return monthly / 4.345;
+      }
 
-/* ---------- Save Balances + Timeline ---------- */
-saveBalancesBtn.addEventListener('click',()=>{
-  const b={
-    ops:Number(balOps.value)||0,
-    buf:Number(balBuf.value)||0,
-    growth:Number(balGrowth.value)||0,
-    freedom:Number(balFreedom.value)||0
-  };
-  store.set('house.balances',b);
-  updateChart();
-  const total = b.ops + b.buf + b.growth + b.freedom;
-  logTimeline(total);
-  balStatus.textContent='Saved '+new Date().toLocaleTimeString();
-});
+      function computeStats(){
+        const logs = getTimeline().slice().sort((a,b) => new Date(a.when || a.date) - new Date(b.when || b.date));
+        const count = logs.length;
+        if (!count){
+          return {
+            count: 0,
+            weeklyAverage: null,
+            last7: null,
+            scheduleMonthly: computeScheduleMonthly(),
+            scheduleWeekly: computeScheduleWeekly(),
+            state: 'idle',
+            statusText: 'Waiting',
+            statusCopy: 'Add your first total to begin tracking.'
+          };
+        }
+        const firstDateObj = new Date(logs[0].when || logs[0].date || Date.now());
+        const lastDateObj = new Date(logs[logs.length - 1].when || logs[logs.length - 1].date || Date.now());
+        const firstTotal = Number(logs[0].total ?? logs[0].value ?? 0);
+        const lastTotal = Number(logs[logs.length - 1].total ?? logs[logs.length - 1].value ?? 0);
+        const spanDays = Math.max(1, (lastDateObj - firstDateObj) / msPerDay);
+        const weeklyAverage = (lastTotal - firstTotal) / (spanDays / 7);
 
-/* ---------- Init ---------- */
-loadIncome();
-loadBalances();
-drawTimeline();
-</script>
+        const weekAgoTime = lastDateObj.getTime() - 7 * msPerDay;
+        let weekAnchor = logs[0];
+        for (const entry of logs){
+          const time = new Date(entry.when || entry.date || Date.now()).getTime();
+          if (time <= weekAgoTime){
+            weekAnchor = entry;
+          }else{
+            break;
+          }
+        }
+        const last7 = lastTotal - Number(weekAnchor.total ?? weekAnchor.value ?? 0);
+
+        const scheduleMonthly = computeScheduleMonthly();
+        const scheduleWeekly = computeScheduleWeekly();
+
+        let state = 'warn';
+        let statusText = 'Behind';
+        let statusCopy = 'Below the $1k weekly target. Review schedule or add inflows.';
+        if (!isFinite(weeklyAverage)){
+          state = 'idle';
+          statusText = 'Waiting';
+          statusCopy = 'Add another entry to see the trend.';
+        } else if (weeklyAverage >= weeklyGoal){
+          state = 'good';
+          statusText = 'On track';
+          statusCopy = 'Ahead of the $1k/week goal — keep this cadence.';
+        } else if (weeklyAverage >= weeklyWin){
+          state = 'ok';
+          statusText = 'Progress';
+          statusCopy = 'Positive slope. Another push reaches the $1k/wk goal.';
+        }
+
+        return {
+          count,
+          weeklyAverage,
+          last7,
+          scheduleMonthly,
+          scheduleWeekly,
+          state,
+          statusText,
+          statusCopy
+        };
+      }
+
+      function drawChart(){
+        const canvas = document.getElementById('timelineChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const logs = getTimeline().slice().sort((a,b) => new Date(a.when || a.date) - new Date(b.when || b.date));
+        if (timelineChart){
+          timelineChart.destroy();
+          timelineChart = null;
+        }
+        if (!logs.length){
+          timelineChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [] },
+            options: {
+              plugins: { legend: { display: false } },
+              scales: { x: { ticks: { color: '#8fa3c2' } }, y: { ticks: { color: '#8fa3c2' } } }
+            }
+          });
+          return;
+        }
+        const firstDate = new Date(logs[0].when || logs[0].date).getTime();
+        const firstTotal = Number(logs[0].total ?? logs[0].value ?? 0);
+        const labels = logs.map(entry => new Date(entry.when || entry.date).toLocaleDateString());
+        const data = logs.map(entry => Number(entry.total ?? entry.value ?? 0));
+        const target = logs.map(entry => {
+          const weeks = (new Date(entry.when || entry.date).getTime() - firstDate) / msPerDay / 7;
+          return firstTotal + weeks * weeklyGoal;
+        });
+
+        timelineChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Actual',
+                data,
+                borderColor: '#7be3ff',
+                backgroundColor: 'rgba(123,227,255,0.18)',
+                tension: 0.25,
+                fill: true,
+                pointRadius: 3,
+                pointBackgroundColor: '#7be3ff'
+              },
+              {
+                label: 'Target ($1k/wk)',
+                data: target,
+                borderColor: '#6cf3b1',
+                borderDash: [6,4],
+                tension: 0.2,
+                fill: false,
+                pointRadius: 0
+              }
+            ]
+          },
+          options: {
+            plugins: {
+              legend: { labels: { color: '#cfe2ff' } },
+              tooltip: {
+                callbacks: {
+                  label(context){
+                    return fmtCurrency(context.parsed.y);
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#8fa3c2' },
+                grid: { color: 'rgba(123,227,255,0.08)' }
+              },
+              y: {
+                ticks: { color: '#8fa3c2' },
+                grid: { color: 'rgba(123,227,255,0.08)' }
+              }
+            }
+          }
+        });
+      }
+
+      function renderSchedule(){
+        const container = document.getElementById('scheduleList');
+        const items = loadSchedule();
+        if (!container) return;
+        if (!items.length){
+          container.innerHTML = '<div class="muted">No scheduled inflows yet. Add a salary, rent, or client payment.</div>';
+        } else {
+          container.innerHTML = '';
+          items.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = 'schedule-row';
+
+            const labelInput = document.createElement('input');
+            labelInput.type = 'text';
+            labelInput.placeholder = 'Label';
+            labelInput.value = item.label || '';
+            labelInput.addEventListener('change', () => {
+              items[index].label = labelInput.value.trim();
+              saveSchedule(items);
+              refreshStats();
+            });
+
+            const dayInput = document.createElement('input');
+            dayInput.type = 'number';
+            dayInput.min = '1';
+            dayInput.max = '31';
+            dayInput.value = item.day || 1;
+            dayInput.addEventListener('change', () => {
+              const value = Math.min(31, Math.max(1, Number(dayInput.value) || 1));
+              items[index].day = value;
+              dayInput.value = value;
+              saveSchedule(items);
+              refreshStats();
+            });
+
+            const amountInput = document.createElement('input');
+            amountInput.type = 'number';
+            amountInput.step = '10';
+            amountInput.value = item.amount ?? 0;
+            amountInput.addEventListener('change', () => {
+              items[index].amount = Number(amountInput.value) || 0;
+              saveSchedule(items);
+              refreshStats();
+            });
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn tiny ghost';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => {
+              items.splice(index, 1);
+              saveSchedule(items);
+              renderSchedule();
+              refreshStats();
+            });
+
+            row.appendChild(labelInput);
+            row.appendChild(dayInput);
+            row.appendChild(amountInput);
+            row.appendChild(removeBtn);
+            container.appendChild(row);
+          });
+        }
+        document.getElementById('scheduleMonthly').textContent = fmtCurrency(computeScheduleMonthly());
+        document.getElementById('scheduleWeekly').textContent = fmtCurrency(computeScheduleWeekly());
+        document.getElementById('schedulePerWeek').textContent = fmtCurrency(computeScheduleWeekly());
+      }
+
+      function refreshStats(){
+        const stats = computeStats();
+        document.getElementById('avgChange').textContent = fmtCurrency(stats.weeklyAverage);
+        document.getElementById('lastChange').textContent = fmtCurrency(stats.last7);
+        document.getElementById('schedulePerWeek').textContent = fmtCurrency(stats.scheduleWeekly);
+        document.getElementById('entryCount').textContent = stats.count.toString();
+        const badge = document.getElementById('statusBadge');
+        badge.className = 'status-pill ' + stats.state;
+        badge.textContent = stats.statusText;
+        document.getElementById('statusCopy').textContent = stats.statusCopy;
+      }
+
+      function updateReminderCopy(){
+        const lastEntry = storeApi.get(lastEntryKey, 0);
+        const reminder = storeApi.get(reminderKey, 0);
+        const anchor = Math.max(lastEntry || 0, reminder || 0);
+        const display = document.getElementById('reminderCopy');
+        if (!display) return;
+        if (!anchor){
+          display.textContent = 'No reminder scheduled yet.';
+          return;
+        }
+        const next = new Date(anchor + 3 * msPerDay);
+        const lastDate = lastEntry ? new Date(lastEntry).toLocaleString() : 'never';
+        display.textContent = 'Last entry: ' + lastDate + ' • next check by ' + next.toLocaleString();
+      }
+
+      function scheduleNextReminder(){
+        storeApi.set(reminderKey, Date.now());
+        updateReminderCopy();
+      }
+
+      function checkReminders(){
+        const lastEntry = storeApi.get(lastEntryKey, 0);
+        const reminder = storeApi.get(reminderKey, 0);
+        const anchor = Math.max(lastEntry || 0, reminder || 0);
+        if (!anchor) return;
+        if (Date.now() - anchor > 3 * msPerDay){
+          if (confirm('It has been a few days since the last household total. Add a new entry now?')){
+            const input = document.getElementById('totalInput');
+            if (input) input.focus();
+          } else {
+            scheduleNextReminder();
+          }
+        }
+      }
+
+      async function handleSaveTotal(){
+        const value = Number(document.getElementById('totalInput').value);
+        if (!Number.isFinite(value)){
+          alert('Enter a numeric total.');
+          return;
+        }
+        const logs = getTimeline();
+        logs.push({ when: new Date().toISOString(), total: value });
+        setTimeline(logs.slice(-365 * 3));
+        storeApi.set(totalKey, value);
+        storeApi.set(lastEntryKey, Date.now());
+
+        try{
+          const progress = storeApi.get('fh.progress', []);
+          progress.unshift({ date: Date.now(), text: 'Updated household total: ' + fmtCurrency(value) });
+          storeApi.set('fh.progress', progress.slice(0, 200));
+        }catch(err){
+          console.warn('Progress log update failed', err);
+        }
+
+        drawChart();
+        renderTimelineList();
+        refreshStats();
+        scheduleNextReminder();
+      }
+
+      async function exportData(){
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          household: {
+            total: storeApi.get(totalKey, 0),
+            lastEntry: storeApi.get(lastEntryKey, 0),
+            reminderSet: storeApi.get(reminderKey, 0),
+            timeline: getTimeline(),
+            scheduled: loadSchedule()
+          }
+        };
+        const filename = 'household-backup-' + new Date().toISOString().slice(0,10) + '.json';
+
+        try{
+          if (window.GDrive){
+            await window.GDrive.withAuth(() => window.GDrive.uploadJson(filename, payload));
+            alert('Backup uploaded to Google Drive (appDataFolder).');
+            return;
+          }
+          throw new Error('Drive helper not available');
+        }catch(err){
+          console.warn('Drive upload failed, falling back to download', err);
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      function initAuth(){
+        if (window.SimpleAuth && typeof window.SimpleAuth.requireAuth === 'function'){
+          window.SimpleAuth.requireAuth();
+        }
+        const signOutBtn = document.getElementById('signOutBtn');
+        if (signOutBtn){
+          signOutBtn.addEventListener('click', () => {
+            if (window.SimpleAuth && typeof window.SimpleAuth.signOut === 'function'){
+              window.SimpleAuth.signOut();
+            } else {
+              sessionStorage.removeItem('session.isAuthenticated');
+              window.location.href = '/login.html';
+            }
+          });
+        }
+      }
+
+      function initDriveButton(){
+        const btn = document.getElementById('gdriveSignBtn');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+          if (window.GDrive){
+            window.GDrive.signIn();
+          } else {
+            alert('Drive helper not loaded yet.');
+          }
+        });
+        if (window.GDrive && typeof window.GDrive.setOnAuthChange === 'function'){
+          window.GDrive.setOnAuthChange((signedIn) => {
+            btn.textContent = signedIn ? 'Drive connected' : 'Drive sign-in';
+          });
+        }
+      }
+
+      function initSyncStatus(){
+        const el = document.getElementById('syncStatus');
+        if (!el || !storeApi || typeof storeApi.onSyncStatus !== 'function') return;
+        storeApi.onSyncStatus((state) => {
+          el.textContent = 'sync: ' + state;
+          if (state === 'idle'){
+            refreshEverything();
+          }
+        });
+      }
+
+      function refreshEverything(){
+        const totalInput = document.getElementById('totalInput');
+        if (totalInput){
+          const stored = storeApi.get(totalKey, '');
+          totalInput.value = stored === null || stored === undefined ? '' : stored;
+        }
+        drawChart();
+        renderTimelineList();
+        renderSchedule();
+        refreshStats();
+        updateReminderCopy();
+      }
+
+      function boot(){
+        storeApi = window.store || fallbackStore;
+        initAuth();
+        initDriveButton();
+        initSyncStatus();
+
+        document.getElementById('saveTotal').addEventListener('click', handleSaveTotal);
+        document.getElementById('exportBtn').addEventListener('click', exportData);
+        document.getElementById('addSchedule').addEventListener('click', () => {
+          const items = loadSchedule();
+          items.push({ label: 'New inflow', day: 15, amount: 0 });
+          saveSchedule(items);
+          renderSchedule();
+          refreshStats();
+        });
+        document.getElementById('snoozeReminder').addEventListener('click', scheduleNextReminder);
+
+        refreshEverything();
+        setTimeout(refreshEverything, 800);
+        setInterval(checkReminders, 60 * 60 * 1000);
+        setTimeout(checkReminders, 2000);
+      }
+
+      if (document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', boot);
+      } else {
+        boot();
+      }
+    })();
+  </script>
 </body>
 </html>
