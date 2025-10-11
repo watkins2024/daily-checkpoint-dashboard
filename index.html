@@ -40,7 +40,10 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="scripts/app-config.js"></script>
   <script src="scripts/store-sync.js"></script>
+  <script src="scripts/auth-ui.js"></script>
   <script src="scripts/whatsnext.js"></script>
   <script>
     function bindReminder(){
@@ -60,6 +63,13 @@
       };
     }
     window.addEventListener('load', ()=>{ if(window.WhatsNext) bindReminder(); else { const s=document.createElement('script'); s.src='scripts/whatsnext.js'; s.onload=bindReminder; document.body.appendChild(s);} });
+    window.addEventListener('store:data', bindReminder);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.DashboardAuth) {
+        window.DashboardAuth.init();
+      }
+    });
   </script>
 </body>
 </html>

@@ -21,7 +21,6 @@
     .btn { background: #4a9eff; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; margin: 5px; transition: background 0.2s; }
     .btn:hover { background: #3a8eef; }
   
-  /* Try Drive upload first (if GDrive available and signed in) */
     .btn-sm { padding: 6px 12px; font-size: 12px; }
     .btn-ghost { background: transparent; border: 1px solid #4a9eff; }
     
@@ -96,17 +95,12 @@
   <a href="business.html">Business</a>
   <a href="leverage.html">Leverage</a>
   <a href="household.html">Household</a>
-  <button id="syncNowBtn" class="btn btn-sm btn-ghost" style="margin-left:auto;">Sync now</button>
-  <button id="gdriveSignBtn" class="btn btn-sm btn-ghost" style="margin-left:8px;">Sign in</button>
-  <span id="authStatus" style="margin-left:8px;align-self:center;color:#9aa0a6;font-size:13px">Not signed in</span>
-  <span id="syncStatus" style="margin-left:8px;align-self:center;color:#9aa0a6;font-size:13px">sync: idle</span>
 </div>
 
 <header>
   <h1>Work & Study</h1>
   <div>
     <button class="btn btn-ghost" onclick="openModal('scheduleModal')">Edit Schedule</button>
-    <button class="btn btn-ghost" onclick="exportData()">Export to Drive</button>
   </div>
 </header>
 
@@ -218,10 +212,10 @@
   </div>
 </div>
 
-<!-- load GDrive helper + shared store-sync (store will be available as window.store) -->
-<script src="scripts/gdrive.js?v=20241011"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="scripts/app-config.js"></script>
 <script src="scripts/store-sync.js"></script>
-<script src="scripts/gdrive-ui.js?v=20241011"></script>
+<script src="scripts/auth-ui.js"></script>
 <script>
 let timerInterval = null;
 let timerSeconds = 25 * 60;
@@ -554,45 +548,6 @@ function updateTimerDisplay() {
     `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-function exportData() {
-  const data = {
-    schedule: store.get('work.schedule', {}),
-    workLog: store.get('work.log', []),
-    tasks: store.get('work.tasks', []),
-    classNotes: store.get('work.classNotes', {}),
-    dailySummaries: store.get('work.dailySummaries', {}),
-    exportDate: new Date().toISOString()
-  };
-
-  const filename = `work-backup-${new Date().toISOString().slice(0,10)}.json`;
-
-  // Attempt Drive upload (appDataFolder). If Drive not available or fails, fallback to download.
-  (async function(){
-    try {
-      if (window.GDriveUI && typeof window.GDriveUI.ensureLoaded === 'function') {
-        await window.GDriveUI.ensureLoaded();
-      }
-
-      if (window.GDrive) {
-        await window.GDrive.withAuth(() => window.GDrive.uploadJson(filename, data));
-        alert('Backup uploaded to Google Drive (appDataFolder)');
-        return;
-      }
-    } catch (err) {
-      console.error('Drive upload failed', err);
-    }
-
-    // fallback: local download
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  })();
-}
-
 // Request notification permission
 if (Notification.permission === 'default') {
   Notification.requestPermission();
@@ -605,24 +560,18 @@ renderTasks();
 renderDailySummaries();
 updateTimerDisplay();
 
-const driveUI = window.GDriveUI && window.GDriveUI.attach({
-  signInButtonId: 'gdriveSignBtn',
-  authLabelId: 'authStatus',
-  syncStatusId: 'syncStatus',
-  syncButtonId: 'syncNowBtn',
-  onSyncIdle: () => {
-    renderTodayClasses();
-    renderWorkLog();
-    renderTasks();
-    renderDailySummaries();
-  }
+window.addEventListener('store:data', () => {
+  renderTodayClasses();
+  renderWorkLog();
+  renderTasks();
+  renderDailySummaries();
 });
 
-if (!driveUI && document.getElementById('syncNowBtn')) {
-  document.getElementById('syncNowBtn').addEventListener('click', () => {
-    alert('Sync helper failed to load. Please refresh the page.');
-  });
-}
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.DashboardAuth) {
+    window.DashboardAuth.init();
+  }
+});
 </script>
 
 </body>

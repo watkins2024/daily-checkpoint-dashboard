@@ -1,177 +1,275 @@
 // store-sync.js
-// Shared store wrapper: localStorage cache + Drive appDataFolder persistence
-// Features:
-// - store.get(key, default)
-// - store.set(key, value)
-// - store.onSyncStatus(fn) -> receives 'idle'|'saving'|'error'|'loading'
-// - auto-load on init, auto-save on change (debounced 2000ms)
-// Implementation notes:
-// - Relies on window.GDrive (scripts/gdrive.js) for Drive uploads/queries.
-// - Keeps localStorage as the offline cache.
+// Supabase-backed persistence for the Daily Checkpoint dashboard.
+// Responsibilities:
+//  - Provide the familiar store.get/set API used across pages.
+//  - Mirror data to localStorage for offline use.
+//  - Persist the entire dashboard state JSON to Supabase (table `dash_state`).
+//  - Emit sync status updates and data-change events.
 
 (function(){
-  if (window.StoreSync) return; // idempotent
+  if (window.StoreSync) return; // idempotent guard
 
-  const DEBOUNCE_MS = 2000;
-  const pending = new Map();
-  const timers = new Map();
-  let statusHandlers = [];
-  let loadingFromDrive = false;
+  const STORE_PREFIX = 'dash.';
+  const SAVE_DELAY_MS = 1500;
 
-  function setStatus(s) { statusHandlers.forEach(h => { try { h(s); } catch(e){} }); }
+  const statusHandlers = [];
+  const dataHandlers = [];
+  let lastStatus = 'idle';
+  let saveTimer = null;
+  let payload = {};
+  let currentUser = null;
+  let supabaseClient = null;
+  let hasRemoteConfigured = false;
 
-  function localKey(k) { return `dash.${k}`; }
+  function localKey(k){ return `${STORE_PREFIX}${k}`; }
 
-  const api = {
-    get(k, def=null) {
-      try { const raw = localStorage.getItem(localKey(k)); return raw ? JSON.parse(raw) : def; } catch { return def; }
-    },
-    set(k, v) {
-      try { localStorage.setItem(localKey(k), JSON.stringify(v)); } catch(e) { console.error('local set failed', e); }
-      // schedule remote write
-      scheduleUpload(k, v);
-    },
-    onSyncStatus(fn) { statusHandlers.push(fn); },
-    async syncFromDrive() { await initialLoad(true); },
-    async flushPending() { await flushAll(); }
-  };
+  function setStatus(status){
+    lastStatus = status;
+    statusHandlers.forEach(fn => { try { fn(status); } catch (e) { console.error(e); } });
+    window.dispatchEvent(new CustomEvent('store:status', { detail: status }));
+  }
 
-  function scheduleUpload(k, v) {
-    pending.set(k, v);
-    if (timers.has(k)) clearTimeout(timers.get(k));
-    timers.set(k, setTimeout(() => flushKey(k), DEBOUNCE_MS));
+  function notifyData(keys){
+    const unique = Array.from(new Set(keys));
+    dataHandlers.forEach(fn => { try { fn(unique); } catch (e) { console.error(e); } });
+    window.dispatchEvent(new CustomEvent('store:data', { detail: { keys: unique } }));
+  }
+
+  function readLocalCache(){
+    const cache = {};
+    for (let i=0;i<localStorage.length;i++){
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(STORE_PREFIX)) continue;
+      try {
+        cache[key.slice(STORE_PREFIX.length)] = JSON.parse(localStorage.getItem(key));
+      } catch {
+        cache[key.slice(STORE_PREFIX.length)] = null;
+      }
+    }
+    return cache;
+  }
+
+  function writeLocalCache(data){
+    Object.entries(data).forEach(([key, value]) => {
+      try { localStorage.setItem(localKey(key), JSON.stringify(value)); } catch (e) { console.warn('Local cache write failed', e); }
+    });
+    notifyData(Object.keys(data));
+  }
+
+  function clearLocalCache(){
+    const keysToRemove = [];
+    for (let i=0;i<localStorage.length;i++){
+      const key = localStorage.key(i);
+      if (key && key.startsWith(STORE_PREFIX)) keysToRemove.push(key);
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  }
+
+  function scheduleSave(){
+    if (!hasRemoteConfigured || !currentUser) return;
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(flushPending, SAVE_DELAY_MS);
     setStatus('saving');
   }
 
-  async function flushKey(k) {
-    timers.delete(k);
-    const v = pending.get(k);
-    if (v === undefined) return;
-    pending.delete(k);
-
-    try {
-      // prepare JSON blob named by key
-      const filename = `${k.replace(/\W+/g,'-')}-backup-${new Date().toISOString().slice(0,10)}.json`;
-      const data = { key: k, value: v, updated: new Date().toISOString() };
-
-      if (window.GDrive) {
-        await window.GDrive.withAuth(() => window.GDrive.uploadJson(filename, data));
-        setStatus('idle');
-      } else {
-        // no GDrive - keep local only
-        setStatus('idle');
-      }
-    } catch (err) {
-      console.error('sync upload error', err);
-      setStatus('error');
+  async function flushPending(){
+    if (!hasRemoteConfigured || !currentUser) { setStatus('idle'); return; }
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
     }
-  }
-
-  async function flushAll() {
-    const keys = Array.from(pending.keys());
-    for (const key of keys) {
-      if (timers.has(key)) {
-        clearTimeout(timers.get(key));
-        timers.delete(key);
-      }
-      await flushKey(key);
-    }
-  }
-
-  // load all app keys from Drive (best-effort) into localStorage on init
-  async function initialLoad(force=false) {
-    if (loadingFromDrive && !force) return;
-    loadingFromDrive = true;
-    setStatus('loading');
+    setStatus('saving');
     try {
-      if (!window.GDrive || typeof window.GDrive.hasToken !== 'function' || !window.GDrive.hasToken()) {
-        // nothing to do
-        setStatus('idle');
-        loadingFromDrive = false;
-        return;
-      }
-
-    // List files in appDataFolder and fetch ones that look like backups
-    const q = `name contains 'backup' and 'appDataFolder' in parents and trashed=false`;
-    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&spaces=appDataFolder&fields=files(id,name,modifiedTime)`;
-      const token = await ensureToken();
-      if (!token) { setStatus('idle'); loadingFromDrive = false; return; }
-
-      const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
-      if (!res.ok) { setStatus('idle'); loadingFromDrive = false; return; }
-      const js = await res.json();
-      const files = js.files || [];
-
-      // fetch each file and write to localStorage by key
-      const latestByKey = {};
-
-      await Promise.all(files.map(async f => {
-        try {
-          const getUrl = `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`;
-          const r = await fetch(getUrl, { headers: { 'Authorization': 'Bearer ' + token } });
-          if (!r.ok) return;
-          const body = await r.json();
-          if (!body || !body.key) return;
-
-          const existing = latestByKey[body.key];
-          const incomingStamp = body.updated || f.modifiedTime || '';
-          const existingStamp = existing ? (existing.updated || '') : '';
-          if (!existing || incomingStamp > existingStamp) {
-            latestByKey[body.key] = {
-              value: body.value,
-              updated: incomingStamp
-            };
-          }
-        } catch (e) { /* ignore individual file errors */ }
-      }));
-
-      Object.entries(latestByKey).forEach(([key, payload]) => {
-        try {
-          localStorage.setItem(localKey(key), JSON.stringify(payload.value));
-        } catch (e) { /* ignore storage errors */ }
-      });
-
+      const { error } = await supabaseClient
+        .from('dash_state')
+        .upsert({ user_id: currentUser.id, payload, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      if (error) throw error;
       setStatus('idle');
     } catch (err) {
-      console.error('initialLoad error', err);
+      console.error('Remote save failed', err);
       setStatus('error');
-    } finally {
-      loadingFromDrive = false;
+      saveTimer = setTimeout(flushPending, SAVE_DELAY_MS * 2);
     }
   }
 
-  async function ensureToken() {
-    if (!window.GDrive || typeof window.GDrive.withAuth !== 'function') return null;
-    if (typeof window.GDrive.hasToken === 'function' && !window.GDrive.hasToken()) return null;
+  async function loadRemoteState(user){
+    if (!hasRemoteConfigured || !user) return;
+    setStatus('loading');
     try {
-      const token = await window.GDrive.withAuth((t) => t);
-      return token;
-    } catch (e) {
-      return null;
+      const { data, error } = await supabaseClient
+        .from('dash_state')
+        .select('payload, updated_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      if (data?.payload) {
+        payload = { ...data.payload };
+        clearLocalCache();
+        writeLocalCache(payload);
+      } else {
+        payload = { ...payload };
+        writeLocalCache(payload);
+        if (Object.keys(payload).length > 0) {
+          await flushPending();
+        } else {
+          setStatus('idle');
+        }
+        return;
+      }
+      setStatus('idle');
+    } catch (err) {
+      console.error('Remote load failed', err);
+      setStatus('error');
     }
   }
 
-  // auto-init
-  setTimeout(() => { initialLoad(); }, 100);
+  function ensureSupabase(){
+    if (supabaseClient || hasRemoteConfigured) return;
+    const cfg = window.APP_CONFIG || {};
+    const url = cfg.supabaseUrl;
+    const anonKey = cfg.supabaseAnonKey;
 
-  window.StoreSync = api;
-  // convenience alias
-  window.store = api;
-  // debug helper
-  window.StoreSync.test = function() {
-    console.log('Store keys (local):');
-    for (let i=0;i<localStorage.length;i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('dash.')) console.log(k, JSON.parse(localStorage.getItem(k)));
+    if (!window.supabase) {
+      console.warn('Supabase client library missing. Data will stay local only.');
+      hasRemoteConfigured = false;
+      return;
     }
-    console.log('Pending uploads:', Array.from(pending.keys()));
-  };
+    if (!url || !anonKey || url.includes('YOUR-PROJECT')) {
+      console.warn('Supabase config missing. Provide supabaseUrl and supabaseAnonKey via window.APP_CONFIG.');
+      hasRemoteConfigured = false;
+      return;
+    }
 
-  if (window.GDrive && typeof window.GDrive.addAuthListener === 'function') {
-    window.GDrive.addAuthListener((authed) => {
-      if (authed) {
-        initialLoad();
+    supabaseClient = window.supabase.createClient(url, anonKey, {
+      auth: {
+        persistSession: true,
+        storage: window.localStorage,
+        autoRefreshToken: true
       }
     });
+    hasRemoteConfigured = true;
   }
+
+  // Public Store API -------------------------------------------------------
+  const storeApi = {
+    get(key, defaultValue=null){
+      const local = localStorage.getItem(localKey(key));
+      if (local === null || local === undefined) return defaultValue;
+      try { return JSON.parse(local); } catch { return defaultValue; }
+    },
+    set(key, value){
+      payload[key] = value;
+      try { localStorage.setItem(localKey(key), JSON.stringify(value)); } catch (e) { console.warn('Local save failed', e); }
+      scheduleSave();
+      notifyData([key]);
+    },
+    remove(key){
+      delete payload[key];
+      localStorage.removeItem(localKey(key));
+      scheduleSave();
+      notifyData([key]);
+    },
+    onSyncStatus(fn){ statusHandlers.push(fn); fn(lastStatus); },
+    subscribe(fn){ dataHandlers.push(fn); },
+    async flush(){ await flushPending(); },
+    status(){ return lastStatus; }
+  };
+
+  // Public Auth API --------------------------------------------------------
+  const authHandlers = [];
+
+  function emitAuthChange(user){
+    authHandlers.forEach(fn => { try { fn(user); } catch (e) { console.error(e); } });
+    window.dispatchEvent(new CustomEvent('store:auth', { detail: user }));
+  }
+
+  const authApi = {
+    async signIn(email, password){
+      ensureSupabase();
+      if (!hasRemoteConfigured) throw new Error('Supabase is not configured. Edit scripts/app-config.js with your project keys.');
+      const { error, data } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      currentUser = data.user;
+      emitAuthChange(currentUser);
+      await loadRemoteState(currentUser);
+      return data.user;
+    },
+    async signUp(email, password){
+      ensureSupabase();
+      if (!hasRemoteConfigured) throw new Error('Supabase is not configured.');
+      const { error, data } = await supabaseClient.auth.signUp({ email, password });
+      if (error) throw error;
+      return data.user;
+    },
+    async signOut(){
+      if (hasRemoteConfigured && supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      currentUser = null;
+      payload = {};
+      clearLocalCache();
+      emitAuthChange(null);
+      setStatus('idle');
+    },
+    onChange(fn){ authHandlers.push(fn); fn(currentUser); },
+    getUser(){ return currentUser; },
+    async requireAuth(){
+      ensureSupabase();
+      if (!hasRemoteConfigured) throw new Error('Supabase config missing.');
+      if (currentUser) return currentUser;
+      const existing = await supabaseClient.auth.getSession();
+      if (existing?.data?.session?.user) {
+        currentUser = existing.data.session.user;
+        emitAuthChange(currentUser);
+        await loadRemoteState(currentUser);
+        return currentUser;
+      }
+      return Promise.reject(new Error('Not authenticated'));
+    }
+  };
+
+  // Boot -------------------------------------------------------------------
+  payload = readLocalCache();
+
+  ensureSupabase();
+
+  if (hasRemoteConfigured) {
+    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+      const user = session?.user || null;
+      currentUser = user;
+      emitAuthChange(user);
+      if (user) {
+        payload = { ...payload }; // keep local until remote load merges
+        await loadRemoteState(user);
+      } else {
+        payload = readLocalCache();
+        setStatus('idle');
+      }
+    });
+
+    // restore session if available
+    supabaseClient.auth.getSession().then(async ({ data }) => {
+      const user = data?.session?.user || null;
+      currentUser = user;
+      if (user) {
+        emitAuthChange(user);
+        await loadRemoteState(user);
+      } else {
+        emitAuthChange(null);
+        setStatus('idle');
+      }
+    }).catch(() => {
+      emitAuthChange(null);
+      setStatus('idle');
+    });
+  } else {
+    setStatus('idle');
+    emitAuthChange(null);
+  }
+
+  window.StoreSync = storeApi;
+  window.store = storeApi;
+  window.CloudAuth = authApi;
 })();

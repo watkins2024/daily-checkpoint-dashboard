@@ -61,17 +61,12 @@
   <a href="business.html">Business</a>
   <a href="leverage.html">Leverage</a>
   <a href="household.html">Household</a>
-  <button id="syncNowBtn" class="btn btn-sm btn-ghost" style="margin-left:auto;">Sync now</button>
-  <button id="gdriveSignBtn" class="btn btn-sm btn-ghost" style="margin-left:8px;">Sign in</button>
-  <span id="authStatus" style="margin-left:8px;align-self:center;color:#9aa0a6;font-size:13px">Not signed in</span>
-  <span id="syncStatus" style="margin-left:8px;align-self:center;color:#9aa0a6;font-size:13px">sync: idle</span>
 </div>
 
 <header>
   <h1>Walks & Reflection</h1>
   <div>
     <button class="btn" onclick="openModal('walkModal')">Log Walk</button>
-    <button class="btn btn-ghost" onclick="exportData()">Export to Drive</button>
   </div>
 </header>
 
@@ -131,10 +126,10 @@
   </div>
 </div>
 
-<!-- load GDrive helper + shared store-sync (store will be available as window.store) -->
-<script src="scripts/gdrive.js?v=20241011"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="scripts/app-config.js"></script>
 <script src="scripts/store-sync.js"></script>
-<script src="scripts/gdrive-ui.js?v=20241011"></script>
+<script src="scripts/auth-ui.js"></script>
 <script>
 
 function openModal(id) {
@@ -256,58 +251,20 @@ function updateStreak() {
   document.getElementById('streakNumber').textContent = streak;
 }
 
-function exportData() {
-  const data = {
-    walks: store.get('fh.walks', []),
-    exportDate: new Date().toISOString()
-  };
-  const filename = `walks-backup-${new Date().toISOString().slice(0,10)}.json`;
-
-  (async function(){
-    try {
-      if (window.GDriveUI && typeof window.GDriveUI.ensureLoaded === 'function') {
-        await window.GDriveUI.ensureLoaded();
-      }
-
-      if (window.GDrive) {
-        await window.GDrive.withAuth(() => window.GDrive.uploadJson(filename, data));
-        alert('Backup uploaded to Google Drive (appDataFolder)');
-        return;
-      }
-    } catch (err) {
-      console.error('Drive upload failed', err);
-    }
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  })();
-}
-
 getMoonPhase();
 renderWalks();
 updateStreak();
 
-const driveUI = window.GDriveUI && window.GDriveUI.attach({
-  signInButtonId: 'gdriveSignBtn',
-  authLabelId: 'authStatus',
-  syncStatusId: 'syncStatus',
-  syncButtonId: 'syncNowBtn',
-  onSyncIdle: () => {
-    renderWalks();
-    updateStreak();
-  }
+window.addEventListener('store:data', () => {
+  renderWalks();
+  updateStreak();
 });
 
-if (!driveUI && document.getElementById('syncNowBtn')) {
-  document.getElementById('syncNowBtn').addEventListener('click', () => {
-    alert('Sync helper failed to load. Please refresh the page.');
-  });
-}
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.DashboardAuth) {
+    window.DashboardAuth.init();
+  }
+});
 </script>
 
 </body>
