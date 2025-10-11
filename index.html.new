@@ -40,35 +40,35 @@
     <div class="sub">Refined, high‑tech UI — select an area to begin</div>
 
     <div class="grid">
-      <a class="tile" href="/walks.html">
+  <a class="tile" href="walks.html">
         <h2>Walks</h2>
         <p>Log a short walk & reflection</p>
         <span class="action-link">Open</span>
         <div class="accent-line"></div>
       </a>
 
-      <a class="tile" href="/work.html">
+  <a class="tile" href="work.html">
         <h2>Work & Study</h2>
         <p>Notes, tasks, timer</p>
         <span class="action-link">Open</span>
         <div class="accent-line"></div>
       </a>
 
-      <a class="tile" href="/household.html">
+  <a class="tile" href="household.html">
         <h2>Household</h2>
         <p>Net worth & quick entry</p>
         <span class="action-link">Open</span>
         <div class="accent-line"></div>
       </a>
 
-      <a class="tile" href="/leverage.html">
+  <a class="tile" href="leverage.html">
         <h2>Leverage</h2>
         <p>Micro‑steps to progress</p>
         <span class="action-link">Open</span>
         <div class="accent-line"></div>
       </a>
 
-      <a class="tile" href="/business.html">
+  <a class="tile" href="business.html">
         <h2>Business</h2>
         <p>Operations & leads</p>
         <span class="action-link">Open</span>

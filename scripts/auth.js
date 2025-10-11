@@ -28,7 +28,7 @@
     return sessionStorage.getItem('session.isAuthenticated') === '1';
   }
 
-  function requireAuth(redirectTo='/login.html') {
+  function requireAuth(redirectTo='login.html') {
     if (!isAuthenticated()) {
       window.location.href = redirectTo;
     }
@@ -36,7 +36,7 @@
 
   function signOut() {
     sessionStorage.removeItem('session.isAuthenticated');
-    window.location.href = '/login.html';
+  window.location.href = 'login.html';
   }
 
   window.SimpleAuth = { signIn, isAuthenticated, requireAuth, signOut };

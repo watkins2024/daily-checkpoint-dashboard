@@ -31,11 +31,11 @@
     <div style="text-align:center;color:var(--muted);margin-bottom:14px">Two rows of three — quick access</div>
 
     <div class="grid">
-      <a class="tile" href="/walks.html"><h2>Walks</h2><p>Log a walk</p><span class="btn">Open</span></a>
-      <a class="tile" href="/work.html"><h2>Work</h2><p>Notes & tasks</p><span class="btn">Open</span></a>
-      <a class="tile" href="/household.html"><h2>Household</h2><p>Net worth</p><span class="btn">Open</span></a>
-      <a class="tile" href="/leverage.html"><h2>Leverage</h2><p>Micro steps</p><span class="btn">Open</span></a>
-      <a class="tile" href="/business.html"><h2>Business</h2><p>Operations</p><span class="btn">Open</span></a>
+      <a class="tile" href="walks.html"><h2>Walks</h2><p>Log a walk</p><span class="btn">Open</span></a>
+      <a class="tile" href="work.html"><h2>Work</h2><p>Notes & tasks</p><span class="btn">Open</span></a>
+      <a class="tile" href="household.html"><h2>Household</h2><p>Net worth</p><span class="btn">Open</span></a>
+      <a class="tile" href="leverage.html"><h2>Leverage</h2><p>Micro steps</p><span class="btn">Open</span></a>
+      <a class="tile" href="business.html"><h2>Business</h2><p>Operations</p><span class="btn">Open</span></a>
       <a class="tile" id="reminderTile" href="#" style="cursor:pointer"><h2 id="reminderTitle">Reminder</h2><p id="reminderBody">Loading…</p><span class="btn" id="reminderBtn">Go</span></a>
     </div>
   </div>
@@ -51,11 +51,11 @@
       tile.onclick = (e)=>{
         e.preventDefault();
         try{ const prog = window.store.get('fh.progress',[]); prog.unshift({date:Date.now(),text:'Started: '+next.title}); window.store.set('fh.progress', prog.slice(0,200)); }catch(e){}
-        if(next.action==='walk') location.href='/walks.html';
-        else if(next.action==='household') location.href='/household.html';
-        else if(next.action==='leverage') location.href='/leverage.html';
-        else if(next.action==='work') location.href='/work.html';
-        else if(next.action==='business') location.href='/business.html';
+  if(next.action==='walk') location.href='walks.html';
+  else if(next.action==='household') location.href='household.html';
+  else if(next.action==='leverage') location.href='leverage.html';
+  else if(next.action==='work') location.href='work.html';
+  else if(next.action==='business') location.href='business.html';
         else if(window.WhatsNext && window.WhatsNext.showModal) window.WhatsNext.showModal(next.title,next.body,()=>{},()=>{});
       };
     }
