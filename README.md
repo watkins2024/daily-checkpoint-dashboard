@@ -1,6 +1,8 @@
 Daily Checkpoint Dashboard
 ==========================
 
+> **✨ NEW: [Version 2.0](./README-V2.md) is now available!** Features advanced analytics, smart insights, keyboard shortcuts, PWA support, and a modern modular architecture. [Check it out →](./README-V2.md)
+
 This repo hosts a fully client-side dashboard (vanilla HTML/CSS/JS) for logging walks, work, business ops, leverage planning, and household runway. Data is cached in `localStorage` for offline use and mirrored to Supabase so every page stays in sync across devices.
 
 Key features

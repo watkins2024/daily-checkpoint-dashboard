@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daily Checkpoint Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/styles/design-system.css">
+  <style>
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--space-xl);
+    }
+
+    .hero {
+      text-align: center;
+      padding: var(--space-2xl) 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(123, 227, 255, 0.1) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: var(--space-md);
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto var(--space-xl);
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav-tiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .nav-tile {
+      background: var(--bg-card);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-tile::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--gradient-primary);
+      opacity: 0;
+      transition: opacity var(--transition-base);
+    }
+
+    .nav-tile:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+      border-color: var(--accent-primary);
+    }
+
+    .nav-tile:hover::before {
+      opacity: 1;
+    }
+
+    .nav-tile-icon {
+      font-size: 3rem;
+      margin-bottom: var(--space-md);
+    }
+
+    .nav-tile h3 {
+      font-size: 1.5rem;
+      margin-bottom: var(--space-sm);
+    }
+
+    .nav-tile p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-md);
+      padding: var(--space-lg);
+      background: rgba(20, 25, 40, 0.6);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .quick-stat {
+      text-align: center;
+    }
+
+    .quick-stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .quick-stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 4px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) var(--space-xl);
+      background: rgba(20, 25, 40, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-primary);
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .top-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .search-box {
+      position: relative;
+      display: none;
+    }
+
+    .search-box.active {
+      display: block;
+    }
+
+    .search-input {
+      width: 300px;
+      padding: 8px 16px 8px 40px;
+      background: rgba(10, 15, 25, 0.8);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-full);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .analytics-section {
+      margin-top: var(--space-2xl);
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .search-box {
+        position: fixed;
+        top: 80px;
+        left: var(--space-md);
+        right: var(--space-md);
+        z-index: var(--z-fixed);
+      }
+
+      .search-input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="logo">⚡ DAILY CHECKPOINT</div>
+      <div class="search-box" id="searchBox">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="Search... (Ctrl+/)" id="searchInput">
+      </div>
+    </div>
+    <div class="top-bar-actions">
+      <button class="btn btn-ghost btn-sm" id="shortcutsBtn" title="Keyboard Shortcuts (?)">
+        ⌨️
+      </button>
+      <button class="btn btn-ghost btn-sm" id="exportBtn" title="Export Data">
+        📥
+      </button>
+      <div class="dash-auth-status-pill" id="dash-auth-status">Not signed in</div>
+      <button class="nav-btn secondary" id="dash-signout-btn">Sign out</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="hero fade-in">
+      <h1>Your Command Center</h1>
+      <p>Track walks, work, finances, and leverage. All your daily checkpoints in one intelligent dashboard.</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-bar fade-in-up">
+      <div class="quick-stat">
+        <div class="quick-stat-value" id="walkStreak">0</div>
+        <div class="quick-stat-label">Walk Streak</div>
+      </div>
+      <div class="quick-stat">
+        <div class="quick-stat-value" id="tasksCompleted">0</div>
+        <div class="quick-stat-label">Tasks Done</div>
+      </div>
+      <div class="quick-stat">
+        <div class="quick-stat-value" id="runwayMonths">-</div>
+        <div class="quick-stat-label">Runway (mo)</div>
+      </div>
+      <div class="quick-stat">
+        <div class="quick-stat-value" id="leverageSteps">0</div>
+        <div class="quick-stat-label">Leverage Steps</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tiles -->
+    <div class="nav-tiles">
+      <a class="nav-tile fade-in-up" href="walks.html" style="animation-delay: 0.1s">
+        <div class="nav-tile-icon">🚶</div>
+        <h3>Walks</h3>
+        <p>Log dawn walks, track streaks, and moon phases</p>
+      </a>
+
+      <a class="nav-tile fade-in-up" href="work.html" style="animation-delay: 0.15s">
+        <div class="nav-tile-icon">💼</div>
+        <h3>Work & Study</h3>
+        <p>Schedule, class notes, and focus sessions</p>
+      </a>
+
+      <a class="nav-tile fade-in-up" href="household.html" style="animation-delay: 0.2s">
+        <div class="nav-tile-icon">🏠</div>
+        <h3>Household</h3>
+        <p>Track runway, net worth, and savings rate</p>
+      </a>
+
+      <a class="nav-tile fade-in-up" href="leverage.html" style="animation-delay: 0.25s">
+        <div class="nav-tile-icon">⚡</div>
+        <h3>Leverage</h3>
+        <p>Micro steps toward building leverage</p>
+      </a>
+
+      <a class="nav-tile fade-in-up" href="business.html" style="animation-delay: 0.3s">
+        <div class="nav-tile-icon">📊</div>
+        <h3>Business</h3>
+        <p>Operations, pipeline, and daily stand-ups</p>
+      </a>
+
+      <a class="nav-tile fade-in-up" href="#analytics" id="analyticsTile" style="animation-delay: 0.35s">
+        <div class="nav-tile-icon">📈</div>
+        <h3>Analytics</h3>
+        <p>Insights, trends, and predictions</p>
+        <span class="badge badge-primary mt-md">New</span>
+      </a>
+    </div>
+
+    <!-- Analytics Dashboard -->
+    <div class="analytics-section" id="analyticsContainer"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="scripts/app-config.js"></script>
+  <script src="scripts/store-sync.js"></script>
+  <script src="scripts/auth-ui.js"></script>
+  <script src="scripts/whatsnext.js"></script>
+
+  <script type="module">
+    import { AnalyticsDashboard } from './src/components/AnalyticsDashboard.js';
+    import { toast } from './src/components/Toast.js';
+    import { shortcuts } from './src/components/KeyboardShortcuts.js';
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.DashboardAuth) {
+        window.DashboardAuth.init();
+      }
+
+      // Update quick stats
+      updateQuickStats();
+      window.addEventListener('store:data', updateQuickStats);
+
+      // Load analytics dashboard
+      const analyticsContainer = document.getElementById('analyticsContainer');
+      const dashboard = new AnalyticsDashboard();
+      dashboard.mount(analyticsContainer);
+
+      // Setup search
+      const searchBox = document.getElementById('searchBox');
+      const searchInput = document.getElementById('searchInput');
+
+      window.addEventListener('toggle-search', () => {
+        searchBox.classList.toggle('active');
+        if (searchBox.classList.contains('active')) {
+          searchInput.focus();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent('toggle-search'));
+        }
+      });
+
+      // Export functionality
+      document.getElementById('exportBtn').addEventListener('click', exportData);
+
+      // Shortcuts button
+      document.getElementById('shortcutsBtn').addEventListener('click', () => {
+        shortcuts.showHelp();
+      });
+
+      // Scroll to analytics
+      document.getElementById('analyticsTile').addEventListener('click', (e) => {
+        e.preventDefault();
+        analyticsContainer.scrollIntoView({ behavior: 'smooth' });
+      });
+
+      // Register keyboard shortcuts
+      shortcuts
+        .register('w', 'Open Walks', () => window.location.href = 'walks.html')
+        .register('h', 'Open Household', () => window.location.href = 'household.html')
+        .register('b', 'Open Business', () => window.location.href = 'business.html')
+        .register('l', 'Open Leverage', () => window.location.href = 'leverage.html')
+        .register('e', 'Export Data', exportData);
+
+      toast.success('Dashboard loaded! Press ? for keyboard shortcuts.', { duration: 3000 });
+    });
+
+    function updateQuickStats() {
+      // Walk streak
+      const walks = window.store.get('fh.walks', []);
+      const days = new Set(walks.map(w => w.date.slice(0, 10)));
+      let streak = 0;
+      let d = new Date();
+      while (days.has(d.toISOString().slice(0, 10))) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      }
+      document.getElementById('walkStreak').textContent = streak;
+
+      // Tasks completed
+      const progress = window.store.get('fh.progress', []);
+      const completed = progress.filter(p => p.text.includes('Completed')).length;
+      document.getElementById('tasksCompleted').textContent = completed;
+
+      // Runway
+      const timeline = window.store.get('house.timeline', []);
+      if (timeline.length >= 2) {
+        const sorted = [...timeline].sort((a, b) => new Date(a.when) - new Date(b.when));
+        const first = sorted[0];
+        const last = sorted[sorted.length - 1];
+        const months = Math.max(1, (new Date(last.when) - new Date(first.when)) / (1000 * 60 * 60 * 24 * 30));
+        const change = first.total - last.total;
+        const burnRate = change / months;
+        const runway = burnRate > 0 ? (last.total / burnRate).toFixed(1) : '∞';
+        document.getElementById('runwayMonths').textContent = runway;
+      }
+
+      // Leverage steps
+      const sprint = window.store.get('fh.sprint', []);
+      const done = sprint.filter(s => s.done).length;
+      document.getElementById('leverageSteps').textContent = `${done}/${sprint.length}`;
+    }
+
+    function exportData() {
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('dash.')) {
+          data[key.replace('dash.', '')] = JSON.parse(localStorage.getItem(key));
+        }
+      }
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dashboard-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast.success('Data exported successfully!');
+    }
+  </script>
+</body>
+</html>

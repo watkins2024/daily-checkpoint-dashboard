@@ -1,0 +1,59 @@
+{
+  "name": "Daily Checkpoint Dashboard",
+  "short_name": "Checkpoint",
+  "description": "Your personal command center for tracking walks, work, finances, and leverage",
+  "start_url": "./index-v2.html",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#7be3ff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "lifestyle", "health"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Log Walk",
+      "short_name": "Walk",
+      "description": "Quickly log a dawn walk",
+      "url": "./walks.html",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Work & Study",
+      "short_name": "Work",
+      "description": "View work schedule",
+      "url": "./work.html",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Household",
+      "short_name": "Finances",
+      "description": "Check financial runway",
+      "url": "./household.html",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
