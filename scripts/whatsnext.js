@@ -1,4 +1,4 @@
-// whatsnext.js — small helper for "What's Next?" modal and priority logic
+// whatsnext.js — priority engine for "What's Next?" across all dashboard areas
 (function(){
   if (window.WhatsNext) return;
 
@@ -26,31 +26,97 @@
     modal.querySelector('#wnBody').innerHTML = body;
   }
 
-  // Simple priority logic for Command Center
+  function getWeekKey(){
+    var d = new Date();
+    var year = d.getFullYear();
+    var week = Math.ceil((d - new Date(year,0,1)) / (7*24*60*60*1000));
+    return year + '-W' + week;
+  }
+
+  // Priority engine — checks all areas in order of urgency
   function computeNext(store) {
-    // Rule order (as requested):
-    // 1) walk not logged today -> prompt walk
-    const walks = store.get('fh.walks', []);
-    const today = new Date().toISOString().slice(0,10);
-    if (!walks.some(w => w.date && w.date.slice(0,10) === today)) {
-      return { title: 'Log your walk', body: 'You haven\'t logged a walk today. Quick reflection helps.', action: 'walk' };
+    if (!store || !store.get) return { title: 'All caught up', body: '', action: 'idle' };
+
+    var today = new Date().toISOString().slice(0,10);
+    var hour = new Date().getHours();
+
+    // 1. Morning: walk not logged today -> prompt walk (before noon)
+    if (hour < 14) {
+      var walks = store.get('fh.walks', []);
+      if (!walks.some(function(w){ return w.date && w.date.slice(0,10) === today; })) {
+        return { title: 'Log your walk', body: 'You haven\'t logged a walk today. A quick dawn walk and reflection helps build momentum.', action: 'walk' };
+      }
     }
 
-    // 2) household balance >7 days old -> prompt entry
-    const lastHouse = store.get('household.lastEntry', 0) || (store.get('house.timeline', [])[0] && new Date(store.get('house.timeline', [])[0].when).getTime());
-    if (!lastHouse || (Date.now() - new Date(lastHouse).getTime()) > 7*24*3600*1000) {
-      return { title: 'Update household balance', body: 'It looks like your household total needs an update (7+ days).', action: 'household' };
+    // 2. Work tasks incomplete (during work hours)
+    if (hour >= 7 && hour < 18) {
+      var tasks = store.get('work.tasks', []);
+      var pending = tasks.filter(function(t){ return !t.done; });
+      var highPriority = pending.filter(function(t){ return t.priority === 'high'; });
+      if (highPriority.length > 0) {
+        return { title: 'High priority task', body: highPriority[0].text + ' (' + highPriority.length + ' high priority remaining)', action: 'work' };
+      }
     }
 
-    // 3) leverage action incomplete -> show micro-step
-    const sprint = store.get('fh.sprint', []);
-    if (sprint && sprint.length) {
-      const next = sprint.find(s => !s.done);
-      if (next) return { title: 'Next Leverage Step', body: next.text, action: 'leverage' };
+    // 3. Business outreach (if less than 2 outreach this week)
+    var outreach = store.get('fh.outreach', {count:0, week:''});
+    var weekKey = getWeekKey();
+    var outreachCount = outreach.week === weekKey ? outreach.count : 0;
+    if (outreachCount < 2) {
+      var sprint = store.get('fh.sprint', []);
+      var nextSprint = null;
+      for (var i = 0; i < sprint.length; i++) {
+        if (!sprint[i].done) { nextSprint = sprint[i]; break; }
+      }
+      if (nextSprint) {
+        return { title: 'Business sprint', body: nextSprint.text + ' (' + outreachCount + ' outreach this week)', action: 'business' };
+      }
+    }
+
+    // 4. Leverage action — no action logged today
+    var levActions = store.get('lev.actions', []);
+    var levToday = levActions.some(function(a){ return a.date && a.date.slice(0,10) === today; });
+    if (!levToday) {
+      var ladder = store.get('lev.ladder', []);
+      if (ladder.length > 0) {
+        var focusIdx = store.get('lev.focus', 0);
+        var focusMetric = ladder[focusIdx] || ladder[0];
+        return { title: 'Leverage step', body: 'Take one step on "' + focusMetric.name + '". Small moves compound.', action: 'leverage' };
+      }
+    }
+
+    // 5. Household balance >7 days old
+    var lastHouse = store.get('household.lastEntry', 0);
+    if (!lastHouse || (Date.now() - lastHouse) > 7*24*3600*1000) {
+      return { title: 'Update household balance', body: 'It\'s been ' + (lastHouse ? Math.floor((Date.now() - lastHouse)/86400000) + ' days' : 'a while') + ' since your last household update.', action: 'household' };
+    }
+
+    // 6. Walk not logged (afternoon reminder if still not done)
+    var walksAll = store.get('fh.walks', []);
+    if (!walksAll.some(function(w){ return w.date && w.date.slice(0,10) === today; })) {
+      return { title: 'Log your walk', body: 'Still no walk logged today. Even a short one counts.', action: 'walk' };
+    }
+
+    // 7. Daily work summary not written
+    var summaries = store.get('work.dailySummaries', {});
+    if (!summaries[today] && hour >= 15) {
+      return { title: 'Write daily summary', body: 'Reflect on your work day while it\'s fresh.', action: 'work' };
+    }
+
+    // 8. End-of-day checkpoint
+    if (hour >= 19) {
+      return { title: 'Daily checkpoint', body: 'Review your day and set tomorrow\'s focus.', action: 'checkpoint' };
+    }
+
+    // 9. Remaining work tasks
+    var allTasks = store.get('work.tasks', []);
+    var remaining = allTasks.filter(function(t){ return !t.done; });
+    if (remaining.length > 0) {
+      return { title: 'Finish tasks', body: remaining.length + ' task' + (remaining.length > 1 ? 's' : '') + ' remaining: ' + remaining[0].text, action: 'work' };
     }
 
     return { title: 'All caught up', body: 'No high-priority next actions. Good work!', action: 'idle' };
   }
 
-  window.WhatsNext = { showModal, computeNext };
+  window.WhatsNext = { showModal: showModal, computeNext: computeNext };
 })();

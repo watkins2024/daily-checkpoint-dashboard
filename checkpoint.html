@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daily Checkpoint — Review</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-primary:#060e1a;
+      --surface:rgba(8,16,32,0.9);
+      --muted:#95b0c8;
+      --accent:#7be3ff;
+      --accent-alt:#6cf3b1;
+      --tile-border:rgba(120,180,255,0.08);
+      --good:#10b981;
+      --warn:#f59e0b;
+      --miss:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Noto Sans JP',system-ui,-apple-system,'Segoe UI',Arial;background:linear-gradient(180deg,#060e1a,#081226);color:#e8f7ff;min-height:100vh}
+
+    .top-nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:10px 20px;background:rgba(7,16,32,0.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(123,227,255,0.08)}
+    .top-nav a{color:#8ea6c0;text-decoration:none;padding:8px 12px;border-radius:8px;font-size:14px;transition:background 0.2s,color 0.2s}
+    .top-nav a:hover,.top-nav a.active{color:var(--accent);background:rgba(123,227,255,0.1)}
+    .top-nav .spacer{flex:1}
+
+    .wrap{max-width:720px;margin:0 auto;padding:28px 20px 80px}
+    h1{font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:0.08em;margin:0 0 4px;font-size:26px;color:#dff8ff}
+    .sub{color:var(--muted);font-size:14px;margin:0 0 28px}
+
+    .score-bar{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--tile-border);border-radius:16px;padding:20px 24px;margin-bottom:28px}
+    .score-ring{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;flex-shrink:0}
+    .score-text{flex:1}
+    .score-title{font-size:18px;font-weight:600;color:#fff;margin-bottom:2px}
+    .score-detail{font-size:13px;color:var(--muted)}
+
+    .checklist{display:grid;gap:12px;margin-bottom:28px}
+    .check-item{background:var(--surface);border:1px solid var(--tile-border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px}
+    .check-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:700}
+    .check-icon.yes{background:rgba(16,185,129,0.2);color:var(--good)}
+    .check-icon.no{background:rgba(239,68,68,0.15);color:var(--miss)}
+    .check-icon.partial{background:rgba(245,158,11,0.15);color:var(--warn)}
+    .check-text{flex:1}
+    .check-label{font-size:14px;color:#fff;font-weight:500}
+    .check-detail{font-size:12px;color:var(--muted);margin-top:2px}
+    .check-link{color:var(--accent);text-decoration:none;font-size:12px;flex-shrink:0;padding:6px 12px;border:1px solid rgba(123,227,255,0.2);border-radius:8px;transition:background .2s}
+    .check-link:hover{background:rgba(123,227,255,0.1)}
+
+    .section{margin-bottom:28px}
+    .section h2{font-family:'Rajdhani',sans-serif;font-size:18px;letter-spacing:0.06em;margin:0 0 12px;color:#dff8ff}
+
+    textarea{width:100%;padding:14px;border-radius:12px;border:1px solid rgba(123,227,255,0.16);background:rgba(4,12,20,0.7);color:#e8f7ff;font-size:14px;font-family:inherit;resize:vertical;min-height:100px}
+    textarea:focus{outline:none;border-color:rgba(123,227,255,0.4);box-shadow:0 0 0 3px rgba(123,227,255,0.15)}
+
+    .btn{border:none;border-radius:12px;padding:12px 20px;font-size:14px;font-family:inherit;cursor:pointer;transition:transform .18s,box-shadow .18s;background:linear-gradient(90deg,var(--accent),var(--accent-alt));color:#05121d;font-weight:700;box-shadow:0 12px 30px rgba(123,227,255,0.2)}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 14px 32px rgba(123,227,255,0.3)}
+    .btn-ghost{background:transparent;border:1px solid rgba(123,227,255,0.2);color:var(--muted);box-shadow:none;font-weight:400}
+    .btn-ghost:hover{background:rgba(123,227,255,0.08)}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap}
+
+    .past-entries{display:grid;gap:10px;margin-top:12px}
+    .past-entry{background:rgba(255,255,255,0.03);border:1px solid var(--tile-border);border-radius:10px;padding:14px}
+    .past-date{font-size:12px;color:var(--accent);margin-bottom:6px;font-weight:600}
+    .past-score{font-size:12px;color:var(--muted);float:right}
+    .past-text{font-size:13px;color:#cfe2ff;line-height:1.5}
+    .past-wins{font-size:12px;color:var(--good);margin-top:6px}
+    .past-focus{font-size:12px;color:var(--warn);margin-top:4px}
+
+    .saved-msg{display:none;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#b4f8d3;padding:12px 18px;border-radius:10px;font-size:14px;margin-bottom:16px}
+    .saved-msg.visible{display:block}
+  </style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="index.html">Hub</a>
+  <a href="walks.html">Walks</a>
+  <a href="work.html">Work</a>
+  <a href="business.html">Business</a>
+  <a href="leverage.html">Leverage</a>
+  <a href="household.html">Household</a>
+  <a href="checkpoint.html" class="active">Checkpoint</a>
+  <div class="spacer"></div>
+</nav>
+
+<div class="wrap">
+  <h1>Daily Checkpoint</h1>
+  <p class="sub" id="dateLine"></p>
+
+  <!-- Score bar -->
+  <div class="score-bar">
+    <div class="score-ring" id="scoreRing" style="background:conic-gradient(var(--accent) 0%, #1a2a3a 0%)">0</div>
+    <div class="score-text">
+      <div class="score-title" id="scoreTitle">Calculating...</div>
+      <div class="score-detail" id="scoreDetail"></div>
+    </div>
+  </div>
+
+  <!-- Today's checklist -->
+  <div class="checklist" id="checklist"></div>
+
+  <div id="savedMsg" class="saved-msg">Checkpoint saved!</div>
+
+  <!-- Reflection -->
+  <div class="section">
+    <h2>Reflection</h2>
+    <textarea id="reflectionText" placeholder="How did today go? What worked, what didn't?"></textarea>
+  </div>
+
+  <!-- Wins -->
+  <div class="section">
+    <h2>Today's wins</h2>
+    <textarea id="winsText" rows="3" placeholder="What went well today? Even small wins count." style="min-height:70px"></textarea>
+  </div>
+
+  <!-- Tomorrow's focus -->
+  <div class="section">
+    <h2>Tomorrow's focus</h2>
+    <textarea id="focusText" rows="3" placeholder="One or two things to prioritise tomorrow." style="min-height:70px"></textarea>
+  </div>
+
+  <div class="btn-row" style="margin-bottom:28px">
+    <button class="btn" id="saveBtn" onclick="saveCheckpoint()">Save checkpoint</button>
+    <button class="btn btn-ghost" onclick="exportCheckpoints()">Export all checkpoints</button>
+  </div>
+
+  <!-- Past checkpoints -->
+  <div class="section">
+    <h2>Past checkpoints</h2>
+    <div class="past-entries" id="pastEntries">
+      <div style="color:#556;font-size:13px">No past checkpoints yet.</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="scripts/app-config.js"></script>
+<script src="scripts/store-sync.js"></script>
+<script src="scripts/auth-ui.js"></script>
+<script>
+(function(){
+  var today = new Date().toISOString().slice(0,10);
+  document.getElementById('dateLine').textContent = new Date().toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  function escapeHtml(s){
+    return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Compute today's status across all areas
+  function computeChecklist(){
+    var items = [];
+    var score = 0;
+    var total = 0;
+
+    // 1. Walk
+    total++;
+    var walks = store.get('fh.walks', []);
+    var walkedToday = walks.some(function(w){ return w.date && w.date.slice(0,10) === today; });
+    if(walkedToday){ score++; }
+    items.push({
+      label: 'Walk logged',
+      detail: walkedToday ? 'Walked today' : 'No walk logged today',
+      state: walkedToday ? 'yes' : 'no',
+      link: 'walks.html',
+      linkText: walkedToday ? 'View' : 'Log walk'
+    });
+
+    // 2. Work tasks
+    total++;
+    var tasks = store.get('work.tasks', []);
+    var doneTasks = tasks.filter(function(t){ return t.done; }).length;
+    var totalTasks = tasks.length;
+    var tasksDone = totalTasks > 0 && doneTasks === totalTasks;
+    var tasksPartial = totalTasks > 0 && doneTasks > 0 && doneTasks < totalTasks;
+    if(tasksDone) score++;
+    else if(tasksPartial) score += 0.5;
+    items.push({
+      label: 'Work tasks',
+      detail: totalTasks === 0 ? 'No tasks set' : doneTasks + '/' + totalTasks + ' completed',
+      state: tasksDone ? 'yes' : tasksPartial ? 'partial' : (totalTasks === 0 ? 'no' : 'no'),
+      link: 'work.html',
+      linkText: tasksDone ? 'View' : 'Open tasks'
+    });
+
+    // 3. Daily summary
+    total++;
+    var summaries = store.get('work.dailySummaries', {});
+    var hasSummary = !!summaries[today];
+    if(hasSummary) score++;
+    items.push({
+      label: 'Daily summary',
+      detail: hasSummary ? 'Written today' : 'Not written yet',
+      state: hasSummary ? 'yes' : 'no',
+      link: 'work.html',
+      linkText: hasSummary ? 'View' : 'Write summary'
+    });
+
+    // 4. Business action
+    total++;
+    var outreach = store.get('fh.outreach', {count:0, week:''});
+    var weekKey = getWeekKey();
+    var outreachCount = outreach.week === weekKey ? outreach.count : 0;
+    var progress = store.get('fh.progress', []);
+    var bizToday = progress.some(function(p){ return p.date && new Date(p.date).toISOString().slice(0,10) === today; });
+    var bizDone = outreachCount > 0 || bizToday;
+    if(bizDone) score++;
+    items.push({
+      label: 'Business action',
+      detail: outreachCount + ' outreach this week' + (bizToday ? ', logged today' : ''),
+      state: bizDone ? 'yes' : 'no',
+      link: 'business.html',
+      linkText: bizDone ? 'View' : 'Take action'
+    });
+
+    // 5. Leverage step
+    total++;
+    var levActions = store.get('lev.actions', []);
+    var levToday = levActions.some(function(a){ return a.date && a.date.slice(0,10) === today; });
+    if(levToday) score++;
+    items.push({
+      label: 'Leverage step',
+      detail: levToday ? 'Action taken today' : 'No leverage action today',
+      state: levToday ? 'yes' : 'no',
+      link: 'leverage.html',
+      linkText: levToday ? 'View' : 'Take step'
+    });
+
+    // 6. Household current
+    total++;
+    var lastHouse = store.get('household.lastEntry', 0);
+    var houseCurrent = lastHouse && (Date.now() - lastHouse) < 7*24*3600*1000;
+    if(houseCurrent) score++;
+    var daysSince = lastHouse ? Math.floor((Date.now() - lastHouse) / 86400000) : null;
+    items.push({
+      label: 'Household updated',
+      detail: daysSince !== null ? (daysSince === 0 ? 'Updated today' : daysSince + ' days ago') : 'Never updated',
+      state: houseCurrent ? 'yes' : 'no',
+      link: 'household.html',
+      linkText: houseCurrent ? 'View' : 'Update'
+    });
+
+    return { items: items, score: score, total: total };
+  }
+
+  function getWeekKey(){
+    var d = new Date();
+    var year = d.getFullYear();
+    var week = Math.ceil((d - new Date(year,0,1)) / (7*24*60*60*1000));
+    return year + '-W' + week;
+  }
+
+  function renderChecklist(){
+    var result = computeChecklist();
+    var pct = Math.round(result.score / result.total * 100);
+
+    // Score ring
+    var ring = document.getElementById('scoreRing');
+    ring.style.background = 'conic-gradient(var(--accent) ' + pct + '%, #1a2a3a ' + pct + '%)';
+    ring.textContent = pct + '%';
+
+    var title = document.getElementById('scoreTitle');
+    var detail = document.getElementById('scoreDetail');
+    if(pct >= 80){
+      title.textContent = 'Great day';
+      detail.textContent = result.score + ' of ' + result.total + ' areas active. Strong momentum.';
+    } else if(pct >= 50){
+      title.textContent = 'Solid progress';
+      detail.textContent = result.score + ' of ' + result.total + ' areas active. A few gaps to fill.';
+    } else if(pct > 0){
+      title.textContent = 'Getting started';
+      detail.textContent = result.score + ' of ' + result.total + ' areas active. Small moves add up.';
+    } else {
+      title.textContent = 'Fresh start';
+      detail.textContent = 'Nothing logged yet today. Pick one area and begin.';
+    }
+
+    // Checklist items
+    var container = document.getElementById('checklist');
+    container.innerHTML = result.items.map(function(item){
+      var icon = item.state === 'yes' ? '&#10003;' : item.state === 'partial' ? '~' : '&#10007;';
+      return '<div class="check-item">' +
+        '<div class="check-icon ' + item.state + '">' + icon + '</div>' +
+        '<div class="check-text"><div class="check-label">' + escapeHtml(item.label) + '</div>' +
+        '<div class="check-detail">' + escapeHtml(item.detail) + '</div></div>' +
+        '<a class="check-link" href="' + item.link + '">' + item.linkText + '</a>' +
+        '</div>';
+    }).join('');
+
+    return result;
+  }
+
+  // Load existing checkpoint for today
+  function loadTodayCheckpoint(){
+    var checkpoints = store.get('checkpoints', {});
+    var cp = checkpoints[today];
+    if(cp){
+      document.getElementById('reflectionText').value = cp.reflection || '';
+      document.getElementById('winsText').value = cp.wins || '';
+      document.getElementById('focusText').value = cp.focus || '';
+    }
+  }
+
+  // Save checkpoint
+  window.saveCheckpoint = function(){
+    var result = computeChecklist();
+    var checkpoints = store.get('checkpoints', {});
+    checkpoints[today] = {
+      date: today,
+      score: Math.round(result.score / result.total * 100),
+      reflection: document.getElementById('reflectionText').value.trim(),
+      wins: document.getElementById('winsText').value.trim(),
+      focus: document.getElementById('focusText').value.trim(),
+      savedAt: new Date().toISOString()
+    };
+    store.set('checkpoints', checkpoints);
+
+    // Also log to progress feed
+    var prog = store.get('fh.progress', []);
+    prog.unshift({date: new Date().toISOString(), text: 'Daily checkpoint: ' + result.score + '/' + result.total + ' areas active (' + Math.round(result.score/result.total*100) + '%)'});
+    store.set('fh.progress', prog.slice(0, 200));
+
+    var msg = document.getElementById('savedMsg');
+    msg.classList.add('visible');
+    setTimeout(function(){ msg.classList.remove('visible'); }, 3000);
+
+    renderPastCheckpoints();
+  };
+
+  // Export
+  window.exportCheckpoints = function(){
+    var checkpoints = store.get('checkpoints', {});
+    var blob = new Blob([JSON.stringify(checkpoints, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'checkpoints-' + today + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Render past checkpoints
+  function renderPastCheckpoints(){
+    var checkpoints = store.get('checkpoints', {});
+    var entries = Object.keys(checkpoints).sort().reverse();
+    var container = document.getElementById('pastEntries');
+
+    if(!entries.length){
+      container.innerHTML = '<div style="color:#556;font-size:13px">No past checkpoints yet. Save your first one above.</div>';
+      return;
+    }
+
+    container.innerHTML = entries.slice(0,14).map(function(date){
+      var cp = checkpoints[date];
+      var dateStr = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+      return '<div class="past-entry">' +
+        '<span class="past-score">' + (cp.score||0) + '%</span>' +
+        '<div class="past-date">' + dateStr + '</div>' +
+        (cp.reflection ? '<div class="past-text">' + escapeHtml(cp.reflection) + '</div>' : '') +
+        (cp.wins ? '<div class="past-wins">Wins: ' + escapeHtml(cp.wins) + '</div>' : '') +
+        (cp.focus ? '<div class="past-focus">Focus: ' + escapeHtml(cp.focus) + '</div>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  function refreshAll(){
+    renderChecklist();
+    loadTodayCheckpoint();
+    renderPastCheckpoints();
+  }
+
+  window.addEventListener('load', refreshAll);
+  window.addEventListener('store:data', function(){
+    renderChecklist();
+    renderPastCheckpoints();
+  });
+
+  document.addEventListener('DOMContentLoaded', function(){
+    if(window.DashboardAuth) window.DashboardAuth.init();
+  });
+})();
+</script>
+</body>
+</html>
