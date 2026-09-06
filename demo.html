@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#071020" />
+  <title>Daily Checkpoint · Live Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--accent:#7be3ff;--accent-alt:#6cf3b1;--muted:#95b0c8}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:'Noto Sans JP',system-ui,-apple-system,'Segoe UI',Roboto,Arial;
+      color:#e8f7ff;background:radial-gradient(1200px 600px at 50% -10%,#0c1a33,#071020 60%);
+      display:flex;align-items:center;justify-content:center;padding:28px;-webkit-font-smoothing:antialiased}
+    .card{width:100%;max-width:440px;background:rgba(8,16,32,0.82);border:1px solid rgba(123,227,255,0.16);
+      border-radius:22px;padding:30px 26px 26px;box-shadow:0 30px 70px rgba(0,0,0,0.5)}
+    .badge{display:inline-block;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:0.14em;
+      font-size:12px;color:#05121d;background:linear-gradient(90deg,var(--accent),var(--accent-alt));
+      padding:5px 12px;border-radius:999px;margin-bottom:16px}
+    h1{font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:0.04em;font-size:28px;margin:0 0 8px}
+    p{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 18px}
+    ul{list-style:none;padding:0;margin:0 0 22px;display:grid;gap:10px}
+    li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#cfe2ff;line-height:1.45}
+    li .dot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--accent-alt);margin-top:6px}
+    .cta{display:block;width:100%;text-align:center;text-decoration:none;border:none;cursor:pointer;
+      font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+      font-size:17px;color:#021426;background:linear-gradient(90deg,var(--accent),var(--accent-alt));
+      padding:16px;border-radius:14px;box-shadow:0 14px 34px rgba(123,227,255,0.28);transition:transform .16s}
+    .cta:active{transform:translateY(1px)}
+    .note{font-size:12px;color:#7790ac;margin:16px 2px 0;line-height:1.5}
+    .pages{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px}
+    .pages a{font-size:12px;color:#bfe7ff;text-decoration:none;background:rgba(123,227,255,0.08);
+      border:1px solid rgba(123,227,255,0.16);border-radius:999px;padding:6px 12px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <span class="badge">LIVE DEMO</span>
+    <h1>Daily Checkpoint</h1>
+    <p>A hands-on tour of the dashboard, pre-loaded with realistic sample data. No login, nothing saved to any account — perfect for a play on your phone.</p>
+    <ul>
+      <li><span class="dot"></span><span>Tap around every page: walks, work, business, leverage &amp; household.</span></li>
+      <li><span class="dot"></span><span>Add, tick off and edit things — changes stick while the tab is open.</span></li>
+      <li><span class="dot"></span><span>Use the <b>Reset</b> / <b>Exit</b> pill (bottom-right) any time.</span></li>
+    </ul>
+    <a class="cta" href="index.html?demo=1">Enter the demo →</a>
+    <div class="pages">
+      <a href="walks.html?demo=1">Walks</a>
+      <a href="work.html?demo=1">Work</a>
+      <a href="business.html?demo=1">Business</a>
+      <a href="leverage.html?demo=1">Leverage</a>
+      <a href="household.html?demo=1">Household</a>
+      <a href="checkpoint.html?demo=1">Checkpoint</a>
+    </div>
+    <p class="note">Demo data lives only in this browser tab (sessionStorage) and is wiped when you close it. Your real, Supabase-backed dashboard is completely untouched.</p>
+  </main>
+</body>
+</html>
